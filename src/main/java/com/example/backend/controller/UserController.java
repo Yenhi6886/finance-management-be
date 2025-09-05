@@ -14,12 +14,12 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/user")
 @CrossOrigin(origins = "*")
-@PreAuthorize("hasRole('USER')")
 public class UserController {
 
     @Autowired
     private UserService userService;
 
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse> getCurrentUserProfile() {
         try {
@@ -30,6 +30,7 @@ public class UserController {
         }
     }
 
+    @PreAuthorize("hasRole('USER')")
     @PutMapping("/profile")
     public ResponseEntity<ApiResponse> updateProfile(@Valid @RequestBody UpdateProfileRequest request) {
         try {
@@ -40,6 +41,7 @@ public class UserController {
         }
     }
 
+    @PreAuthorize("hasRole('USER')")
     @PostMapping("/change-password")
     public ResponseEntity<ApiResponse> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
         try {
@@ -50,6 +52,7 @@ public class UserController {
         }
     }
 
+    @PreAuthorize("hasRole('USER')")
     @DeleteMapping("/account")
     public ResponseEntity<ApiResponse> deleteAccount() {
         try {

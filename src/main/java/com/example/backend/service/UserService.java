@@ -48,10 +48,13 @@ public class UserService {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email đã được sử dụng!");
         }
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new RuntimeException("Username đã được sử dụng!");
+        }
 
         User user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setStatus(UserStatus.INACTIVE);
+        user.setStatus(UserStatus.ACTIVE);
         user.setAuthProvider(AuthProvider.LOCAL);
         user.setActivationToken(UUID.randomUUID().toString());
 
@@ -63,7 +66,7 @@ public class UserService {
 
     public AuthResponse login(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+                new UsernamePasswordAuthenticationToken(request.getIdentifier(), request.getPassword()));
 
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         User user = userDetails.getUser();
