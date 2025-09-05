@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 public class UserResponse {
     private Long id;
     private String email;
+    private String username;
     private String firstName;
     private String lastName;
     private String phoneNumber;
@@ -17,4 +18,13 @@ public class UserResponse {
     private AuthProvider authProvider;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    // Explicit getter/setter to satisfy tooling
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
 }
