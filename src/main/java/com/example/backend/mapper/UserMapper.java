@@ -39,7 +39,7 @@ public class UserMapper {
         user.setFirstName(registerRequest.getFirstName());
         user.setLastName(registerRequest.getLastName());
         user.setPhoneNumber(registerRequest.getPhoneNumber());
-
+        // Mật khẩu sẽ được set trong service sau khi mã hoá
         return user;
     }
 
