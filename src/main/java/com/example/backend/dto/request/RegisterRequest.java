@@ -12,12 +12,12 @@ public class RegisterRequest {
     @Email(message = "Email không hợp lệ")
     private String email;
 
-    @NotBlank(message = "Username không được để trống")
-    @Size(min = 6, max = 8, message = "Username phải có từ 6 đến 8 ký tự")
+    @NotBlank(message = "Tên đăng nhập không được để trống")
+    @Size(min = 3, max = 50, message = "Tên đăng nhập phải có từ 3 đến 50 ký tự")
     private String username;
 
     @NotBlank(message = "Mật khẩu không được để trống")
-    @Size(min = 6, max = 8, message = "Mật khẩu phải có từ 6 đến 8 ký tự")
+    @Size(min = 6, max = 20, message = "Mật khẩu phải có từ 6 đến 20 ký tự")
     private String password;
 
     @NotBlank(message = "Tên không được để trống")
