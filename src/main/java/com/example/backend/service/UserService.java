@@ -12,6 +12,7 @@ import com.example.backend.security.CustomUserDetails;
 import com.example.backend.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -54,25 +55,32 @@ public class UserService {
 
         User user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setStatus(UserStatus.ACTIVE);
+        user.setStatus(UserStatus.INACTIVE);
         user.setAuthProvider(AuthProvider.LOCAL);
         user.setActivationToken(UUID.randomUUID().toString());
 
         userRepository.save(user);
 
-        // Gửi email kích hoạt
         emailService.sendActivationEmail(user.getEmail(), user.getActivationToken());
     }
 
     public AuthResponse login(LoginRequest request) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getIdentifier(), request.getPassword()));
+        Authentication authentication;
+        try {
+            authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getIdentifier(), request.getPassword()));
+        } catch (BadCredentialsException e) {
+            throw new RuntimeException("Tên đăng nhập hoặc mật khẩu không chính xác!");
+        }
 
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         User user = userDetails.getUser();
 
-        if (user.getStatus() != UserStatus.ACTIVE) {
-            throw new RuntimeException("Tài khoản chưa được kích hoạt!");
+        if (user.getStatus() == UserStatus.INACTIVE) {
+            throw new RuntimeException("Tài khoản của bạn chưa được kích hoạt. Vui lòng kiểm tra email.");
+        }
+        if (user.getStatus() == UserStatus.DELETED) {
+            throw new RuntimeException("Tài khoản của bạn đã bị vô hiệu hoá.");
         }
 
         String token = jwtUtil.generateToken(authentication);
@@ -83,7 +91,7 @@ public class UserService {
 
     public void activateAccount(String token) {
         User user = userRepository.findByActivationToken(token)
-                .orElseThrow(() -> new RuntimeException("Token kích hoạt không hợp lệ!"));
+                .orElseThrow(() -> new RuntimeException("Token kích hoạt không hợp lệ hoặc đã hết hạn!"));
 
         user.setStatus(UserStatus.ACTIVE);
         user.setActivationToken(null);
@@ -96,36 +104,31 @@ public class UserService {
 
         String resetToken = UUID.randomUUID().toString();
         user.setResetPasswordToken(resetToken);
-        user.setResetPasswordExpires(LocalDateTime.now().plusHours(1)); // Token hết hạn sau 1 giờ
+        user.setResetPasswordExpires(LocalDateTime.now().plusHours(1));
 
         userRepository.save(user);
-
-        // Gửi email reset password
         emailService.sendResetPasswordEmail(user.getEmail(), resetToken);
     }
 
     public void resetPassword(ResetPasswordRequest request) {
         User user = userRepository.findByResetPasswordToken(request.getToken())
-                .orElseThrow(() -> new RuntimeException("Token reset password không hợp lệ!"));
+                .orElseThrow(() -> new RuntimeException("Token đặt lại mật khẩu không hợp lệ!"));
 
         if (user.getResetPasswordExpires().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("Token reset password đã hết hạn!");
+            throw new RuntimeException("Token đặt lại mật khẩu đã hết hạn!");
         }
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         user.setResetPasswordToken(null);
         user.setResetPasswordExpires(null);
-
         userRepository.save(user);
     }
 
     public void changePassword(ChangePasswordRequest request) {
         User currentUser = getCurrentUser();
-
         if (!passwordEncoder.matches(request.getCurrentPassword(), currentUser.getPassword())) {
             throw new RuntimeException("Mật khẩu hiện tại không đúng!");
         }
-
         currentUser.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(currentUser);
     }
@@ -137,20 +140,23 @@ public class UserService {
         return userMapper.toUserResponse(updatedUser);
     }
 
-    public void deleteAccount() {
-        User currentUser = getCurrentUser();
-        currentUser.setStatus(UserStatus.DELETED);
-        userRepository.save(currentUser);
-    }
-
     public UserResponse getCurrentUserProfile() {
-        User currentUser = getCurrentUser();
-        return userMapper.toUserResponse(currentUser);
+        return userMapper.toUserResponse(getCurrentUser());
     }
 
     private User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            throw new RuntimeException("Yêu cầu xác thực để thực hiện hành động này.");
+        }
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        return userDetails.getUser();
+        return userRepository.findById(userDetails.getId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng hiện tại trong CSDL."));
+    }
+
+    public void deleteAccount() {
+        User currentUser = getCurrentUser();
+        currentUser.setStatus(UserStatus.DELETED);
+        userRepository.save(currentUser);
     }
 }
