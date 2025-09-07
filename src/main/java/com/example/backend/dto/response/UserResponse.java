@@ -14,17 +14,10 @@ public class UserResponse {
     private String firstName;
     private String lastName;
     private String phoneNumber;
+    private String avatarUrl;
     private UserStatus status;
     private AuthProvider authProvider;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // Explicit getter/setter to satisfy tooling
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
 }

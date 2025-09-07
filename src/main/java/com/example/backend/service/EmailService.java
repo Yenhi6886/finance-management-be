@@ -22,35 +22,64 @@ public class EmailService {
     @Value("${app.mail.enabled:false}")
     private boolean mailEnabled;
 
+    // Thêm một thuộc tính để định nghĩa URL của frontend
+    @Value("${app.frontend.url:http://localhost:3000}")
+    private String frontendUrl;
+
     public void sendActivationEmail(String toEmail, String activationToken) {
-        String link = "http://localhost:8080/api/auth/activate?token=" + activationToken;
+        // **THAY ĐỔI QUAN TRỌNG: Link trỏ về trang /activate của Frontend**
+        String link = frontendUrl + "/activate?token=" + activationToken;
+
         if (!mailEnabled) {
-            logger.info("[MAIL DISABLED] Activation link for {}: {}", toEmail, link);
+            logger.info("[MAIL DISABLED] To enable mail sending, set 'app.mail.enabled=true' in application.properties");
+            logger.info("[MAIL DEBUG] Activation link for {}: {}", toEmail, link);
             return;
         }
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromEmail);
-        message.setTo(toEmail);
-        message.setSubject("Kích hoạt tài khoản");
-        message.setText("Vui lòng click vào link sau để kích hoạt tài khoản: " + link);
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(toEmail);
+            message.setSubject("Chào mừng! Vui lòng kích hoạt tài khoản của bạn");
 
-        mailSender.send(message);
+            String text = "Cảm ơn bạn đã đăng ký.\n\n"
+                    + "Vui lòng nhấp vào liên kết dưới đây để kích hoạt tài khoản của bạn:\n"
+                    + link + "\n\n"
+                    + "Nếu bạn không yêu cầu điều này, vui lòng bỏ qua email này.";
+
+            message.setText(text);
+            mailSender.send(message);
+            logger.info("Activation email sent successfully to {}", toEmail);
+        } catch (Exception e) {
+            logger.error("Failed to send activation email to {}: {}", toEmail, e.getMessage());
+        }
     }
 
     public void sendResetPasswordEmail(String toEmail, String resetToken) {
-        String link = "http://localhost:3000/reset-password?token=" + resetToken;
+        String link = frontendUrl + "/reset-password?token=" + resetToken;
+
         if (!mailEnabled) {
-            logger.info("[MAIL DISABLED] Reset password link for {}: {}", toEmail, link);
+            logger.info("[MAIL DISABLED] To enable mail sending, set 'app.mail.enabled=true' in application.properties");
+            logger.info("[MAIL DEBUG] Reset password link for {}: {}", toEmail, link);
             return;
         }
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromEmail);
-        message.setTo(toEmail);
-        message.setSubject("Đặt lại mật khẩu");
-        message.setText("Vui lòng click vào link sau để đặt lại mật khẩu: " + link);
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(toEmail);
+            message.setSubject("Yêu cầu đặt lại mật khẩu");
 
-        mailSender.send(message);
+            String text = "Bạn đã nhận được email này vì bạn (hoặc ai đó) đã yêu cầu đặt lại mật khẩu cho tài khoản của bạn.\n\n"
+                    + "Vui lòng nhấp vào liên kết sau hoặc dán vào trình duyệt của bạn để hoàn tất quá trình:\n"
+                    + link + "\n\n"
+                    + "Nếu bạn không yêu cầu điều này, vui lòng bỏ qua email này và mật khẩu của bạn sẽ không thay đổi.";
+
+            message.setText(text);
+            mailSender.send(message);
+            logger.info("Reset password email sent successfully to {}", toEmail);
+        } catch (Exception e) {
+            logger.error("Failed to send reset password email to {}: {}", toEmail, e.getMessage());
+        }
     }
 }

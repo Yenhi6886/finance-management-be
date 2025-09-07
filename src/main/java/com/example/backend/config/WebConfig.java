@@ -1,61 +1,53 @@
 package com.example.backend.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.lang.NonNull;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
+    @Value("${file.upload-dir}")
+    private String uploadDir;
 
     @Override
-    public void addCorsMappings(@NonNull CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOriginPatterns("*") // Cho phép tất cả origins
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
-                .allowedHeaders("*")
-                .allowCredentials(true)
-                .maxAge(3600); // Cache preflight response for 1 hour
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/uploads/avatars/**")
+                .addResourceLocations("file:" + uploadDir + "/");
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:3000"
+                // , "https://your-production-frontend-domain.com"
+        ));
 
-        // Cho phép tất cả origins
-        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
 
-        // Cho phép tất cả HTTP methods
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"));
-
-        // Cho phép tất cả headers
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-
-        // Cho phép gửi credentials (cookies, authorization headers, etc.)
-        configuration.setAllowCredentials(true);
-
-        // Cache preflight response
-        configuration.setMaxAge(3600L);
-
-        // Expose headers để frontend có thể đọc
-        configuration.setExposedHeaders(Arrays.asList(
+        configuration.setAllowedHeaders(Arrays.asList(
                 "Authorization",
                 "Content-Type",
-                "X-Requested-With",
                 "Accept",
                 "Origin",
-                "Access-Control-Request-Method",
-                "Access-Control-Request-Headers"));
+                "X-Requested-With"
+        ));
 
+        configuration.setAllowCredentials(true);
+        configuration.setExposedHeaders(Collections.singletonList("Authorization"));
+        configuration.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
+
         return source;
     }
 }

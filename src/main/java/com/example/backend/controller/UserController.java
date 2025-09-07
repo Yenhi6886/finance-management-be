@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/user")
@@ -21,12 +22,8 @@ public class UserController {
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse> getCurrentUserProfile() {
-        try {
-            UserResponse userResponse = userService.getCurrentUserProfile();
-            return ResponseEntity.ok(ApiResponse.success("Lấy thông tin profile thành công!", userResponse));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        UserResponse userResponse = userService.getCurrentUserProfile();
+        return ResponseEntity.ok(ApiResponse.success("Lấy thông tin profile thành công!", userResponse));
     }
 
     @PreAuthorize("hasRole('USER')")
@@ -35,6 +32,17 @@ public class UserController {
         try {
             UserResponse userResponse = userService.updateProfile(request);
             return ResponseEntity.ok(ApiResponse.success("Cập nhật profile thành công!", userResponse));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @PostMapping("/avatar")
+    public ResponseEntity<ApiResponse> updateAvatar(@RequestParam("avatar") MultipartFile file) {
+        try {
+            UserResponse userResponse = userService.updateAvatar(file);
+            return ResponseEntity.ok(ApiResponse.success("Cập nhật ảnh đại diện thành công!", userResponse));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
