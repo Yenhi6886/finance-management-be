@@ -1,7 +1,9 @@
 package com.example.backend.security;
 
 import com.example.backend.entity.User;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
@@ -9,19 +11,19 @@ import java.util.Collections;
 
 public class CustomUserDetails implements UserDetails {
 
-    private final User user;
+    private final transient User user;
+
+    @Getter
+    private final Long id;
 
     public CustomUserDetails(User user) {
         this.user = user;
-    }
-
-    public Long getId() {
-        return user.getId();
+        this.id = user.getId();
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.emptyList();
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
     }
 
     @Override
@@ -41,7 +43,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return !user.getStatus().name().equals("LOCKED");
+        return true;
     }
 
     @Override

@@ -9,6 +9,7 @@ import com.example.backend.enums.UserStatus;
 import com.example.backend.mapper.UserMapper;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.security.CustomUserDetails;
+import com.example.backend.service.filestorage.FileStorageService;
 import com.example.backend.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,6 +20,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -45,12 +49,18 @@ public class UserService {
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    @Autowired
+    private FileStorageService fileStorageService;
+
     public void register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email đã được sử dụng!");
         }
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new RuntimeException("Username đã được sử dụng!");
+        }
+        if (StringUtils.hasText(request.getPhoneNumber()) && userRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+            throw new RuntimeException("Số điện thoại đã được sử dụng!");
         }
 
         User user = userMapper.toUser(request);
@@ -87,6 +97,20 @@ public class UserService {
         UserResponse userResponse = userMapper.toUserResponse(user);
 
         return new AuthResponse(token, userResponse);
+    }
+
+    public UserResponse updateAvatar(MultipartFile file) {
+        User currentUser = getCurrentUser();
+        String fileName = fileStorageService.storeFile(file);
+
+        String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/uploads/avatars/")
+                .path(fileName)
+                .toUriString();
+
+        currentUser.setAvatarUrl(fileDownloadUri);
+        User updatedUser = userRepository.save(currentUser);
+        return userMapper.toUserResponse(updatedUser);
     }
 
     public void activateAccount(String token) {
@@ -150,8 +174,7 @@ public class UserService {
             throw new RuntimeException("Yêu cầu xác thực để thực hiện hành động này.");
         }
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        return userRepository.findById(userDetails.getId())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng hiện tại trong CSDL."));
+        return userDetails.getUser();
     }
 
     public void deleteAccount() {
