@@ -1,8 +1,9 @@
 package com.example.backend.util;
 
-import com.example.backend.security.CustomUserDetails;
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
+import java.util.Date;
+
+import javax.crypto.SecretKey;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,8 +11,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.SecretKey;
-import java.util.Date;
+import com.example.backend.security.CustomUserDetails;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.security.Keys;
 
 @Component
 public class JwtUtil {
@@ -29,18 +36,31 @@ public class JwtUtil {
     }
 
     public String generateToken(Authentication authentication) {
-        String username;
+        String email;
+        String name = null;
+        String picture = null;
+
         Object principal = authentication.getPrincipal();
 
         if (principal instanceof CustomUserDetails) {
-            username = ((CustomUserDetails) principal).getUsername();
+            email = ((CustomUserDetails) principal).getUsername();
         } else if (principal instanceof OAuth2User) {
-            username = ((OAuth2User) principal).getAttribute("email");
+            OAuth2User oauth2User = (OAuth2User) principal;
+            email = oauth2User.getAttribute("email");
+            name = oauth2User.getAttribute("name");
+            picture = oauth2User.getAttribute("picture");
         } else {
             throw new IllegalArgumentException("Unsupported principal type: " + principal.getClass().getName());
         }
 
-        return generateTokenFromUsername(username);
+        return Jwts.builder()
+                .setSubject(email)
+                .claim("name", name)
+                .claim("picture", picture)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
+                .signWith(getSigningKey())
+                .compact();
     }
 
     public String generateTokenFromUsername(String username) {
@@ -87,5 +107,13 @@ public class JwtUtil {
             logger.error("JWT claims string is empty: {}", e.getMessage());
         }
         return false;
+    }
+
+    public Claims getAllClaimsFromToken(String token) {
+        return Jwts.parser()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 }
