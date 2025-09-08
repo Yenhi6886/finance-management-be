@@ -66,7 +66,6 @@ public class UserService {
         User user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setStatus(UserStatus.INACTIVE);
-        user.setAuthProvider(AuthProvider.LOCAL);
         user.setActivationToken(UUID.randomUUID().toString());
 
         userRepository.save(user);
@@ -108,7 +107,7 @@ public class UserService {
                 .path(fileName)
                 .toUriString();
 
-        currentUser.setAvatarUrl(fileDownloadUri);
+        currentUser.setImageUrl(fileDownloadUri);
         User updatedUser = userRepository.save(currentUser);
         return userMapper.toUserResponse(updatedUser);
     }

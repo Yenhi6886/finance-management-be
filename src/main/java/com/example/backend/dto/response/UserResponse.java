@@ -14,9 +14,8 @@ public class UserResponse {
     private String firstName;
     private String lastName;
     private String phoneNumber;
-    private String avatarUrl;
+    private String imageUrl;
     private UserStatus status;
-    private AuthProvider authProvider;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

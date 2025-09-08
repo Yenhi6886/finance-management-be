@@ -2,6 +2,10 @@ package com.example.backend.config;
 
 import com.example.backend.security.CustomUserDetailsService;
 import com.example.backend.security.JwtAuthenticationFilter;
+import com.example.backend.security.oauth2.CustomOAuth2UserService;
+import com.example.backend.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
+import com.example.backend.security.oauth2.OAuth2AuthenticationFailureHandler;
+import com.example.backend.security.oauth2.OAuth2AuthenticationSuccessHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,10 +31,24 @@ public class SecurityConfig {
     private CustomUserDetailsService userDetailsService;
 
     @Autowired
+    private CustomOAuth2UserService customOAuth2UserService;
+
+    @Autowired
+    private OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+
+    @Autowired
+    private OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
+
+    @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Autowired
     private CorsConfigurationSource corsConfigurationSource;
+
+    @Bean
+    public HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository() {
+        return new HttpCookieOAuth2AuthorizationRequestRepository();
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -57,10 +75,18 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/error").permitAll()
-                        .requestMatchers("/uploads/avatars/**").permitAll()
-                        .anyRequest().authenticated());
+                        .requestMatchers("/public/**", "/error", "/oauth2/**", "/login/**", "/api/auth/**").permitAll()
+                        .anyRequest().authenticated())
+                .oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint(endpoint -> endpoint
+                                .baseUri("/oauth2/authorize")
+                                .authorizationRequestRepository(cookieAuthorizationRequestRepository())
+                        )
+                        .userInfoEndpoint(endpoint -> endpoint
+                                .userService(customOAuth2UserService)
+                        )
+                        .successHandler(oAuth2AuthenticationSuccessHandler)
+                        .failureHandler(oAuth2AuthenticationFailureHandler));
 
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

@@ -1,12 +1,13 @@
 package com.example.backend.util;
 
+import com.example.backend.security.CustomUserDetails;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -20,7 +21,7 @@ public class JwtUtil {
     @Value("${app.jwt.secret:mySecretKey}")
     private String jwtSecret;
 
-    @Value("${app.jwt.expiration:86400000}")
+    @Value("${app.jwt.expiration:604800000}") // 7 days
     private int jwtExpirationMs;
 
     private SecretKey getSigningKey() {
@@ -28,8 +29,18 @@ public class JwtUtil {
     }
 
     public String generateToken(Authentication authentication) {
-        UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
-        return generateTokenFromUsername(userPrincipal.getUsername());
+        String username;
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof CustomUserDetails) {
+            username = ((CustomUserDetails) principal).getUsername();
+        } else if (principal instanceof OAuth2User) {
+            username = ((OAuth2User) principal).getAttribute("email");
+        } else {
+            throw new IllegalArgumentException("Unsupported principal type: " + principal.getClass().getName());
+        }
+
+        return generateTokenFromUsername(username);
     }
 
     public String generateTokenFromUsername(String username) {

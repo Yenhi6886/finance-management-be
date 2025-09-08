@@ -21,9 +21,8 @@ public class UserMapper {
         response.setFirstName(user.getFirstName());
         response.setLastName(user.getLastName());
         response.setPhoneNumber(user.getPhoneNumber());
-        response.setAvatarUrl(user.getAvatarUrl());
+        response.setImageUrl(user.getImageUrl());
         response.setStatus(user.getStatus());
-        response.setAuthProvider(user.getAuthProvider());
         response.setCreatedAt(user.getCreatedAt());
         response.setUpdatedAt(user.getUpdatedAt());
 
@@ -58,8 +57,8 @@ public class UserMapper {
         if (request.getPhoneNumber() != null) {
             user.setPhoneNumber(request.getPhoneNumber());
         }
-        if (request.getAvatarUrl() != null) {
-            user.setAvatarUrl(request.getAvatarUrl());
+        if (request.getImageUrl() != null) {
+            user.setImageUrl(request.getImageUrl());
         }
     }
 }

@@ -5,20 +5,43 @@ import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 
-public class CustomUserDetails implements UserDetails {
+@Getter
+public class CustomUserDetails implements UserDetails, OAuth2User {
 
     private final transient User user;
-
-    @Getter
     private final Long id;
+    private Map<String, Object> attributes;
 
     public CustomUserDetails(User user) {
         this.user = user;
         this.id = user.getId();
+    }
+
+    public static CustomUserDetails create(User user) {
+        return new CustomUserDetails(user);
+    }
+
+    public static CustomUserDetails create(User user, Map<String, Object> attributes) {
+        CustomUserDetails userDetails = CustomUserDetails.create(user);
+        // Add app-specific user ID to the attributes
+        attributes.put("appUserId", user.getId());
+        userDetails.setAttributes(attributes);
+        return userDetails;
+    }
+
+    @Override
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(Map<String, Object> attributes) {
+        this.attributes = attributes;
     }
 
     @Override
@@ -56,7 +79,8 @@ public class CustomUserDetails implements UserDetails {
         return user.getStatus().name().equals("ACTIVE");
     }
 
-    public User getUser() {
-        return user;
+    @Override
+    public String getName() {
+        return String.valueOf(id);
     }
 }
