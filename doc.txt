@@ -1,0 +1,165 @@
+x
+2025-09-09T15:08:15.504+07:00  INFO 498125 --- [backend] [  restartedMain] com.example.backend.BackendApplication   : Starting BackendApplication using Java 17.0.16 with PID 498125 (/home/ducthien/module6/finance-management-be/build/classes/java/main started by ducthien in /home/ducthien/module6/finance-management-be)
+2025-09-09T15:08:15.506+07:00 DEBUG 498125 --- [backend] [  restartedMain] com.example.backend.BackendApplication   : Running with Spring Boot v3.5.5, Spring v6.2.10
+2025-09-09T15:08:15.507+07:00  INFO 498125 --- [backend] [  restartedMain] com.example.backend.BackendApplication   : No active profile set, falling back to 1 default profile: "default"
+2025-09-09T15:08:15.564+07:00  INFO 498125 --- [backend] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-09-09T15:08:15.565+07:00  INFO 498125 --- [backend] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-09-09T15:08:16.068+07:00  INFO 498125 --- [backend] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-09-09T15:08:16.138+07:00  INFO 498125 --- [backend] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 61 ms. Found 1 JPA repository interface.
+2025-09-09T15:08:17.026+07:00  INFO 498125 --- [backend] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2025-09-09T15:08:17.039+07:00  INFO 498125 --- [backend] [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-09-09T15:08:17.039+07:00  INFO 498125 --- [backend] [  restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.44]
+2025-09-09T15:08:17.075+07:00  INFO 498125 --- [backend] [  restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-09-09T15:08:17.076+07:00  INFO 498125 --- [backend] [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1510 ms
+2025-09-09T15:08:17.213+07:00  INFO 498125 --- [backend] [  restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-09-09T15:08:17.267+07:00  INFO 498125 --- [backend] [  restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.26.Final
+2025-09-09T15:08:17.301+07:00  INFO 498125 --- [backend] [  restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-09-09T15:08:17.542+07:00  INFO 498125 --- [backend] [  restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-09-09T15:08:17.565+07:00  INFO 498125 --- [backend] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-09-09T15:08:17.844+07:00  INFO 498125 --- [backend] [  restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@37576e7a
+2025-09-09T15:08:17.845+07:00  INFO 498125 --- [backend] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-09-09T15:08:17.889+07:00  WARN 498125 --- [backend] [  restartedMain] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-09-09T15:08:17.907+07:00  INFO 498125 --- [backend] [  restartedMain] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 8.0.43
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-09-09T15:08:18.590+07:00  INFO 498125 --- [backend] [  restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-09-09T15:08:18.640+07:00  INFO 498125 --- [backend] [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-09-09T15:08:18.923+07:00 DEBUG 498125 --- [backend] [  restartedMain] c.e.b.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
+2025-09-09T15:08:19.060+07:00  INFO 498125 --- [backend] [  restartedMain] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2025-09-09T15:08:19.060+07:00  WARN 498125 --- [backend] [  restartedMain] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2025-09-09T15:08:19.168+07:00  WARN 498125 --- [backend] [  restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-09-09T15:08:19.464+07:00 DEBUG 498125 --- [backend] [  restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with filters: DisableEncodeUrlFilter, WebAsyncManagerIntegrationFilter, SecurityContextHolderFilter, HeaderWriterFilter, CorsFilter, LogoutFilter, OAuth2AuthorizationRequestRedirectFilter, OAuth2LoginAuthenticationFilter, JwtAuthenticationFilter, DefaultResourcesFilter, DefaultLoginPageGeneratingFilter, DefaultLogoutPageGeneratingFilter, RequestCacheAwareFilter, SecurityContextHolderAwareRequestFilter, AnonymousAuthenticationFilter, SessionManagementFilter, ExceptionTranslationFilter, AuthorizationFilter
+2025-09-09T15:08:19.722+07:00  INFO 498125 --- [backend] [  restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2025-09-09T15:08:19.754+07:00  INFO 498125 --- [backend] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2025-09-09T15:08:19.762+07:00  INFO 498125 --- [backend] [  restartedMain] com.example.backend.BackendApplication   : Started BackendApplication in 4.646 seconds (process running for 5.246)
+2025-09-09T15:08:29.696+07:00  INFO 498125 --- [backend] [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-09-09T15:08:29.697+07:00  INFO 498125 --- [backend] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-09-09T15:08:29.698+07:00  INFO 498125 --- [backend] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2025-09-09T15:08:29.711+07:00 DEBUG 498125 --- [backend] [nio-8080-exec-1] o.s.security.web.FilterChainProxy        : Securing GET /oauth2/authorize/google
+2025-09-09T15:08:29.736+07:00 DEBUG 498125 --- [backend] [nio-8080-exec-1] o.s.s.web.DefaultRedirectStrategy        : Redirecting to https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=1002698251432-in1i17j6i9cekppq9tjbc6rn5sa6ddmg.apps.googleusercontent.com&scope=openid%20profile%20email&state=P87DpKV5ySPyY32LmjJAmC4S8J8rMA5RZx_2PzN57F4%3D&redirect_uri=http://localhost:8080/login/oauth2/code/google&nonce=nWDx7y4VMucLGeqbatc7L7Rqr-UJpOT43gpxlEIbIeg
+2025-09-09T15:08:30.423+07:00 DEBUG 498125 --- [backend] [nio-8080-exec-2] o.s.security.web.FilterChainProxy        : Securing GET /oauth2/authorize/google
+2025-09-09T15:08:30.425+07:00 DEBUG 498125 --- [backend] [nio-8080-exec-2] o.s.s.web.DefaultRedirectStrategy        : Redirecting to https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=1002698251432-in1i17j6i9cekppq9tjbc6rn5sa6ddmg.apps.googleusercontent.com&scope=openid%20profile%20email&state=s4oXU7oeG7vFTEvmB0X76T1AxydinRlSAon-MKi-rYs%3D&redirect_uri=http://localhost:8080/login/oauth2/code/google&nonce=r005KRRdYnWd1her7eF9bYp1zDyvxaDOQXSuHIO-vx0
+2025-09-09T15:08:34.091+07:00 DEBUG 498125 --- [backend] [nio-8080-exec-3] o.s.security.web.FilterChainProxy        : Securing GET /login/oauth2/code/google?state=s4oXU7oeG7vFTEvmB0X76T1AxydinRlSAon-MKi-rYs%3D&code=4%2F0AVMBsJjDkHFOQ0plldMKRLMkvrtoemjlSV0H9B36sZiffonR4H07ut2tWRSDRg8X-VN5mQ&scope=email+profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+openid&authuser=0&prompt=none
+2025-09-09T15:08:34.678+07:00  INFO 498125 --- [backend] [nio-8080-exec-3] c.e.b.security.CustomOAuth2UserService   : Processing OAuth2 user...
+2025-09-09T15:08:34.679+07:00  INFO 498125 --- [backend] [nio-8080-exec-3] c.e.b.security.CustomOAuth2UserService   : OAuth2 User Info: Email=ducthien190203@gmail.com, Name=Thiện Trương Đức, ImageUrl=https://lh3.googleusercontent.com/a/ACg8ocKS4xFMVStC_bHdIoqcRVEiv5jdPWbDNI31XFhX8pPG4OmwUIj0=s96-c
+Hibernate:
+    select
+        u1_0.id,
+        u1_0.activation_token,
+        u1_0.auth_provider,
+        u1_0.avatar_url,
+        u1_0.created_at,
+        u1_0.email,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.password,
+        u1_0.phone_number,
+        u1_0.provider_id,
+        u1_0.reset_password_expires,
+        u1_0.reset_password_token,
+        u1_0.status,
+        u1_0.updated_at,
+        u1_0.username
+    from
+        users u1_0
+    where
+        u1_0.email=?
+2025-09-09T15:08:34.767+07:00  INFO 498125 --- [backend] [nio-8080-exec-3] c.e.b.security.CustomOAuth2UserService   : User with email ducthien190203@gmail.com does not exist. Registering new user.
+2025-09-09T15:08:34.773+07:00  INFO 498125 --- [backend] [nio-8080-exec-3] c.e.b.security.CustomOAuth2UserService   : Attempting to save new user: User(id=null, email=ducthien190203@gmail.com, username=oauth2_google_101919344303820742720, password=371fd767-5f32-4647-a3b6-caece82e14d4, firstName=Thiện, lastName=Trương Đức, phoneNumber=null, avatarUrl=https://lh3.googleusercontent.com/a/ACg8ocKS4xFMVStC_bHdIoqcRVEiv5jdPWbDNI31XFhX8pPG4OmwUIj0=s96-c, status=ACTIVE, authProvider=GOOGLE, providerId=101919344303820742720, activationToken=null, resetPasswordToken=null, resetPasswordExpires=null, createdAt=null, updatedAt=null)
+Hibernate:
+    insert
+    into
+        users
+        (activation_token, auth_provider, avatar_url, created_at, email, first_name, last_name, password, phone_number, provider_id, reset_password_expires, reset_password_token, status, updated_at, username)
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2025-09-09T15:08:34.831+07:00  INFO 498125 --- [backend] [nio-8080-exec-3] c.e.b.security.CustomOAuth2UserService   : Successfully saved new user with ID: 1
+2025-09-09T15:08:34.847+07:00 DEBUG 498125 --- [backend] [nio-8080-exec-3] .s.o.c.w.OAuth2LoginAuthenticationFilter : Set SecurityContextHolder to OAuth2AuthenticationToken [Principal=Name: [ducthien190203@gmail.com], Granted Authorities: [[ROLE_USER]], User Attributes: [{at_hash=3MwoezjGhxR7orgMhqYb7g, sub=101919344303820742720, email_verified=true, iss=https://accounts.google.com, given_name=Thiện, nonce=r005KRRdYnWd1her7eF9bYp1zDyvxaDOQXSuHIO-vx0, picture=https://lh3.googleusercontent.com/a/ACg8ocKS4xFMVStC_bHdIoqcRVEiv5jdPWbDNI31XFhX8pPG4OmwUIj0=s96-c, aud=[1002698251432-in1i17j6i9cekppq9tjbc6rn5sa6ddmg.apps.googleusercontent.com], azp=1002698251432-in1i17j6i9cekppq9tjbc6rn5sa6ddmg.apps.googleusercontent.com, name=Thiện Trương Đức, exp=2025-09-09T09:08:34Z, family_name=Trương Đức, iat=2025-09-09T08:08:34Z, email=ducthien190203@gmail.com}], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_USER]]
+2025-09-09T15:08:34.960+07:00 DEBUG 498125 --- [backend] [nio-8080-exec-3] o.s.s.web.DefaultRedirectStrategy        : Redirecting to http://localhost:3000/oauth2/callback?token=eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJkdWN0aGllbjE5MDIwM0BnbWFpbC5jb20iLCJpYXQiOjE3NTc0MDUzMTQsImV4cCI6MTc1NzQ5MTcxNH0.YrmoCTv5tHClyK64_Z_YA3oGIh3XQCl4uQMQXOr2bXh78urBM0ZNKLhzJNSmLLXjP-Gj0Y5zu4XjYg4j6gLayg
+2025-09-09T15:14:13.189+07:00 DEBUG 498125 --- [backend] [nio-8080-exec-6] o.s.security.web.FilterChainProxy        : Securing GET /oauth2/authorize/google
+2025-09-09T15:14:13.190+07:00 DEBUG 498125 --- [backend] [nio-8080-exec-6] o.s.s.web.DefaultRedirectStrategy        : Redirecting to https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=1002698251432-in1i17j6i9cekppq9tjbc6rn5sa6ddmg.apps.googleusercontent.com&scope=openid%20profile%20email&state=Ohwbz3rUEPHqM42CFUZgexszB-O7sDAqHXuMVeZH0iE%3D&redirect_uri=http://localhost:8080/login/oauth2/code/google&nonce=Om8TyA8kExtQBQ2J3MHTx2NnRkbmPU3CeUghnx8fesk
+2025-09-09T15:14:13.967+07:00 DEBUG 498125 --- [backend] [nio-8080-exec-7] o.s.security.web.FilterChainProxy        : Securing GET /oauth2/authorize/google
+2025-09-09T15:14:13.968+07:00 DEBUG 498125 --- [backend] [nio-8080-exec-7] o.s.s.web.DefaultRedirectStrategy        : Redirecting to https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=1002698251432-in1i17j6i9cekppq9tjbc6rn5sa6ddmg.apps.googleusercontent.com&scope=openid%20profile%20email&state=ak5rLCn1XgKe_9muhXw5IdSQ2Wk9qRN8XIM-N9aadRM%3D&redirect_uri=http://localhost:8080/login/oauth2/code/google&nonce=wIkbs1iBpg4PW5ADm_vg-0mbiOisWxWOCx6UJgVi1mQ
+2025-09-09T15:14:17.318+07:00 DEBUG 498125 --- [backend] [nio-8080-exec-8] o.s.security.web.FilterChainProxy        : Securing GET /login/oauth2/code/google?state=ak5rLCn1XgKe_9muhXw5IdSQ2Wk9qRN8XIM-N9aadRM%3D&code=4%2F0AVMBsJjTdpNu0Pi2OfT3TVS9bjogw6LONyz9CerrZ4derFpBKimUcZ55gC-XsTzJtXwwaA&scope=email+profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+openid&authuser=2&prompt=none
+2025-09-09T15:14:18.105+07:00  INFO 498125 --- [backend] [nio-8080-exec-8] c.e.b.security.CustomOAuth2UserService   : Processing OAuth2 user...
+2025-09-09T15:14:18.106+07:00  INFO 498125 --- [backend] [nio-8080-exec-8] c.e.b.security.CustomOAuth2UserService   : OAuth2 User Info: Email=concho190203@gmail.com, Name=ff Sh4co, ImageUrl=https://lh3.googleusercontent.com/a/ACg8ocLCx0Lab_AiElJIxJIlie6Chu44862eIKQsZhpDS0ori0noJvs=s96-c
+Hibernate:
+    select
+        u1_0.id,
+        u1_0.activation_token,
+        u1_0.auth_provider,
+        u1_0.avatar_url,
+        u1_0.created_at,
+        u1_0.email,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.password,
+        u1_0.phone_number,
+        u1_0.provider_id,
+        u1_0.reset_password_expires,
+        u1_0.reset_password_token,
+        u1_0.status,
+        u1_0.updated_at,
+        u1_0.username
+    from
+        users u1_0
+    where
+        u1_0.email=?
+2025-09-09T15:14:18.108+07:00  INFO 498125 --- [backend] [nio-8080-exec-8] c.e.b.security.CustomOAuth2UserService   : User with email concho190203@gmail.com does not exist. Registering new user.
+2025-09-09T15:14:18.109+07:00  INFO 498125 --- [backend] [nio-8080-exec-8] c.e.b.security.CustomOAuth2UserService   : Attempting to save new user: User(id=null, email=concho190203@gmail.com, username=oauth2_google_111122348013781614109, password=3ee52041-683a-4d91-9e63-ee6ea8528337, firstName=ff, lastName=Sh4co, phoneNumber=null, avatarUrl=https://lh3.googleusercontent.com/a/ACg8ocLCx0Lab_AiElJIxJIlie6Chu44862eIKQsZhpDS0ori0noJvs=s96-c, status=ACTIVE, authProvider=GOOGLE, providerId=111122348013781614109, activationToken=null, resetPasswordToken=null, resetPasswordExpires=null, createdAt=null, updatedAt=null)
+Hibernate:
+    insert
+    into
+        users
+        (activation_token, auth_provider, avatar_url, created_at, email, first_name, last_name, password, phone_number, provider_id, reset_password_expires, reset_password_token, status, updated_at, username)
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2025-09-09T15:14:18.112+07:00  INFO 498125 --- [backend] [nio-8080-exec-8] c.e.b.security.CustomOAuth2UserService   : Successfully saved new user with ID: 2
+2025-09-09T15:14:18.133+07:00 DEBUG 498125 --- [backend] [nio-8080-exec-8] .s.o.c.w.OAuth2LoginAuthenticationFilter : Set SecurityContextHolder to OAuth2AuthenticationToken [Principal=Name: [concho190203@gmail.com], Granted Authorities: [[ROLE_USER]], User Attributes: [{at_hash=V8Bu9j4bpZHp8_dAo-C2-w, sub=111122348013781614109, email_verified=true, iss=https://accounts.google.com, given_name=ff, nonce=wIkbs1iBpg4PW5ADm_vg-0mbiOisWxWOCx6UJgVi1mQ, picture=https://lh3.googleusercontent.com/a/ACg8ocLCx0Lab_AiElJIxJIlie6Chu44862eIKQsZhpDS0ori0noJvs=s96-c, aud=[1002698251432-in1i17j6i9cekppq9tjbc6rn5sa6ddmg.apps.googleusercontent.com], azp=1002698251432-in1i17j6i9cekppq9tjbc6rn5sa6ddmg.apps.googleusercontent.com, name=ff Sh4co, exp=2025-09-09T09:14:17Z, family_name=Sh4co, iat=2025-09-09T08:14:17Z, email=concho190203@gmail.com}], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_USER]]
+2025-09-09T15:14:18.134+07:00 DEBUG 498125 --- [backend] [nio-8080-exec-8] o.s.s.web.DefaultRedirectStrategy        : Redirecting to http://localhost:3000/oauth2/callback?token=eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJjb25jaG8xOTAyMDNAZ21haWwuY29tIiwiaWF0IjoxNzU3NDA1NjU4LCJleHAiOjE3NTc0OTIwNTh9.VsZaTHdiWpYLcU43RGZNw7AGHJ-hw5BKhvN9g9a-f6ekHLMlJqDofj0g9a862DAAU_uXvEQYKGnIB92NbrjhRA
+2025-09-09T15:14:19.238+07:00 DEBUG 498125 --- [backend] [nio-8080-exec-9] o.s.security.web.FilterChainProxy        : Securing GET /oauth2/authorize/google
+2025-09-09T15:14:19.240+07:00 DEBUG 498125 --- [backend] [nio-8080-exec-9] o.s.s.web.DefaultRedirectStrategy        : Redirecting to https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=1002698251432-in1i17j6i9cekppq9tjbc6rn5sa6ddmg.apps.googleusercontent.com&scope=openid%20profile%20email&state=BmgCJD7nOQwdta-5nCnU64vzeEKP5gz_is0vB4AVErg%3D&redirect_uri=http://localhost:8080/login/oauth2/code/google&nonce=4os7lXmP9d85bayUzrbPRPpc2HEL7NxkuCH-ade7ftU
+2025-09-09T15:14:19.916+07:00 DEBUG 498125 --- [backend] [io-8080-exec-10] o.s.security.web.FilterChainProxy        : Securing GET /oauth2/authorize/google
+2025-09-09T15:14:19.917+07:00 DEBUG 498125 --- [backend] [io-8080-exec-10] o.s.s.web.DefaultRedirectStrategy        : Redirecting to https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=1002698251432-in1i17j6i9cekppq9tjbc6rn5sa6ddmg.apps.googleusercontent.com&scope=openid%20profile%20email&state=DpEcGo2LURctdNu97jU95KEr1eieTI-FgvX5FnrL-no%3D&redirect_uri=http://localhost:8080/login/oauth2/code/google&nonce=vYdV2FccTr0TQ3seBf92EwoTO8Q2-OOSfz-F-Y3_m_c
+2025-09-09T15:14:23.148+07:00 DEBUG 498125 --- [backend] [nio-8080-exec-1] o.s.security.web.FilterChainProxy        : Securing GET /login/oauth2/code/google?state=DpEcGo2LURctdNu97jU95KEr1eieTI-FgvX5FnrL-no%3D&code=4%2F0AVMBsJjzkfBw7iJlTfuc4-Vy2Xe1LpvK9O_c8rrcjvZ-gdH8E-Y943ZniP_rezy7BZgs9Q&scope=email+profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+openid&authuser=1&prompt=none
+2025-09-09T15:14:25.718+07:00  INFO 498125 --- [backend] [nio-8080-exec-1] c.e.b.security.CustomOAuth2UserService   : Processing OAuth2 user...
+2025-09-09T15:14:25.718+07:00  INFO 498125 --- [backend] [nio-8080-exec-1] c.e.b.security.CustomOAuth2UserService   : OAuth2 User Info: Email=conchothien190203@gmail.com, Name=Con Cho, ImageUrl=https://lh3.googleusercontent.com/a/ACg8ocLb5gb_HLzlgWE40mInYw6rzIm9Akrlw7-dTbeY5y_c5JKzyA=s96-c
+Hibernate:
+    select
+        u1_0.id,
+        u1_0.activation_token,
+        u1_0.auth_provider,
+        u1_0.avatar_url,
+        u1_0.created_at,
+        u1_0.email,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.password,
+        u1_0.phone_number,
+        u1_0.provider_id,
+        u1_0.reset_password_expires,
+        u1_0.reset_password_token,
+        u1_0.status,
+        u1_0.updated_at,
+        u1_0.username
+    from
+        users u1_0
+    where
+        u1_0.email=?
+2025-09-09T15:14:25.721+07:00  INFO 498125 --- [backend] [nio-8080-exec-1] c.e.b.security.CustomOAuth2UserService   : User with email conchothien190203@gmail.com does not exist. Registering new user.
+2025-09-09T15:14:25.721+07:00  INFO 498125 --- [backend] [nio-8080-exec-1] c.e.b.security.CustomOAuth2UserService   : Attempting to save new user: User(id=null, email=conchothien190203@gmail.com, username=oauth2_google_104862673118824296528, password=a2248f7c-13f4-4abc-abe9-e3f4e84c76b5, firstName=Con, lastName=Cho, phoneNumber=null, avatarUrl=https://lh3.googleusercontent.com/a/ACg8ocLb5gb_HLzlgWE40mInYw6rzIm9Akrlw7-dTbeY5y_c5JKzyA=s96-c, status=ACTIVE, authProvider=GOOGLE, providerId=104862673118824296528, activationToken=null, resetPasswordToken=null, resetPasswordExpires=null, createdAt=null, updatedAt=null)
+Hibernate:
+    insert
+    into
+        users
+        (activation_token, auth_provider, avatar_url, created_at, email, first_name, last_name, password, phone_number, provider_id, reset_password_expires, reset_password_token, status, updated_at, username)
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2025-09-09T15:14:25.724+07:00  INFO 498125 --- [backend] [nio-8080-exec-1] c.e.b.security.CustomOAuth2UserService   : Successfully saved new user with ID: 3
+2025-09-09T15:14:25.743+07:00 DEBUG 498125 --- [backend] [nio-8080-exec-1] .s.o.c.w.OAuth2LoginAuthenticationFilter : Set SecurityContextHolder to OAuth2AuthenticationToken [Principal=Name: [conchothien190203@gmail.com], Granted Authorities: [[ROLE_USER]], User Attributes: [{at_hash=fCu6aM4j1YppDEVDU01mTw, sub=104862673118824296528, email_verified=true, iss=https://accounts.google.com, given_name=Con, nonce=vYdV2FccTr0TQ3seBf92EwoTO8Q2-OOSfz-F-Y3_m_c, picture=https://lh3.googleusercontent.com/a/ACg8ocLb5gb_HLzlgWE40mInYw6rzIm9Akrlw7-dTbeY5y_c5JKzyA=s96-c, aud=[1002698251432-in1i17j6i9cekppq9tjbc6rn5sa6ddmg.apps.googleusercontent.com], azp=1002698251432-in1i17j6i9cekppq9tjbc6rn5sa6ddmg.apps.googleusercontent.com, name=Con Cho, exp=2025-09-09T09:14:23Z, family_name=Cho, iat=2025-09-09T08:14:23Z, email=conchothien190203@gmail.com}], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_USER]]
+2025-09-09T15:14:25.744+07:00 DEBUG 498125 --- [backend] [nio-8080-exec-1] o.s.s.web.DefaultRedirectStrategy        : Redirecting to http://localhost:3000/oauth2/callback?token=eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJjb25jaG90aGllbjE5MDIwM0BnbWFpbC5jb20iLCJpYXQiOjE3NTc0MDU2NjUsImV4cCI6MTc1NzQ5MjA2NX0.a1kyybl9YxTaaEWbS2Mc8l12LlSi-WVhcH33xNjBS45oLihdMFKH_1SKw55xx-Oj4eXpIhs22M3IOSUPpux-yA
