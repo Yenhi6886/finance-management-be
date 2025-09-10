@@ -11,6 +11,7 @@ import com.example.backend.repository.UserRepository;
 import com.example.backend.security.CustomUserDetails;
 import com.example.backend.service.filestorage.FileStorageService;
 import com.example.backend.util.JwtUtil;
+import com.example.backend.util.PasswordGeneratorUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -126,12 +127,15 @@ public class UserService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Email không tồn tại trong hệ thống!"));
 
-        String resetToken = UUID.randomUUID().toString();
-        user.setResetPasswordToken(resetToken);
-        user.setResetPasswordExpires(LocalDateTime.now().plusHours(1));
+        String newPassword = PasswordGeneratorUtil.generateRandomPassword();
+        user.setPassword(passwordEncoder.encode(newPassword));
+
+        // Xóa token cũ nếu có để tránh nhầm lẫn
+        user.setResetPasswordToken(null);
+        user.setResetPasswordExpires(null);
 
         userRepository.save(user);
-        emailService.sendResetPasswordEmail(user.getEmail(), resetToken);
+        emailService.sendNewPasswordEmail(user.getEmail(), newPassword);
     }
 
     public void resetPassword(ResetPasswordRequest request) {
