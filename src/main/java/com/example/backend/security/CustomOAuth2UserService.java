@@ -51,8 +51,16 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         User user;
         if (userOptional.isPresent()) {
             user = userOptional.get();
-            if (!user.getAuthProvider().equals(AuthProvider.valueOf(oAuth2UserRequest.getClientRegistration().getRegistrationId().toUpperCase()))) {
-                throw new RuntimeException("Looks like you're signed up with " + user.getAuthProvider() + " account. Please use your " + user.getAuthProvider() + " account to login.");
+            // Thay vì throw exception, cho phép merge account
+            AuthProvider currentProvider = AuthProvider.valueOf(oAuth2UserRequest.getClientRegistration().getRegistrationId().toUpperCase());
+
+            // Nếu user đã tồn tại với provider khác, cập nhật provider về OAuth2
+            if (!user.getAuthProvider().equals(currentProvider)) {
+                // Cập nhật provider sang OAuth2 và lưu providerId
+                user.setAuthProvider(currentProvider);
+                user.setProviderId(oAuth2UserInfo.getId());
+                // Cập nhật password để không thể đăng nhập bằng password cũ
+                user.setPassword(UUID.randomUUID().toString());
             }
             user = updateExistingUser(user, oAuth2UserInfo);
         } else {
