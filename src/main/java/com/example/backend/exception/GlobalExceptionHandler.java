@@ -26,7 +26,7 @@ public class GlobalExceptionHandler {
         });
 
         return ResponseEntity.badRequest().body(
-                ApiResponse.error("Dữ liệu không hợp lệ: " + errors.toString()));
+                ApiResponse.error("Dữ liệu không hợp lệ: " ));
     }
 
     @ExceptionHandler(RuntimeException.class)
