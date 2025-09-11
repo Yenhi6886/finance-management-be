@@ -1,17 +1,21 @@
 package com.example.backend.controller;
 
 import com.example.backend.dto.WalletDto;
+import com.example.backend.dto.response.WalletTransferResponse;
+import com.example.backend.dto.request.UpdateProfileRequest;
 import com.example.backend.entity.Wallet;
+import com.example.backend.exception.InsufficientBalanceException;
+import com.example.backend.exception.WalletNotFoundException;
 import com.example.backend.mapper.WalletMapper;
 import com.example.backend.service.WalletSelectionService;
+import com.example.backend.service.WalletTransferService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,6 +26,7 @@ import java.util.Optional;
 public class WalletController {
     private final WalletSelectionService walletSelectionService;
     private final WalletMapper walletMapper;
+    private final WalletTransferService walletTransferService;
 
     @GetMapping
     public ResponseEntity<List<WalletDto>> getWallets(@AuthenticationPrincipal(expression = "id") Long userId) {
@@ -51,4 +56,46 @@ public class WalletController {
             return ResponseEntity.badRequest().build();
         }
     }
+    @PostMapping("/transfer")
+    public ResponseEntity<?> transferMoney(
+            @AuthenticationPrincipal(expression = "id") Long userId,
+            @Valid @RequestBody UpdateProfileRequest.WalletTransferRequest request) {
+        try {
+            WalletTransferResponse response = walletTransferService.transferMoney(userId, request);
+            return ResponseEntity.ok(response);
+        } catch (InsufficientBalanceException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", e.getMessage()));
+        } catch (WalletNotFoundException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("success", false, "message", "Có lỗi xảy ra khi chuyển tiền"));
+        }
+    }
+
+    @GetMapping("/{walletId}/validate-amount")
+    public ResponseEntity<Map<String, Object>> validateTransferAmount(
+            @AuthenticationPrincipal(expression = "id") Long userId,
+            @PathVariable Long walletId,
+            @RequestParam BigDecimal amount) {
+        try {
+            boolean isValid = walletTransferService.validateTransferAmount(walletId, userId, amount);
+            return ResponseEntity.ok(Map.of(
+                "valid", isValid,
+                "message", isValid ? "Số dư đủ để thực hiện giao dịch" : "Số dư không đủ để thực hiện giao dịch"
+            ));
+        } catch (WalletNotFoundException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("valid", false, "message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("valid", false, "message", "Có lỗi xảy ra khi kiểm tra số dư"));
+        }
+    }
 }
+
