@@ -59,8 +59,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 // Cập nhật provider sang OAuth2 và lưu providerId
                 user.setAuthProvider(currentProvider);
                 user.setProviderId(oAuth2UserInfo.getId());
-                // Cập nhật password để không thể đăng nhập bằng password cũ
-                user.setPassword(UUID.randomUUID().toString());
+
             }
             user = updateExistingUser(user, oAuth2UserInfo);
         } else {
