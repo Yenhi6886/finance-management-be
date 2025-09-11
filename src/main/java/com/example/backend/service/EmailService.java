@@ -4,9 +4,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 @Service
 public class EmailService {
@@ -106,6 +110,29 @@ public class EmailService {
             logger.info("New password email sent successfully to {}", toEmail);
         } catch (Exception e) {
             logger.error("Failed to send new password email to {}: {}", toEmail, e.getMessage());
+        }
+    }
+
+    public void sendEmail(String toEmail, String subject, String content) {
+        if (!mailEnabled) {
+            logger.info("[MAIL DISABLED] To enable mail sending, set 'app.mail.enabled=true' in application.properties");
+            logger.info("[MAIL DEBUG] Email to {}: Subject: {}, Content: {}", toEmail, subject, content);
+            return;
+        }
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            
+            helper.setFrom(fromEmail);
+            helper.setTo(toEmail);
+            helper.setSubject(subject);
+            helper.setText(content, true); // true indicates HTML content
+            
+            mailSender.send(message);
+            logger.info("Email sent successfully to {}", toEmail);
+        } catch (MessagingException e) {
+            logger.error("Failed to send email to {}: {}", toEmail, e.getMessage());
         }
     }
 }
