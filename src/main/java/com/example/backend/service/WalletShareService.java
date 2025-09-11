@@ -181,33 +181,33 @@ public class WalletShareService {
         return String.format("""
             <html>
             <body>
-                <h2>钱包邀请</h2>
-                <p>您好，</p>
-                <p>您被邀请访问一个钱包：</p>
+                <h2>Lời mời ví</h2>
+                <p>Xin chào,</p>
+                <p>Bạn được mời truy cập một ví:</p>
                 <ul>
-                    <li><strong>钱包名称：</strong>%s</li>
-                    <li><strong>权限级别：</strong>%s</li>
-                    <li><strong>邀请时间：</strong>%s</li>
+                    <li><strong>Tên ví:</strong>%s</li>
+                    <li><strong>Cấp độ quyền:</strong>%s</li>
+                    <li><strong>Thời gian mời:</strong>%s</li>
                 </ul>
                 %s
-                <p>请注册账户后访问：<a href="%s">点击这里</a></p>
-                <p>此邮件由系统自动发送，请勿回复。</p>
+                <p>Vui lòng đăng ký tài khoản để truy cập: <a href="%s">Nhấp vào đây</a></p>
+                <p>Email này được gửi tự động bởi hệ thống, vui lòng không trả lời.</p>
             </body>
             </html>
             """, 
             wallet.getName(),
             getPermissionLevelText(share.getPermissionLevel()),
             share.getCreatedAt().toString(),
-            share.getMessage() != null ? "<p><strong>备注：</strong>" + share.getMessage() + "</p>" : "",
+            share.getMessage() != null ? "<p><strong>Ghi chú:</strong>" + share.getMessage() + "</p>" : "",
             "http://localhost:3000/register"
         );
     }
 
     private String getPermissionLevelText(WalletShare.PermissionLevel level) {
         return switch (level) {
-            case VIEWER -> "只读权限";
-            case EDITOR -> "编辑权限";
-            case OWNER -> "完全权限";
+            case VIEWER -> "Quyền chỉ đọc";
+            case EDITOR -> "Quyền chỉnh sửa";
+            case OWNER -> "Quyền hoàn toàn";
         };
     }
 
@@ -215,7 +215,7 @@ public class WalletShareService {
         return ShareWalletResponse.builder()
                 .id(share.getId())
                 .walletId(share.getWalletId())
-                .walletName(wallet != null ? wallet.getName() : "未知钱包")
+                .walletName(wallet != null ? wallet.getName() : "Ví không xác định")
                 .walletIcon(wallet != null ? wallet.getIcon() : null)
                 .permissionLevel(share.getPermissionLevel())
                 .shareMethod(share.getShareMethod())

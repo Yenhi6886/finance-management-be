@@ -27,21 +27,21 @@ public class WalletShareController {
         ShareWalletResponse response = walletShareService.shareWallet(userId, request);
         return ResponseEntity.ok(response);
     }
-
+    // Lấy các ví mà người dùng hiện tại đã chia sẻ
     @GetMapping("/shared")
     public ResponseEntity<List<ShareWalletResponse>> getSharedWallets(Authentication authentication) {
         Long userId = getCurrentUserId(authentication);
         List<ShareWalletResponse> shares = walletShareService.getSharedWallets(userId);
         return ResponseEntity.ok(shares);
     }
-
+    // Lấy các ví được chia sẻ với người dùng hiện tại
     @GetMapping("/received")
     public ResponseEntity<List<ShareWalletResponse>> getReceivedShares(Authentication authentication) {
         Long userId = getCurrentUserId(authentication);
         List<ShareWalletResponse> shares = walletShareService.getReceivedShares(userId);
         return ResponseEntity.ok(shares);
     }
-
+    // Xóa bỏ quyền chia sẻ
     @DeleteMapping("/{shareId}")
     public ResponseEntity<Void> revokeShare(
             @PathVariable Long shareId,
@@ -51,7 +51,7 @@ public class WalletShareController {
         walletShareService.revokeShare(userId, shareId);
         return ResponseEntity.ok().build();
     }
-
+    // Lấy thông tin chia sẻ qua token
     @GetMapping("/token/{shareToken}")
     public ResponseEntity<ShareWalletResponse> getShareByToken(@PathVariable String shareToken) {
         ShareWalletResponse response = walletShareService.getShareByToken(shareToken);
@@ -59,8 +59,8 @@ public class WalletShareController {
     }
 
     private Long getCurrentUserId(Authentication authentication) {
-        // 从认证信息中获取用户ID
-        // 这里需要根据你的认证实现来调整
+        // Lấy ID người dùng từ thông tin xác thực
+        // Cần điều chỉnh theo cách triển khai xác thực của bạn
         return Long.valueOf(authentication.getName());
     }
 }

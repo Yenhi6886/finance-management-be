@@ -27,7 +27,7 @@ public class WalletController {
     public ResponseEntity<Wallet> getWalletById(@PathVariable Long id, Authentication authentication) {
         Long userId = getCurrentUserId(authentication);
         Wallet wallet = walletRepository.findByIdAndUserAccess(id, userId)
-                .orElseThrow(() -> new RuntimeException("钱包不存在或您没有权限访问"));
+                .orElseThrow(() -> new RuntimeException("Ví không tồn tại hoặc bạn không có quyền truy cập"));
         return ResponseEntity.ok(wallet);
     }
 
@@ -44,7 +44,7 @@ public class WalletController {
     public ResponseEntity<Wallet> updateWallet(@PathVariable Long id, @RequestBody Wallet wallet, Authentication authentication) {
         Long userId = getCurrentUserId(authentication);
         Wallet existingWallet = walletRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new RuntimeException("钱包不存在或您没有权限修改"));
+                .orElseThrow(() -> new RuntimeException("Ví không tồn tại hoặc bạn không có quyền chỉnh sửa"));
         
         existingWallet.setName(wallet.getName());
         existingWallet.setIcon(wallet.getIcon());
@@ -58,7 +58,7 @@ public class WalletController {
     public ResponseEntity<Void> deleteWallet(@PathVariable Long id, Authentication authentication) {
         Long userId = getCurrentUserId(authentication);
         Wallet wallet = walletRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new RuntimeException("钱包不存在或您没有权限删除"));
+                .orElseThrow(() -> new RuntimeException("Ví không tồn tại hoặc bạn không có quyền xóa"));
         
         walletRepository.delete(wallet);
         return ResponseEntity.ok().build();
@@ -68,7 +68,7 @@ public class WalletController {
     public ResponseEntity<Wallet> archiveWallet(@PathVariable Long id, Authentication authentication) {
         Long userId = getCurrentUserId(authentication);
         Wallet wallet = walletRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new RuntimeException("钱包不存在或您没有权限操作"));
+                .orElseThrow(() -> new RuntimeException("Ví không tồn tại hoặc bạn không có quyền thao tác"));
         
         wallet.setIsArchived(true);
         Wallet archivedWallet = walletRepository.save(wallet);
@@ -79,7 +79,7 @@ public class WalletController {
     public ResponseEntity<Wallet> unarchiveWallet(@PathVariable Long id, Authentication authentication) {
         Long userId = getCurrentUserId(authentication);
         Wallet wallet = walletRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new RuntimeException("钱包不存在或您没有权限操作"));
+                .orElseThrow(() -> new RuntimeException("Ví không tồn tại hoặc bạn không có quyền thao tác"));
         
         wallet.setIsArchived(false);
         Wallet unarchivedWallet = walletRepository.save(wallet);
@@ -87,8 +87,8 @@ public class WalletController {
     }
 
     private Long getCurrentUserId(Authentication authentication) {
-        // 从认证信息中获取用户ID
-        // 这里需要根据你的认证实现来调整
+        // Lấy ID người dùng từ thông tin xác thực
+        // Cần điều chỉnh theo cách triển khai xác thực của bạn
         return Long.valueOf(authentication.getName());
     }
 }
