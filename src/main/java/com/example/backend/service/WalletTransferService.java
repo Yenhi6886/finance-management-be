@@ -1,5 +1,6 @@
 package com.example.backend.service;
 
+import com.example.backend.dto.request.WalletTransferRequest;
 import com.example.backend.dto.response.WalletTransferResponse;
 import com.example.backend.dto.request.UpdateProfileRequest;
 import com.example.backend.entity.Wallet;
@@ -20,7 +21,7 @@ public class WalletTransferService {
     private final WalletRepository walletRepository;
 
     @Transactional
-    public WalletTransferResponse transferMoney(Long userId, UpdateProfileRequest.WalletTransferRequest request) {
+    public WalletTransferResponse transferMoney(Long userId, WalletTransferRequest request) {
         // Validate input
         if (request.getFromWalletId().equals(request.getToWalletId())) {
             throw new IllegalArgumentException("Không thể chuyển tiền trong cùng một ví");

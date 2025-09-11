@@ -1,6 +1,7 @@
 package com.example.backend.controller;
 
 import com.example.backend.dto.WalletDto;
+import com.example.backend.dto.request.WalletTransferRequest;
 import com.example.backend.dto.response.WalletTransferResponse;
 import com.example.backend.dto.request.UpdateProfileRequest;
 import com.example.backend.entity.Wallet;
@@ -59,7 +60,7 @@ public class WalletController {
     @PostMapping("/transfer")
     public ResponseEntity<?> transferMoney(
             @AuthenticationPrincipal(expression = "id") Long userId,
-            @Valid @RequestBody UpdateProfileRequest.WalletTransferRequest request) {
+            @Valid @RequestBody WalletTransferRequest request) {
         try {
             WalletTransferResponse response = walletTransferService.transferMoney(userId, request);
             return ResponseEntity.ok(response);
