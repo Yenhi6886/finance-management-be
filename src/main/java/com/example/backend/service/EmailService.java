@@ -23,13 +23,16 @@ public class EmailService {
     @Value("${app.mail.enabled:false}")
     private boolean mailEnabled;
 
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
+
     @Async
     public void sendActivationEmail(String toEmail, String activationToken) {
-        String link = "https://frontend-app/activate?token=" + activationToken;
+        String link = frontendUrl + "/activate?token=" + activationToken;
 
         if (!mailEnabled) {
             logger.info("[MAIL DISABLED] To enable mail sending, set 'app.mail.enabled=true' in application.properties");
-            logger.info("[MAIL DEBUG] Activation link for {}: {}", toEmail, link);
+            logger.info("[MAIL DEBUG] Activation link for {}: ", toEmail, link);
             return;
         }
 
@@ -54,10 +57,12 @@ public class EmailService {
 
     @Async
     public void sendPasswordResetEmail(String toEmail, String token) {
-        String resetUrl = "https://frontend-app/reset-password?token=" + token;
+        String resetUrl = frontendUrl + "/reset-password?token=" + token;
+        logger.info("[MAIL DEBUG] Frontend URL: {}", frontendUrl);
+        logger.info("[MAIL DEBUG] Reset URL: {}", resetUrl);
         if (!mailEnabled) {
             logger.info("[MAIL DISABLED] To enable mail sending, set 'app.mail.enabled=true' in application.properties");
-            logger.info("[MAIL DEBUG] Password reset link for {}: {}", toEmail, resetUrl);
+            logger.info("[MAIL DEBUG] Password reset link for {}: ", toEmail, resetUrl);
             return;
         }
         try {
@@ -65,7 +70,7 @@ public class EmailService {
             message.setFrom(fromEmail);
             message.setTo(toEmail);
             message.setSubject("Yêu cầu đặt lại mật khẩu");
-            message.setText("Để đặt lại mật khẩu của bạn, vui lòng nhấp vào liên kết dưới đây:\n" + resetUrl
+            message.setText("Để đặt lại mật khẩu của bạn, vui lòng nhấp vào liên kết dưới đây: " + resetUrl
                     + "\n\nLiên kết này sẽ hết hạn sau 15 phút. Nếu bạn không yêu cầu điều này, vui lòng bỏ qua email này.");
             mailSender.send(message);
             logger.info("Password reset email sent successfully to {}", toEmail);
