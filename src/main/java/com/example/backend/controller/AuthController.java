@@ -26,67 +26,49 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse> register(@Valid @RequestBody RegisterRequest request) {
-        try {
-            userService.register(request);
-            return ResponseEntity
-                    .ok(ApiResponse.success("Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản."));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        userService.register(request);
+        return ResponseEntity
+                .ok(ApiResponse.success("Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản."));
     }
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse> login(@Valid @RequestBody LoginRequest request) {
-        try {
-            AuthResponse authResponse = userService.login(request);
-            return ResponseEntity.ok(ApiResponse.success("Đăng nhập thành công!", authResponse));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        AuthResponse authResponse = userService.login(request);
+        return ResponseEntity.ok(ApiResponse.success("Đăng nhập thành công!", authResponse));
     }
 
     @GetMapping("/activate")
     public ResponseEntity<ApiResponse> activateAccount(@RequestParam String token) {
-        try {
-            userService.activateAccount(token);
-            return ResponseEntity.ok(ApiResponse.success("Kích hoạt tài khoản thành công!"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        userService.activateAccount(token);
+        return ResponseEntity.ok(ApiResponse.success("Kích hoạt tài khoản thành công!"));
     }
 
     @PostMapping("/forgot-password")
     public ResponseEntity<ApiResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
-        try {
-            userService.forgotPassword(request);
-            return ResponseEntity.ok(ApiResponse.success("Link đặt lại mật khẩu đã được gửi đến email của bạn."));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        userService.requestPasswordReset(request.getEmail());
+        return ResponseEntity.ok(ApiResponse.success("Nếu email của bạn tồn tại trong hệ thống, một liên kết để đặt lại mật khẩu đã được gửi đến."));
+    }
+
+    @GetMapping("/validate-reset-token")
+    public ResponseEntity<ApiResponse> validateResetToken(@RequestParam String token) {
+        userService.validatePasswordResetToken(token);
+        return ResponseEntity.ok(ApiResponse.success("Token hợp lệ."));
     }
 
     @PostMapping("/reset-password")
     public ResponseEntity<ApiResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
-        try {
-            userService.resetPassword(request);
-            return ResponseEntity.ok(ApiResponse.success("Đặt lại mật khẩu thành công!"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        userService.resetPassword(request.getToken(), request.getNewPassword());
+        return ResponseEntity.ok(ApiResponse.success("Mật khẩu đã được thay đổi thành công."));
     }
 
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse> logout(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        try {
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
-                var exp = jwtUtil.getExpirationDateFromToken(token);
-                jwtBlacklistService.blacklistToken(token, exp.getTime());
-            }
-            return ResponseEntity.ok(ApiResponse.success("Đăng xuất thành công!"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            var exp = jwtUtil.getExpirationDateFromToken(token);
+            jwtBlacklistService.blacklistToken(token, exp.getTime());
         }
+        return ResponseEntity.ok(ApiResponse.success("Đăng xuất thành công!"));
     }
 }
