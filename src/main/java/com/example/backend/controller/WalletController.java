@@ -1,6 +1,8 @@
 package com.example.backend.controller;
 
+import com.example.backend.dto.WalletDto;
 import com.example.backend.entity.Wallet;
+import com.example.backend.mapper.WalletMapper;
 import com.example.backend.service.WalletSelectionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,21 +21,23 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class WalletController {
     private final WalletSelectionService walletSelectionService;
+    private final WalletMapper walletMapper;
 
     @GetMapping
-    public ResponseEntity<List<Wallet>> getWallets(@AuthenticationPrincipal(expression = "id") Long userId) {
+    public ResponseEntity<List<WalletDto>> getWallets(@AuthenticationPrincipal(expression = "id") Long userId) {
        try{
               List<Wallet> wallets = walletSelectionService.listUserWallets(userId);
-              return ResponseEntity.ok(wallets);
+              List<WalletDto> walletDtos = walletMapper.toDtoList(wallets);
+              return ResponseEntity.ok(walletDtos);
        }catch (Exception e){
               return ResponseEntity.badRequest().build();
        }
     }
     @GetMapping("/current")
-    public ResponseEntity<Map<String, Long>> getCurrentWallet(@AuthenticationPrincipal(expression = "id") Long userId) {
+    public ResponseEntity<Map<String, Object>> getCurrentWallet(@AuthenticationPrincipal(expression = "id") Long userId) {
         try{
-            Long currentWalletId = walletSelectionService.getCurrentSelectedWalletId(userId).get();
-            return ResponseEntity.ok(Map.of("currentWalletId", currentWalletId));
+           Optional<Long> currentWalletId = walletSelectionService.getCurrentSelectedWalletId(userId);
+            return currentWalletId.<ResponseEntity<Map<String, Object>>>map(aLong -> ResponseEntity.ok(Map.of("currentWalletId", aLong))).orElseGet(() -> ResponseEntity.ok(Map.of("message", "There is no current wallet yet")));
         }catch (Exception e){
             return ResponseEntity.badRequest().build();
         }
