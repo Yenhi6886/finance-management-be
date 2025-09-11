@@ -54,15 +54,6 @@ public class User {
     @Column(name = "provider_id")
     private String providerId;
 
-    @Column(name = "activation_token")
-    private String activationToken;
-
-    @Column(name = "reset_password_token")
-    private String resetPasswordToken;
-
-    @Column(name = "reset_password_expires")
-    private LocalDateTime resetPasswordExpires;
-
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
