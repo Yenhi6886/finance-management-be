@@ -23,12 +23,9 @@ public class EmailService {
     @Value("${app.mail.enabled:false}")
     private boolean mailEnabled;
 
-    @Value("${app.frontend.url}")
-    private String frontendUrl;
-
     @Async
     public void sendActivationEmail(String toEmail, String activationToken) {
-        String link = frontendUrl + "/activate?token=" + activationToken;
+        String link = "http://localhost:3000/activate?token=" + activationToken;
 
         if (!mailEnabled) {
             logger.info("[MAIL DISABLED] To enable mail sending, set 'app.mail.enabled=true' in application.properties");
@@ -57,8 +54,8 @@ public class EmailService {
 
     @Async
     public void sendPasswordResetEmail(String toEmail, String token) {
-        String resetUrl = frontendUrl + "/reset-password?token=" + token;
-        logger.info("[MAIL DEBUG] Frontend URL: {}", frontendUrl);
+        String resetUrl = "http://localhost:3000/reset-password?token=" + token;
+        logger.info("[MAIL DEBUG] Frontend URL: http://localhost:3000");
         logger.info("[MAIL DEBUG] Reset URL: {}", resetUrl);
         if (!mailEnabled) {
             logger.info("[MAIL DISABLED] To enable mail sending, set 'app.mail.enabled=true' in application.properties");
