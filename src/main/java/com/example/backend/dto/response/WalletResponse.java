@@ -13,9 +13,12 @@ public class WalletResponse {
     private String icon;
     private Currency currency;
     private BigDecimal initialBalance;
-    private BigDecimal balance;
+    private BigDecimal balance; // For simplicity, balance is same as initialBalance on creation
     private String description;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private String permissions;
+    
+    // Fields for shared wallets
+    private String sharedBy;
+    private String permissionLevel;
 }

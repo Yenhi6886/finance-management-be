@@ -1,16 +1,15 @@
 package com.example.backend.service;
 
 import com.example.backend.dto.request.CreateWalletRequest;
-import com.example.backend.dto.request.UpdateWalletRequest;
 import com.example.backend.dto.response.WalletResponse;
 import com.example.backend.entity.User;
 import com.example.backend.entity.Wallet;
+import com.example.backend.entity.WalletShare;
 import com.example.backend.mapper.WalletMapper;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.repository.WalletRepository;
-import jakarta.persistence.EntityNotFoundException;
+import com.example.backend.repository.WalletShareRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +28,9 @@ public class WalletService {
     @Autowired
     private WalletMapper walletMapper;
 
+    @Autowired
+    private WalletShareRepository walletShareRepository;
+
     public WalletResponse createWallet(CreateWalletRequest request, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
@@ -45,42 +47,49 @@ public class WalletService {
                 .collect(Collectors.toList());
     }
 
-    public WalletResponse getWalletById(Long walletId, Long userId) {
-        Wallet wallet = walletRepository.findById(walletId)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy ví với id: " + walletId));
-
-        if (!wallet.getUser().getId().equals(userId)) {
-            throw new AccessDeniedException("Bạn không có quyền xem ví này");
-        }
-
-        return walletMapper.toWalletResponse(wallet);
+    public List<WalletResponse> getSharedWalletsByUserId(Long userId) {
+        List<WalletShare> walletShares = walletShareRepository.findSharedWalletsByUserId(userId);
+        return walletShares.stream()
+                .map(ws -> {
+                    WalletResponse response = walletMapper.toWalletResponse(ws.getWallet());
+                    response.setSharedBy(ws.getOwner().getFirstName() + " " + ws.getOwner().getLastName());
+                    response.setPermissionLevel(ws.getPermissionLevel().name());
+                    return response;
+                })
+                .collect(Collectors.toList());
     }
 
-    public WalletResponse updateWallet(Long walletId, UpdateWalletRequest request, Long userId) {
-        Wallet wallet = walletRepository.findById(walletId)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy ví với id: " + walletId));
+    public List<WalletResponse> getAllWalletsByUserId(Long userId) {
+        // Lấy ví của user
+        List<Wallet> userWallets = walletRepository.findByUserId(userId);
+        List<WalletResponse> userWalletResponses = userWallets.stream()
+                .map(walletMapper::toWalletResponse)
+                .collect(Collectors.toList());
 
-        if (!wallet.getUser().getId().equals(userId)) {
-            throw new AccessDeniedException("Bạn không có quyền chỉnh sửa ví này");
-        }
+        // Lấy ví được share với user
+        List<WalletShare> sharedWallets = walletShareRepository.findSharedWalletsByUserId(userId);
+        List<WalletResponse> sharedWalletResponses = sharedWallets.stream()
+                .map(ws -> {
+                    WalletResponse response = walletMapper.toWalletResponse(ws.getWallet());
+                    // Thêm thông tin về quyền truy cập
+                    response.setSharedBy(ws.getOwner().getFirstName() + " " + ws.getOwner().getLastName());
+                    response.setPermissionLevel(ws.getPermissionLevel().name());
+                    return response;
+                })
+                .collect(Collectors.toList());
 
-        wallet.setName(request.getName());
-        wallet.setIcon(request.getIcon());
-        wallet.setCurrency(request.getCurrency());
-        wallet.setDescription(request.getDescription());
-
-        Wallet updatedWallet = walletRepository.save(wallet);
-        return walletMapper.toWalletResponse(updatedWallet);
+        // Kết hợp cả hai danh sách
+        userWalletResponses.addAll(sharedWalletResponses);
+        return userWalletResponses;
     }
 
-    public void deleteWallet(Long walletId, Long userId) {
-        Wallet wallet = walletRepository.findById(walletId)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy ví với id: " + walletId));
-
-        if (!wallet.getUser().getId().equals(userId)) {
-            throw new AccessDeniedException("Bạn không có quyền xóa ví này");
-        }
-
-        walletRepository.delete(wallet);
+    /**
+     * Kiểm tra user có phải là chủ sở hữu ví không
+     */
+    public boolean isWalletOwner(Long walletId, Long userId) {
+        return walletRepository.findById(walletId)
+                .map(wallet -> wallet.getUser().getId().equals(userId))
+                .orElse(false);
     }
+
 }

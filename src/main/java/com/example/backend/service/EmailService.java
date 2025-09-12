@@ -1,78 +1,177 @@
 package com.example.backend.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.backend.entity.User;
+import com.example.backend.entity.Wallet;
+import com.example.backend.entity.WalletShare;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class EmailService {
 
-    private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
+    private final JavaMailSender mailSender;
 
-    @Autowired
-    private JavaMailSender mailSender;
-
-    @Value("${spring.mail.username}")
+    @Value("${app.mail.from:noreply@finance-management.com}")
     private String fromEmail;
 
-    @Value("${app.mail.enabled:false}")
-    private boolean mailEnabled;
+    @Value("${app.frontend.url:http://localhost:3000}")
+    private String frontendUrl;
 
-    @Async
-    public void sendActivationEmail(String toEmail, String activationToken) {
-        String link = "http://localhost:3000/activate?token=" + activationToken;
-
-        if (!mailEnabled) {
-            logger.info("[MAIL DISABLED] To enable mail sending, set 'app.mail.enabled=true' in application.properties");
-            logger.info("[MAIL DEBUG] Activation link for {}: ", toEmail, link);
-            return;
-        }
-
+    public void sendWalletShareNotification(WalletShare walletShare, String customMessage) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
-            message.setTo(toEmail);
-            message.setSubject("Chào mừng! Vui lòng kích hoạt tài khoản của bạn");
+            message.setTo(walletShare.getSharedWithUser().getEmail());
+            message.setSubject("Bạn đã được chia sẻ ví: " + walletShare.getWallet().getName());
 
-            String text = "Cảm ơn bạn đã đăng ký.\n\n" +
-                    "Vui lòng nhấp vào liên kết dưới đây để kích hoạt tài khoản của bạn:\n" +
-                    link + "\n\n" +
-                    "Nếu bạn không yêu cầu điều này, vui lòng bỏ qua email này.";
+            String emailContent = buildWalletShareEmailContent(walletShare, customMessage);
+            message.setText(emailContent);
 
-            message.setText(text);
             mailSender.send(message);
-            logger.info("Activation email sent successfully to {}", toEmail);
+            log.info("Email thông báo chia sẻ ví đã được gửi đến: {}", walletShare.getSharedWithUser().getEmail());
         } catch (Exception e) {
-            logger.error("Failed to send activation email to {}: {}", toEmail, e.getMessage());
+            log.error("Lỗi khi gửi email thông báo chia sẻ ví: {}", e.getMessage(), e);
         }
     }
 
-    @Async
-    public void sendPasswordResetEmail(String toEmail, String token) {
-        String resetUrl = "http://localhost:3000/reset-password?token=" + token;
-        logger.info("[MAIL DEBUG] Frontend URL: http://localhost:3000");
-        logger.info("[MAIL DEBUG] Reset URL: {}", resetUrl);
-        if (!mailEnabled) {
-            logger.info("[MAIL DISABLED] To enable mail sending, set 'app.mail.enabled=true' in application.properties");
-            logger.info("[MAIL DEBUG] Password reset link for {}: ", toEmail, resetUrl);
-            return;
+    private String buildWalletShareEmailContent(WalletShare walletShare, String customMessage) {
+        User owner = walletShare.getOwner();
+        User sharedWithUser = walletShare.getSharedWithUser();
+        Wallet wallet = walletShare.getWallet();
+
+        StringBuilder content = new StringBuilder();
+        content.append("Xin chào ").append(sharedWithUser.getFirstName()).append(" ").append(sharedWithUser.getLastName()).append(",\n\n");
+        
+        content.append(owner.getFirstName()).append(" ").append(owner.getLastName())
+               .append(" đã chia sẻ ví '").append(wallet.getName()).append("' với bạn.\n\n");
+        
+        content.append("Thông tin ví:\n");
+        content.append("- Tên ví: ").append(wallet.getName()).append("\n");
+        content.append("- Loại tiền tệ: ").append(wallet.getCurrency()).append("\n");
+        content.append("- Số dư ban đầu: ").append(wallet.getInitialBalance()).append(" ").append(wallet.getCurrency()).append("\n");
+        content.append("- Quyền truy cập: ").append(walletShare.getPermissionLevel().getDisplayName()).append("\n");
+        
+        if (wallet.getDescription() != null && !wallet.getDescription().isEmpty()) {
+            content.append("- Mô tả: ").append(wallet.getDescription()).append("\n");
         }
+        
+        if (customMessage != null && !customMessage.isEmpty()) {
+            content.append("\nLời nhắn từ ").append(owner.getFirstName()).append(":\n");
+            content.append(customMessage).append("\n");
+        }
+        
+        content.append("\nBạn có thể truy cập ví này trong ứng dụng quản lý tài chính của mình.\n");
+        content.append("Đăng nhập tại: ").append(frontendUrl).append("/login\n\n");
+        
+        content.append("Trân trọng,\n");
+        content.append("Đội ngũ Finance Management");
+
+        return content.toString();
+    }
+
+    public void sendWalletShareAcceptedNotification(WalletShare walletShare) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
-            message.setTo(toEmail);
-            message.setSubject("Yêu cầu đặt lại mật khẩu");
-            message.setText("Để đặt lại mật khẩu của bạn, vui lòng nhấp vào liên kết dưới đây: " + resetUrl
-                    + "\n\nLiên kết này sẽ hết hạn sau 15 phút. Nếu bạn không yêu cầu điều này, vui lòng bỏ qua email này.");
+            message.setTo(walletShare.getOwner().getEmail());
+            message.setSubject("Ví của bạn đã được chấp nhận chia sẻ");
+
+            String emailContent = buildWalletShareAcceptedEmailContent(walletShare);
+            message.setText(emailContent);
+
             mailSender.send(message);
-            logger.info("Password reset email sent successfully to {}", toEmail);
+            log.info("Email thông báo chấp nhận chia sẻ ví đã được gửi đến: {}", walletShare.getOwner().getEmail());
         } catch (Exception e) {
-            logger.error("Failed to send password reset email to {}: {}", toEmail, e.getMessage());
+            log.error("Lỗi khi gửi email thông báo chấp nhận chia sẻ ví: {}", e.getMessage(), e);
         }
+    }
+
+    private String buildWalletShareAcceptedEmailContent(WalletShare walletShare) {
+        User owner = walletShare.getOwner();
+        User sharedWithUser = walletShare.getSharedWithUser();
+        Wallet wallet = walletShare.getWallet();
+
+        StringBuilder content = new StringBuilder();
+        content.append("Xin chào ").append(owner.getFirstName()).append(" ").append(owner.getLastName()).append(",\n\n");
+        
+        content.append(sharedWithUser.getFirstName()).append(" ").append(sharedWithUser.getLastName())
+               .append(" đã chấp nhận chia sẻ ví '").append(wallet.getName()).append("' với bạn.\n\n");
+        
+        content.append("Bây giờ ").append(sharedWithUser.getFirstName())
+               .append(" có thể truy cập ví này với quyền: ")
+               .append(walletShare.getPermissionLevel().getDisplayName()).append("\n\n");
+        
+        content.append("Trân trọng,\n");
+        content.append("Đội ngũ Finance Management");
+
+        return content.toString();
+    }
+
+    public void sendActivationEmail(String email, String token) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(email);
+            message.setSubject("Kích hoạt tài khoản Finance Management");
+
+            String emailContent = buildActivationEmailContent(token);
+            message.setText(emailContent);
+
+            mailSender.send(message);
+            log.info("Email kích hoạt tài khoản đã được gửi đến: {}", email);
+        } catch (Exception e) {
+            log.error("Lỗi khi gửi email kích hoạt tài khoản: {}", e.getMessage(), e);
+        }
+    }
+
+    public void sendPasswordResetEmail(String email, String token) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(email);
+            message.setSubject("Đặt lại mật khẩu Finance Management");
+
+            String emailContent = buildPasswordResetEmailContent(token);
+            message.setText(emailContent);
+
+            mailSender.send(message);
+            log.info("Email đặt lại mật khẩu đã được gửi đến: {}", email);
+        } catch (Exception e) {
+            log.error("Lỗi khi gửi email đặt lại mật khẩu: {}", e.getMessage(), e);
+        }
+    }
+
+    private String buildActivationEmailContent(String token) {
+        StringBuilder content = new StringBuilder();
+        content.append("Xin chào,\n\n");
+        content.append("Cảm ơn bạn đã đăng ký tài khoản Finance Management!\n\n");
+        content.append("Để kích hoạt tài khoản, vui lòng nhấp vào liên kết sau:\n");
+        content.append(frontendUrl).append("/activate?token=").append(token).append("\n\n");
+        content.append("Liên kết này sẽ hết hạn sau 1 giờ.\n\n");
+        content.append("Nếu bạn không yêu cầu tạo tài khoản này, vui lòng bỏ qua email này.\n\n");
+        content.append("Trân trọng,\n");
+        content.append("Đội ngũ Finance Management");
+
+        return content.toString();
+    }
+
+    private String buildPasswordResetEmailContent(String token) {
+        StringBuilder content = new StringBuilder();
+        content.append("Xin chào,\n\n");
+        content.append("Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản Finance Management.\n\n");
+        content.append("Để đặt lại mật khẩu, vui lòng nhấp vào liên kết sau:\n");
+        content.append(frontendUrl).append("/reset-password?token=").append(token).append("\n\n");
+        content.append("Liên kết này sẽ hết hạn sau 15 phút.\n\n");
+        content.append("Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.\n\n");
+        content.append("Trân trọng,\n");
+        content.append("Đội ngũ Finance Management");
+
+        return content.toString();
     }
 }
