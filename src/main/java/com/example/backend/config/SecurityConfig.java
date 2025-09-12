@@ -84,15 +84,16 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/uploads/avatars/**").permitAll()
-                        .requestMatchers("/login/oauth2/code/*").permitAll() // Allow OAuth2 callback URIs
-                        .requestMatchers("/public/**").permitAll() // Allow public access to OAuth2 success redirect
+                        .requestMatchers("/login/oauth2/code/*").permitAll()
+                        .requestMatchers("/public/**").permitAll()
+                        .requestMatchers("/api/wallets/**").authenticated()
                         .anyRequest().authenticated());
 
         http
                 .oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(endpoint -> endpoint
                                 .baseUri("/oauth2/authorize")
-                                .authorizationRequestRepository(httpCookieOAuth2AuthorizationRequestRepository())) // Call bean method
+                                .authorizationRequestRepository(httpCookieOAuth2AuthorizationRequestRepository()))
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserService)
                                 .oidcUserService(oidcUserRequest -> {
@@ -101,8 +102,8 @@ public class SecurityConfig {
                                     return new DefaultOidcUser(oAuth2User.getAuthorities(), oidcUserRequest.getIdToken(), oidcUserInfo, "email");
                                 })
                         )
-                        .successHandler(oAuth2LoginSuccessHandler(jwtUtil, appProperties, httpCookieOAuth2AuthorizationRequestRepository())) // Call bean method
-                        .failureHandler(oAuth2AuthenticationFailureHandler(httpCookieOAuth2AuthorizationRequestRepository())) // Call bean method
+                        .successHandler(oAuth2LoginSuccessHandler(jwtUtil, appProperties, httpCookieOAuth2AuthorizationRequestRepository()))
+                        .failureHandler(oAuth2AuthenticationFailureHandler(httpCookieOAuth2AuthorizationRequestRepository()))
                 );
 
         http.authenticationProvider(authenticationProvider());
