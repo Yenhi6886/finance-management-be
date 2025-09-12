@@ -27,10 +27,12 @@ public class WalletMapper {
         response.setIcon(wallet.getIcon());
         response.setCurrency(wallet.getCurrency());
         response.setInitialBalance(wallet.getInitialBalance());
-        response.setBalance(wallet.getInitialBalance()); // Logic to calculate current balance can be added later
         response.setDescription(wallet.getDescription());
         response.setCreatedAt(wallet.getCreatedAt());
         response.setUpdatedAt(wallet.getUpdatedAt());
+        // Tạm thời gán quyền là owner, sau này có thể thêm logic phức tạp hơn
+        response    .setPermissions("owner");
         return response;
     }
+
 }
