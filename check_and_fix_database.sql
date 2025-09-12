@@ -19,7 +19,6 @@ MODIFY COLUMN permission_level ENUM('VIEW', 'EDIT', 'ADMIN') NOT NULL DEFAULT 'V
 DESCRIBE wallet_shares;
 
 -- 6. Test insert thủ công
--- ffff
 INSERT INTO wallet_shares (wallet_id, owner_id, shared_with_user_id, permission_level, is_active) 
 VALUES (6, 1, 2, 'EDIT', TRUE);
 
