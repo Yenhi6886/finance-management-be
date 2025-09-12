@@ -9,7 +9,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -53,5 +55,41 @@ public class WalletSelectionService {
         //cap nhat vi hien tai
         settings.setCurrentWallet(walletRepository.getReferenceById(walletId));
         userSettingsRepository.save(settings);
+    }
+
+    // Tính tổng số dư theo từng loại tiền tệ
+    public Map<String, BigDecimal> getTotalBalanceByCurrency(Long userId) {
+        List<Wallet> wallets = listUserWallets(userId);
+        return wallets.stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                    wallet -> wallet.getCurrency().name(),
+                    java.util.stream.Collectors.reducing(
+                        BigDecimal.ZERO,
+                        Wallet::getInitialBalance,
+                        BigDecimal::add
+                    )
+                ));
+    }
+
+    // Tính tổng số dư quy đổi về VND (giả sử tỷ giá cố định)
+    public BigDecimal getTotalBalanceInVND(Long userId) {
+        List<Wallet> wallets = listUserWallets(userId);
+        BigDecimal totalVND = BigDecimal.ZERO;
+
+        for (Wallet wallet : wallets) {
+            BigDecimal balanceInVND = convertToVND(wallet.getInitialBalance(), wallet.getCurrency());
+            totalVND = totalVND.add(balanceInVND);
+        }
+
+        return totalVND;
+    }
+
+    // Phương thức quy đổi tiền tệ về VND (có thể tùy chỉnh tỷ giá)
+    private BigDecimal convertToVND(BigDecimal amount, com.example.backend.enums.Currency currency) {
+        return switch (currency) {
+            case VND -> amount;
+            case USD -> amount.multiply(new BigDecimal("24000")); // 1 USD = 24,000 VND
+            default -> amount; // Mặc định giữ nguyên
+        };
     }
 }

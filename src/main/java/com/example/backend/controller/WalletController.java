@@ -3,6 +3,7 @@ package com.example.backend.controller;
 import com.example.backend.dto.WalletDto;
 import com.example.backend.dto.request.WalletTransferRequest;
 import com.example.backend.dto.response.WalletTransferResponse;
+import com.example.backend.dto.response.WalletSummaryResponse;
 import com.example.backend.dto.request.UpdateProfileRequest;
 import com.example.backend.entity.Wallet;
 import com.example.backend.exception.InsufficientBalanceException;
@@ -97,5 +98,27 @@ public class WalletController {
                     .body(Map.of("valid", false, "message", "Có lỗi xảy ra khi kiểm tra số dư"));
         }
     }
-}
 
+    @GetMapping("/total-balance")
+    public ResponseEntity<WalletSummaryResponse> getTotalBalance(@AuthenticationPrincipal(expression = "id") Long userId) {
+        try {
+            Map<String, BigDecimal> totalBalanceByCurrency = walletSelectionService.getTotalBalanceByCurrency(userId);
+            BigDecimal totalBalanceVND = walletSelectionService.getTotalBalanceInVND(userId);
+            int totalWallets = walletSelectionService.listUserWallets(userId).size();
+
+            WalletSummaryResponse response = WalletSummaryResponse.builder()
+                    .totalBalanceByCurrency(totalBalanceByCurrency)
+                    .totalBalanceVND(totalBalanceVND)
+                    .totalWallets(totalWallets)
+                    .message("Lấy tổng số dư thành công")
+                    .build();
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(WalletSummaryResponse.builder()
+                            .message("Có lỗi xảy ra khi tính tổng số dư")
+                            .build());
+        }
+    }
+}
