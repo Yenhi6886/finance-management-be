@@ -1,10 +1,9 @@
 package com.example.backend.controller;
 
-import com.example.backend.dto.WalletDto;
 import com.example.backend.dto.request.WalletTransferRequest;
+import com.example.backend.dto.response.WalletResponse;
 import com.example.backend.dto.response.WalletTransferResponse;
 import com.example.backend.dto.response.WalletSummaryResponse;
-import com.example.backend.dto.request.UpdateProfileRequest;
 import com.example.backend.entity.Wallet;
 import com.example.backend.exception.InsufficientBalanceException;
 import com.example.backend.exception.WalletNotFoundException;
@@ -32,37 +31,40 @@ public class WalletController {
     private final WalletTransferService walletTransferService;
 
     @GetMapping
-    public ResponseEntity<List<WalletDto>> getWallets(@AuthenticationPrincipal(expression = "id") Long userId) {
-       try{
-              List<Wallet> wallets = walletSelectionService.listUserWallets(userId);
-              List<WalletDto> walletDtos = new ArrayList<>();
-              for (Wallet wallet : wallets) {
-                        WalletDto walletDto = walletMapper.toWalletDto(wallet);
-                        walletDtos.add(walletDto);
-              }
-              return ResponseEntity.ok(walletDtos);
-       }catch (Exception e){
-              return ResponseEntity.badRequest().build();
-       }
+    public ResponseEntity<List<WalletResponse>> getWallets(@AuthenticationPrincipal(expression = "id") Long userId) {
+        try {
+            List<Wallet> wallets = walletSelectionService.listUserWallets(userId);
+            List<WalletResponse> walletResponses = new ArrayList<>();
+            for (Wallet wallet : wallets) {
+                WalletResponse walletResponse = walletMapper.toWalletResponse(wallet);
+                walletResponses.add(walletResponse);
+            }
+            return ResponseEntity.ok(walletResponses);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
+
     @GetMapping("/current")
     public ResponseEntity<Map<String, Object>> getCurrentWallet(@AuthenticationPrincipal(expression = "id") Long userId) {
-        try{
-           Optional<Long> currentWalletId = walletSelectionService.getCurrentSelectedWalletId(userId);
+        try {
+            Optional<Long> currentWalletId = walletSelectionService.getCurrentSelectedWalletId(userId);
             return currentWalletId.<ResponseEntity<Map<String, Object>>>map(aLong -> ResponseEntity.ok(Map.of("currentWalletId", aLong))).orElseGet(() -> ResponseEntity.ok(Map.of("message", "There is no current wallet yet")));
-        }catch (Exception e){
+        } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
+
     @PutMapping("/current/{walletId}")
     public ResponseEntity<Void> setCurrentWallet(@AuthenticationPrincipal(expression = "id") Long userId, @org.springframework.web.bind.annotation.PathVariable Long walletId) {
-        try{
+        try {
             walletSelectionService.setCurrentSelectedWallet(userId, walletId);
             return ResponseEntity.ok().build();
-        }catch (Exception e){
+        } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
+
     @PostMapping("/transfer")
     public ResponseEntity<?> transferMoney(
             @AuthenticationPrincipal(expression = "id") Long userId,
@@ -87,8 +89,8 @@ public class WalletController {
         try {
             boolean isValid = walletTransferService.validateTransferAmount(walletId, userId, amount);
             return ResponseEntity.ok(Map.of(
-                "valid", isValid,
-                "message", isValid ? "Số dư đủ để thực hiện giao dịch" : "Số dư không đủ để thực hiện giao dịch"
+                    "valid", isValid,
+                    "message", isValid ? "Số dư đủ để thực hiện giao dịch" : "Số dư không đủ để thực hiện giao dịch"
             ));
         } catch (WalletNotFoundException e) {
             return ResponseEntity.badRequest()
