@@ -31,6 +31,8 @@ public class WalletMapper {
         response.setDescription(wallet.getDescription());
         response.setCreatedAt(wallet.getCreatedAt());
         response.setUpdatedAt(wallet.getUpdatedAt());
+        // Tạm thời gán quyền là owner, sau này có thể thêm logic phức tạp hơn
+        response    .setPermissions("owner");
         return response;
     }
 }
