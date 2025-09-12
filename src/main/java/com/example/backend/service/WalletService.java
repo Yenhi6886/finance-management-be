@@ -65,6 +65,7 @@ public class WalletService {
 
         wallet.setName(request.getName());
         wallet.setIcon(request.getIcon());
+        wallet.setBalance(request.getBalance());
         wallet.setCurrency(request.getCurrency());
         wallet.setDescription(request.getDescription());
 
@@ -147,12 +148,21 @@ public class WalletService {
 
         checkIfWalletIsArchived(walletToDelete);
 
+        // Xóa hết số tiền có trong ví
+        walletToDelete.setBalance(BigDecimal.ZERO);
+        
+        // Xóa hết các giao dịch của ví  
+        transactionRepository.deleteByWalletId(walletId);
+
+        // Cập nhật user settings nếu có
         List<UserSettings> settingsToUpdate = userSettingsRepository.findByCurrentWalletId(walletId);
         settingsToUpdate.forEach(setting -> setting.setCurrentWallet(null));
         userSettingsRepository.saveAll(settingsToUpdate);
 
+        // Xóa các chia sẻ ví
         walletShareRepository.deleteByWalletId(walletId);
 
+        // Xóa ví
         walletRepository.delete(walletToDelete);
     }
 
