@@ -17,4 +17,8 @@ public class WalletResponse {
     private String description;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    
+    // Fields for shared wallets
+    private String sharedBy;
+    private String permissionLevel;
 }
