@@ -17,6 +17,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,7 +34,11 @@ public class WalletController {
     public ResponseEntity<List<WalletDto>> getWallets(@AuthenticationPrincipal(expression = "id") Long userId) {
        try{
               List<Wallet> wallets = walletSelectionService.listUserWallets(userId);
-              List<WalletDto> walletDtos = walletMapper.toDtoList(wallets);
+              List<WalletDto> walletDtos = new ArrayList<>();
+              for (Wallet wallet : wallets) {
+                        WalletDto walletDto = walletMapper.toWalletDto(wallet);
+                        walletDtos.add(walletDto);
+              }
               return ResponseEntity.ok(walletDtos);
        }catch (Exception e){
               return ResponseEntity.badRequest().build();
@@ -64,13 +69,7 @@ public class WalletController {
         try {
             WalletTransferResponse response = walletTransferService.transferMoney(userId, request);
             return ResponseEntity.ok(response);
-        } catch (InsufficientBalanceException e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", e.getMessage()));
-        } catch (WalletNotFoundException e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", e.getMessage()));
-        } catch (IllegalArgumentException e) {
+        } catch (InsufficientBalanceException | IllegalArgumentException | WalletNotFoundException e) {
             return ResponseEntity.badRequest()
                     .body(Map.of("success", false, "message", e.getMessage()));
         } catch (Exception e) {

@@ -1,5 +1,6 @@
 package com.example.backend.dto;
 
+import com.example.backend.enums.Currency;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,7 +18,8 @@ public class WalletDto {
     private String name;
     private String icon;
     private BigDecimal balance;
-    private String currencyCode;
+    private BigDecimal initialBalance;
+    private Currency currency;
     private String description;
     private boolean archived;
     private LocalDateTime createdAt;
