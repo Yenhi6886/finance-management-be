@@ -12,8 +12,7 @@ public class WalletResponse {
     private String name;
     private String icon;
     private Currency currency;
-    private BigDecimal initialBalance;
-    private BigDecimal balance; // For simplicity, balance is same as initialBalance on creation
+    private BigDecimal initialBalance;// For simplicity, balance is same as initialBalance on creation
     private String description;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

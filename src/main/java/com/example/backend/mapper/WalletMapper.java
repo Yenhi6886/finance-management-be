@@ -27,7 +27,6 @@ public class WalletMapper {
         response.setIcon(wallet.getIcon());
         response.setCurrency(wallet.getCurrency());
         response.setInitialBalance(wallet.getInitialBalance());
-        response.setBalance(wallet.getInitialBalance()); // Logic to calculate current balance can be added later
         response.setDescription(wallet.getDescription());
         response.setCreatedAt(wallet.getCreatedAt());
         response.setUpdatedAt(wallet.getUpdatedAt());
@@ -35,4 +34,5 @@ public class WalletMapper {
         response    .setPermissions("owner");
         return response;
     }
+
 }
