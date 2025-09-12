@@ -36,25 +36,25 @@ public class WalletTransferService {
             .orElseThrow(() -> new WalletNotFoundException("Không tìm thấy ví đích"));
 
         // Kiểm tra số dư ví nguồn
-        if (fromWallet.getBalance().compareTo(request.getAmount()) < 0) {
+        if (fromWallet.getInitialBalance().compareTo(request.getAmount()) < 0) {
             throw new InsufficientBalanceException(
                 String.format("Số dư không đủ. Số dư hiện tại: %s %s, Số tiền cần chuyển: %s %s",
-                    fromWallet.getBalance(), fromWallet.getCurrencyCode(),
-                    request.getAmount(), fromWallet.getCurrencyCode())
+                    fromWallet.getInitialBalance(), fromWallet.getCurrency(),
+                    request.getAmount(), fromWallet.getCurrency())
             );
         }
 
         // Kiểm tra cùng loại tiền tệ
-        if (!fromWallet.getCurrencyCode().equals(toWallet.getCurrencyCode())) {
+        if (!fromWallet.getCurrency().equals(toWallet.getCurrency())) {
             throw new IllegalArgumentException("Hai ví phải cùng loại tiền tệ");
         }
 
         // Thực hiện chuyển tiền
-        BigDecimal newFromBalance = fromWallet.getBalance().subtract(request.getAmount());
-        BigDecimal newToBalance = toWallet.getBalance().add(request.getAmount());
+        BigDecimal newFromBalance = fromWallet.getInitialBalance().subtract(request.getAmount());
+        BigDecimal newToBalance = toWallet.getInitialBalance().add(request.getAmount());
 
-        fromWallet.setBalance(newFromBalance);
-        toWallet.setBalance(newToBalance);
+        fromWallet.setInitialBalance(newFromBalance);
+        toWallet.setInitialBalance(newToBalance);
 
         // Lưu thay đổi
         walletRepository.save(fromWallet);
@@ -73,7 +73,7 @@ public class WalletTransferService {
     public boolean validateTransferAmount(Long walletId, Long userId, BigDecimal amount) {
         Wallet wallet = walletRepository.findByIdAndUserId(walletId, userId)
             .orElseThrow(() -> new WalletNotFoundException("Không tìm thấy ví"));
-        return wallet.getBalance().compareTo(amount) >= 0;
+        return wallet.getInitialBalance().compareTo(amount) >= 0;
     }
 }
 

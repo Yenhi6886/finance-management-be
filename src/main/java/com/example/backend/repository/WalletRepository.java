@@ -13,10 +13,10 @@ import java.util.Optional;
 public interface WalletRepository extends JpaRepository<Wallet, Long> {
     List<Wallet> findByUserId(Long userId);
     boolean existsByIdAndUserId(Long id, Long userId);
-    List<Wallet> findAllByUserIdAndArchivedFalse(Long userId);
+    List<Wallet> findAllByUserId(Long userId);
     Optional<Wallet> findByIdAndUserId(Long id, Long userId);
 
-    @Query("SELECT w FROM Wallet w WHERE w.user.id = :userId AND w.archived = false ORDER BY w.createdAt DESC")
+    @Query("SELECT w FROM Wallet w WHERE w.user.id = :userId ORDER BY w.createdAt DESC")
     List<Wallet> findAllActiveWalletsByUserIdOrderByCreatedAtDesc(@Param("userId")  Long userId);
 }
 

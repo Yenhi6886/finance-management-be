@@ -22,7 +22,7 @@ public class WalletSelectionService {
     private final UserRepository userRepository;
 
     public List<Wallet> listUserWallets(Long userId) {
-        return  walletRepository.findAllByUserIdAndArchivedFalse(userId);
+        return  walletRepository.findAllByUserId(userId);
     }
 
     //lay ID vi hien tai dang duoc chon
