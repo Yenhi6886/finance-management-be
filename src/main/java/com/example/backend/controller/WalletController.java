@@ -35,8 +35,26 @@ public class WalletController {
     public ResponseEntity<ApiResponse<List<WalletResponse>>> getUserWallets(
             @AuthenticationPrincipal CustomUserDetails currentUser) {
 
-        List<WalletResponse> wallets = walletService.getWalletsByUserId(currentUser.getId());
+        List<WalletResponse> wallets = walletService.getAllWalletsByUserId(currentUser.getId());
         ApiResponse<List<WalletResponse>> apiResponse = new ApiResponse<>(true, "Lấy danh sách ví thành công", wallets);
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @GetMapping("/my-wallets")
+    public ResponseEntity<ApiResponse<List<WalletResponse>>> getMyWallets(
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+
+        List<WalletResponse> wallets = walletService.getWalletsByUserId(currentUser.getId());
+        ApiResponse<List<WalletResponse>> apiResponse = new ApiResponse<>(true, "Lấy danh sách ví của tôi thành công", wallets);
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @GetMapping("/shared-with-me")
+    public ResponseEntity<ApiResponse<List<WalletResponse>>> getSharedWallets(
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+
+        List<WalletResponse> wallets = walletService.getSharedWalletsByUserId(currentUser.getId());
+        ApiResponse<List<WalletResponse>> apiResponse = new ApiResponse<>(true, "Lấy danh sách ví được chia sẻ thành công", wallets);
         return ResponseEntity.ok(apiResponse);
     }
 }
