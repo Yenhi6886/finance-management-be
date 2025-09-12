@@ -9,9 +9,13 @@ CREATE TABLE `users` (
                          `username` VARCHAR(50) NOT NULL UNIQUE,
                          `email` VARCHAR(100) NOT NULL UNIQUE,
                          `password` VARCHAR(255) NOT NULL,
+                         `first_name` VARCHAR(50) NOT NULL,
+                         `last_name` VARCHAR(50) NOT NULL,
                          `avatar_url` VARCHAR(255) DEFAULT NULL,
                          `phone_number` VARCHAR(20) DEFAULT NULL,
-                         `is_active` BOOLEAN DEFAULT FALSE,
+                         `status` ENUM('INACTIVE', 'ACTIVE', 'SUSPENDED') NOT NULL DEFAULT 'INACTIVE',
+                         `auth_provider` ENUM('LOCAL', 'GOOGLE', 'FACEBOOK', 'GITHUB') NOT NULL DEFAULT 'LOCAL',
+                         `provider_id` VARCHAR(255) DEFAULT NULL,
                          `activation_token` VARCHAR(255) DEFAULT NULL,
                          `reset_password_token` VARCHAR(255) DEFAULT NULL,
                          `reset_password_expires` DATETIME DEFAULT NULL,
@@ -41,10 +45,9 @@ CREATE TABLE `wallets` (
                            `user_id` INT UNSIGNED NOT NULL, -- Chủ sở hữu ví
                            `name` VARCHAR(100) NOT NULL,
                            `icon` VARCHAR(255) DEFAULT NULL,
-                           `balance` DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
-                           `currency_code` VARCHAR(10) NOT NULL DEFAULT 'VND', -- VND, USD...
+                           `currency` ENUM('VND', 'USD', 'EUR', 'JPY', 'GBP', 'AUD', 'CAD', 'CHF', 'CNY', 'KRW') NOT NULL DEFAULT 'VND',
+                           `initial_balance` DECIMAL(19, 4) NOT NULL DEFAULT 0.0000,
                            `description` TEXT DEFAULT NULL,
-                           `is_archived` BOOLEAN DEFAULT FALSE, -- Dành cho chức năng lưu trữ ví
                            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                            `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                            FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
@@ -56,12 +59,38 @@ CREATE TABLE `wallets` (
 CREATE TABLE `wallet_shares` (
                                  `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                                  `wallet_id` INT UNSIGNED NOT NULL,
+                                 `owner_id` INT UNSIGNED NOT NULL,
                                  `shared_with_user_id` INT UNSIGNED NOT NULL,
-                                 `permission_level` ENUM('viewer', 'owner') NOT NULL DEFAULT 'viewer',
+                                 `permission_level` ENUM('VIEW', 'EDIT', 'ADMIN') NOT NULL DEFAULT 'VIEW',
+                                 `is_active` BOOLEAN NOT NULL DEFAULT TRUE,
                                  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                 `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                                  UNIQUE(`wallet_id`, `shared_with_user_id`),
                                  FOREIGN KEY (`wallet_id`) REFERENCES `wallets`(`id`) ON DELETE CASCADE,
+                                 FOREIGN KEY (`owner_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
                                  FOREIGN KEY (`shared_with_user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+);
+
+-- =================================================================
+-- Bảng Quyền Ví (Wallet Permissions) - Quản lý quyền chi tiết
+-- =================================================================
+CREATE TABLE `wallet_permissions` (
+                                      `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                                      `wallet_share_id` INT UNSIGNED NOT NULL,
+                                      `permission_type` ENUM(
+                                          'VIEW_WALLET', 'VIEW_BALANCE', 'VIEW_TRANSACTIONS',
+                                          'EDIT_WALLET', 'ADD_TRANSACTION', 'EDIT_TRANSACTION', 'DELETE_TRANSACTION',
+                                          'MANAGE_PERMISSIONS', 'SHARE_WALLET', 'DELETE_WALLET', 'TRANSFER_OWNERSHIP',
+                                          'VIEW_REPORTS', 'EXPORT_DATA'
+                                      ) NOT NULL,
+                                      `is_granted` BOOLEAN NOT NULL DEFAULT TRUE,
+                                      `granted_by` INT UNSIGNED DEFAULT NULL,
+                                      `granted_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                      `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                      `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                      FOREIGN KEY (`wallet_share_id`) REFERENCES `wallet_shares`(`id`) ON DELETE CASCADE,
+                                      FOREIGN KEY (`granted_by`) REFERENCES `users`(`id`) ON DELETE SET NULL,
+                                      UNIQUE(`wallet_share_id`, `permission_type`)
 );
 
 -- =================================================================

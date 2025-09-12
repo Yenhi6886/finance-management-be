@@ -1,15 +1,18 @@
 package com.example.backend.controller;
 
+import com.example.backend.annotation.RequireWalletPermission;
+import com.example.backend.dto.request.AssignPermissionRequest;
+import com.example.backend.dto.request.CreateWalletRequest;
+import com.example.backend.dto.request.ShareWalletRequest;
 import com.example.backend.dto.request.WalletTransferRequest;
-import com.example.backend.dto.response.WalletResponse;
-import com.example.backend.dto.response.WalletTransferResponse;
-import com.example.backend.dto.response.WalletSummaryResponse;
+import com.example.backend.dto.response.*;
 import com.example.backend.entity.Wallet;
+import com.example.backend.enums.PermissionType;
 import com.example.backend.exception.InsufficientBalanceException;
 import com.example.backend.exception.WalletNotFoundException;
 import com.example.backend.mapper.WalletMapper;
-import com.example.backend.service.WalletSelectionService;
-import com.example.backend.service.WalletTransferService;
+import com.example.backend.security.CustomUserDetails;
+import com.example.backend.service.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +20,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,101 +28,141 @@ import java.util.Optional;
 @RequestMapping("/api/wallets")
 @RequiredArgsConstructor
 public class WalletController {
+
+    private final WalletService walletService;
     private final WalletSelectionService walletSelectionService;
-    private final WalletMapper walletMapper;
     private final WalletTransferService walletTransferService;
+    private final WalletShareService walletShareService;
+    private final WalletPermissionService walletPermissionService;
+    private final WalletMapper walletMapper;
+
+    @PostMapping
+    public ResponseEntity<ApiResponse<WalletResponse>> createWallet(
+            @Valid @RequestBody CreateWalletRequest request,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        WalletResponse walletResponse = walletService.createWallet(request, currentUser.getId());
+        ApiResponse<WalletResponse> apiResponse = new ApiResponse<>(true, "Tạo ví mới thành công", walletResponse);
+        return ResponseEntity.ok(apiResponse);
+    }
 
     @GetMapping
-    public ResponseEntity<List<WalletResponse>> getWallets(@AuthenticationPrincipal(expression = "id") Long userId) {
-        try {
-            List<Wallet> wallets = walletSelectionService.listUserWallets(userId);
-            List<WalletResponse> walletResponses = new ArrayList<>();
-            for (Wallet wallet : wallets) {
-                WalletResponse walletResponse = walletMapper.toWalletResponse(wallet);
-                walletResponses.add(walletResponse);
-            }
-            return ResponseEntity.ok(walletResponses);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<ApiResponse<List<WalletResponse>>> getAllWallets(
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        List<WalletResponse> wallets = walletService.getAllWalletsByUserId(currentUser.getId());
+        ApiResponse<List<WalletResponse>> apiResponse = new ApiResponse<>(true, "Lấy danh sách tất cả các ví thành công", wallets);
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @GetMapping("/my-wallets")
+    public ResponseEntity<ApiResponse<List<WalletResponse>>> getMyWallets(
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        List<WalletResponse> wallets = walletService.getWalletsByUserId(currentUser.getId());
+        ApiResponse<List<WalletResponse>> apiResponse = new ApiResponse<>(true, "Lấy danh sách ví của tôi thành công", wallets);
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @GetMapping("/shared-with-me")
+    public ResponseEntity<ApiResponse<List<WalletResponse>>> getSharedWallets(
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        List<WalletResponse> wallets = walletService.getSharedWalletsByUserId(currentUser.getId());
+        ApiResponse<List<WalletResponse>> apiResponse = new ApiResponse<>(true, "Lấy danh sách ví được chia sẻ thành công", wallets);
+        return ResponseEntity.ok(apiResponse);
     }
 
     @GetMapping("/current")
-    public ResponseEntity<Map<String, Object>> getCurrentWallet(@AuthenticationPrincipal(expression = "id") Long userId) {
-        try {
-            Optional<Long> currentWalletId = walletSelectionService.getCurrentSelectedWalletId(userId);
-            return currentWalletId.<ResponseEntity<Map<String, Object>>>map(aLong -> ResponseEntity.ok(Map.of("currentWalletId", aLong))).orElseGet(() -> ResponseEntity.ok(Map.of("message", "There is no current wallet yet")));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+    public ResponseEntity<ApiResponse<Map<String, Long>>> getCurrentWallet(@AuthenticationPrincipal CustomUserDetails currentUser) {
+        Optional<Long> currentWalletIdOpt = walletSelectionService.getCurrentSelectedWalletId(currentUser.getId());
+        if (currentWalletIdOpt.isPresent()) {
+            ApiResponse<Map<String, Long>> response = new ApiResponse<>(true, "Lấy ví hiện tại thành công", Map.of("currentWalletId", currentWalletIdOpt.get()));
+            return ResponseEntity.ok(response);
+        } else {
+            ApiResponse<Map<String, Long>> response = new ApiResponse<>(false, "Chưa có ví nào được chọn", null);
+            return ResponseEntity.ok(response);
         }
     }
 
     @PutMapping("/current/{walletId}")
-    public ResponseEntity<Void> setCurrentWallet(@AuthenticationPrincipal(expression = "id") Long userId, @org.springframework.web.bind.annotation.PathVariable Long walletId) {
-        try {
-            walletSelectionService.setCurrentSelectedWallet(userId, walletId);
-            return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<ApiResponse<Void>> setCurrentWallet(
+            @AuthenticationPrincipal CustomUserDetails currentUser,
+            @PathVariable Long walletId) {
+        walletSelectionService.setCurrentSelectedWallet(currentUser.getId(), walletId);
+        ApiResponse<Void> response = new ApiResponse<>(true, "Chọn ví hiện tại thành công", null);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/total-balance")
+    public ResponseEntity<ApiResponse<WalletSummaryResponse>> getTotalBalance(@AuthenticationPrincipal CustomUserDetails currentUser) {
+        Map<String, BigDecimal> totalBalanceByCurrency = walletSelectionService.getTotalBalanceByCurrency(currentUser.getId());
+        BigDecimal totalBalanceVND = walletSelectionService.getTotalBalanceInVND(currentUser.getId());
+        int totalWallets = walletService.getAllWalletsByUserId(currentUser.getId()).size();
+
+        WalletSummaryResponse summaryResponse = WalletSummaryResponse.builder()
+                .totalBalanceByCurrency(totalBalanceByCurrency)
+                .totalBalanceVND(totalBalanceVND)
+                .totalWallets(totalWallets)
+                .message("Lấy tổng số dư thành công")
+                .build();
+        ApiResponse<WalletSummaryResponse> apiResponse = new ApiResponse<>(true, "Lấy tổng số dư thành công", summaryResponse);
+        return ResponseEntity.ok(apiResponse);
     }
 
     @PostMapping("/transfer")
-    public ResponseEntity<?> transferMoney(
-            @AuthenticationPrincipal(expression = "id") Long userId,
+    public ResponseEntity<ApiResponse<?>> transferMoney(
+            @AuthenticationPrincipal CustomUserDetails currentUser,
             @Valid @RequestBody WalletTransferRequest request) {
         try {
-            WalletTransferResponse response = walletTransferService.transferMoney(userId, request);
-            return ResponseEntity.ok(response);
-        } catch (InsufficientBalanceException | IllegalArgumentException | WalletNotFoundException e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("success", false, "message", "Có lỗi xảy ra khi chuyển tiền"));
+            WalletTransferResponse response = walletTransferService.transferMoney(currentUser.getId(), request);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Chuyển tiền thành công", response));
+        } catch (InsufficientBalanceException | WalletNotFoundException | IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
         }
     }
 
     @GetMapping("/{walletId}/validate-amount")
-    public ResponseEntity<Map<String, Object>> validateTransferAmount(
-            @AuthenticationPrincipal(expression = "id") Long userId,
+    public ResponseEntity<ApiResponse<Map<String, Object>>> validateTransferAmount(
+            @AuthenticationPrincipal CustomUserDetails currentUser,
             @PathVariable Long walletId,
             @RequestParam BigDecimal amount) {
         try {
-            boolean isValid = walletTransferService.validateTransferAmount(walletId, userId, amount);
-            return ResponseEntity.ok(Map.of(
-                    "valid", isValid,
-                    "message", isValid ? "Số dư đủ để thực hiện giao dịch" : "Số dư không đủ để thực hiện giao dịch"
-            ));
+            boolean isValid = walletTransferService.validateTransferAmount(walletId, currentUser.getId(), amount);
+            String message = isValid ? "Số dư đủ để thực hiện giao dịch" : "Số dư không đủ để thực hiện giao dịch";
+            return ResponseEntity.ok(new ApiResponse<>(true, message, Map.of("valid", isValid)));
         } catch (WalletNotFoundException e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("valid", false, "message", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("valid", false, "message", "Có lỗi xảy ra khi kiểm tra số dư"));
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), Map.of("valid", false)));
         }
     }
 
-    @GetMapping("/total-balance")
-    public ResponseEntity<WalletSummaryResponse> getTotalBalance(@AuthenticationPrincipal(expression = "id") Long userId) {
-        try {
-            Map<String, BigDecimal> totalBalanceByCurrency = walletSelectionService.getTotalBalanceByCurrency(userId);
-            BigDecimal totalBalanceVND = walletSelectionService.getTotalBalanceInVND(userId);
-            int totalWallets = walletSelectionService.listUserWallets(userId).size();
+    @PostMapping("/{id}/share")
+    @RequireWalletPermission(value = PermissionType.MANAGE_PERMISSIONS, requireOwnership = true)
+    public ResponseEntity<ApiResponse<PermissionResponse>> shareWallet(
+            @PathVariable Long id,
+            @Valid @RequestBody ShareWalletRequest request,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        PermissionResponse response = walletShareService.shareWallet(id, request, currentUser.getId());
+        ApiResponse<PermissionResponse> apiResponse = new ApiResponse<>(true, "Chia sẻ ví thành công", response);
+        return ResponseEntity.ok(apiResponse);
+    }
 
-            WalletSummaryResponse response = WalletSummaryResponse.builder()
-                    .totalBalanceByCurrency(totalBalanceByCurrency)
-                    .totalBalanceVND(totalBalanceVND)
-                    .totalWallets(totalWallets)
-                    .message("Lấy tổng số dư thành công")
-                    .build();
+    @DeleteMapping("/{id}/share/{userId}")
+    @RequireWalletPermission(value = PermissionType.MANAGE_PERMISSIONS, requireOwnership = true)
+    public ResponseEntity<ApiResponse<Void>> removeSharedUser(
+            @PathVariable Long id,
+            @PathVariable Long userId,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        walletShareService.removeSharedUser(id, userId, currentUser.getId());
+        ApiResponse<Void> apiResponse = new ApiResponse<>(true, "Xóa người dùng khỏi ví chia sẻ thành công", null);
+        return ResponseEntity.ok(apiResponse);
+    }
 
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(WalletSummaryResponse.builder()
-                            .message("Có lỗi xảy ra khi tính tổng số dư")
-                            .build());
-        }
+    @PutMapping("/{id}/share/{userId}/permissions")
+    @RequireWalletPermission(value = PermissionType.MANAGE_PERMISSIONS, requireOwnership = true)
+    public ResponseEntity<ApiResponse<List<PermissionResponse>>> updateSharedUserPermissions(
+            @PathVariable Long id,
+            @PathVariable Long userId,
+            @Valid @RequestBody AssignPermissionRequest request,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        List<PermissionResponse> permissions = walletPermissionService.assignPermissions(id, userId, request, currentUser.getId());
+        ApiResponse<List<PermissionResponse>> apiResponse = new ApiResponse<>(true, "Cập nhật quyền chia sẻ ví thành công", permissions);
+        return ResponseEntity.ok(apiResponse);
     }
 }
