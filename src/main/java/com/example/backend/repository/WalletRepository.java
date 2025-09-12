@@ -16,7 +16,8 @@ public interface WalletRepository extends JpaRepository<Wallet, Long> {
     List<Wallet> findAllByUserId(Long userId);
     Optional<Wallet> findByIdAndUserId(Long id, Long userId);
 
-    @Query("SELECT w FROM Wallet w WHERE w.user.id = :userId ORDER BY w.createdAt DESC")
+    List<Wallet> findByUserIdAndIsArchived(Long userId, boolean isArchived);
+
+    @Query("SELECT w FROM Wallet w WHERE w.user.id = :userId AND w.isArchived = false ORDER BY w.createdAt DESC")
     List<Wallet> findAllActiveWalletsByUserIdOrderByCreatedAtDesc(@Param("userId")  Long userId);
 }
-

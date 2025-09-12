@@ -29,18 +29,18 @@ public class WalletTransferService {
 
         // Lấy thông tin ví nguồn
         Wallet fromWallet = walletRepository.findByIdAndUserId(request.getFromWalletId(), userId)
-            .orElseThrow(() -> new WalletNotFoundException("Không tìm thấy ví nguồn"));
+                .orElseThrow(() -> new WalletNotFoundException("Không tìm thấy ví nguồn"));
 
         // Lấy thông tin ví đích
         Wallet toWallet = walletRepository.findByIdAndUserId(request.getToWalletId(), userId)
-            .orElseThrow(() -> new WalletNotFoundException("Không tìm thấy ví đích"));
+                .orElseThrow(() -> new WalletNotFoundException("Không tìm thấy ví đích"));
 
         // Kiểm tra số dư ví nguồn
-        if (fromWallet.getInitialBalance().compareTo(request.getAmount()) < 0) {
+        if (fromWallet.getBalance().compareTo(request.getAmount()) < 0) {
             throw new InsufficientBalanceException(
-                String.format("Số dư không đủ. Số dư hiện tại: %s %s, Số tiền cần chuyển: %s %s",
-                    fromWallet.getInitialBalance(), fromWallet.getCurrency(),
-                    request.getAmount(), fromWallet.getCurrency())
+                    String.format("Số dư không đủ. Số dư hiện tại: %s %s, Số tiền cần chuyển: %s %s",
+                            fromWallet.getBalance(), fromWallet.getCurrency(),
+                            request.getAmount(), fromWallet.getCurrency())
             );
         }
 
@@ -50,11 +50,11 @@ public class WalletTransferService {
         }
 
         // Thực hiện chuyển tiền
-        BigDecimal newFromBalance = fromWallet.getInitialBalance().subtract(request.getAmount());
-        BigDecimal newToBalance = toWallet.getInitialBalance().add(request.getAmount());
+        BigDecimal newFromBalance = fromWallet.getBalance().subtract(request.getAmount());
+        BigDecimal newToBalance = toWallet.getBalance().add(request.getAmount());
 
-        fromWallet.setInitialBalance(newFromBalance);
-        toWallet.setInitialBalance(newToBalance);
+        fromWallet.setBalance(newFromBalance);
+        toWallet.setBalance(newToBalance);
 
         // Lưu thay đổi
         walletRepository.save(fromWallet);
@@ -62,18 +62,17 @@ public class WalletTransferService {
 
         // Trả về kết quả
         return WalletTransferResponse.builder()
-            .message("Chuyển tiền thành công")
-            .fromWalletBalance(newFromBalance)
-            .toWalletBalance(newToBalance)
-            .transferTime(LocalDateTime.now())
-            .success(true)
-            .build();
+                .message("Chuyển tiền thành công")
+                .fromWalletBalance(newFromBalance)
+                .toWalletBalance(newToBalance)
+                .transferTime(LocalDateTime.now())
+                .success(true)
+                .build();
     }
 
     public boolean validateTransferAmount(Long walletId, Long userId, BigDecimal amount) {
         Wallet wallet = walletRepository.findByIdAndUserId(walletId, userId)
-            .orElseThrow(() -> new WalletNotFoundException("Không tìm thấy ví"));
-        return wallet.getInitialBalance().compareTo(amount) >= 0;
+                .orElseThrow(() -> new WalletNotFoundException("Không tìm thấy ví"));
+        return wallet.getBalance().compareTo(amount) >= 0;
     }
 }
-

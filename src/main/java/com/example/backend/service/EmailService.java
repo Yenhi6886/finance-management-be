@@ -47,28 +47,28 @@ public class EmailService {
 
         StringBuilder content = new StringBuilder();
         content.append("Xin chào ").append(sharedWithUser.getFirstName()).append(" ").append(sharedWithUser.getLastName()).append(",\n\n");
-        
+
         content.append(owner.getFirstName()).append(" ").append(owner.getLastName())
-               .append(" đã chia sẻ ví '").append(wallet.getName()).append("' với bạn.\n\n");
-        
+                .append(" đã chia sẻ ví '").append(wallet.getName()).append("' với bạn.\n\n");
+
         content.append("Thông tin ví:\n");
         content.append("- Tên ví: ").append(wallet.getName()).append("\n");
         content.append("- Loại tiền tệ: ").append(wallet.getCurrency()).append("\n");
-        content.append("- Số dư ban đầu: ").append(wallet.getInitialBalance()).append(" ").append(wallet.getCurrency()).append("\n");
+        content.append("- Số dư hiện tại: ").append(wallet.getBalance()).append(" ").append(wallet.getCurrency()).append("\n");
         content.append("- Quyền truy cập: ").append(walletShare.getPermissionLevel().getDisplayName()).append("\n");
-        
+
         if (wallet.getDescription() != null && !wallet.getDescription().isEmpty()) {
             content.append("- Mô tả: ").append(wallet.getDescription()).append("\n");
         }
-        
+
         if (customMessage != null && !customMessage.isEmpty()) {
             content.append("\nLời nhắn từ ").append(owner.getFirstName()).append(":\n");
             content.append(customMessage).append("\n");
         }
-        
+
         content.append("\nBạn có thể truy cập ví này trong ứng dụng quản lý tài chính của mình.\n");
         content.append("Đăng nhập tại: ").append(frontendUrl).append("/login\n\n");
-        
+
         content.append("Trân trọng,\n");
         content.append("Đội ngũ Finance Management");
 
@@ -99,14 +99,14 @@ public class EmailService {
 
         StringBuilder content = new StringBuilder();
         content.append("Xin chào ").append(owner.getFirstName()).append(" ").append(owner.getLastName()).append(",\n\n");
-        
+
         content.append(sharedWithUser.getFirstName()).append(" ").append(sharedWithUser.getLastName())
-               .append(" đã chấp nhận chia sẻ ví '").append(wallet.getName()).append("' với bạn.\n\n");
-        
+                .append(" đã chấp nhận chia sẻ ví '").append(wallet.getName()).append("' với bạn.\n\n");
+
         content.append("Bây giờ ").append(sharedWithUser.getFirstName())
-               .append(" có thể truy cập ví này với quyền: ")
-               .append(walletShare.getPermissionLevel().getDisplayName()).append("\n\n");
-        
+                .append(" có thể truy cập ví này với quyền: ")
+                .append(walletShare.getPermissionLevel().getDisplayName()).append("\n\n");
+
         content.append("Trân trọng,\n");
         content.append("Đội ngũ Finance Management");
 

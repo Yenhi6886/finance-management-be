@@ -14,9 +14,10 @@ public class WalletMapper {
         wallet.setName(request.getName());
         wallet.setIcon(request.getIcon());
         wallet.setCurrency(request.getCurrency());
-        wallet.setInitialBalance(request.getInitialBalance());
+        wallet.setBalance(request.getBalance());
         wallet.setDescription(request.getDescription());
         wallet.setUser(user);
+        wallet.setArchived(false);
         return wallet;
     }
 
@@ -26,13 +27,11 @@ public class WalletMapper {
         response.setName(wallet.getName());
         response.setIcon(wallet.getIcon());
         response.setCurrency(wallet.getCurrency());
-        response.setInitialBalance(wallet.getInitialBalance());
+        response.setBalance(wallet.getBalance());
         response.setDescription(wallet.getDescription());
+        response.setArchived(wallet.isArchived());
         response.setCreatedAt(wallet.getCreatedAt());
         response.setUpdatedAt(wallet.getUpdatedAt());
-        // Tạm thời gán quyền là owner, sau này có thể thêm logic phức tạp hơn
-//        response    .setPermissions("owner");
         return response;
     }
-
 }

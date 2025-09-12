@@ -2,6 +2,7 @@ package com.example.backend.dto.request;
 
 import com.example.backend.enums.Currency;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -25,7 +26,8 @@ public class CreateWalletRequest {
 
     @NotNull(message = "Số tiền ban đầu không được để trống")
     @DecimalMin(value = "0.0", inclusive = true, message = "Số tiền ban đầu phải lớn hơn hoặc bằng 0")
-    private BigDecimal initialBalance;
+    @DecimalMax(value = "1000000000000.0", inclusive = true, message = "Số tiền ban đầu không được vượt quá 1 nghìn tỷ")
+    private BigDecimal balance;
 
     @Size(max = 500, message = "Mô tả không được vượt quá 500 ký tự")
     private String description;
