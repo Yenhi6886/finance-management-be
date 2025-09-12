@@ -4,14 +4,16 @@ import com.example.backend.dto.request.*;
 import com.example.backend.dto.response.AuthResponse;
 import com.example.backend.dto.response.UserResponse;
 import com.example.backend.entity.User;
+import com.example.backend.entity.VerificationToken;
 import com.example.backend.enums.AuthProvider;
 import com.example.backend.enums.UserStatus;
+import com.example.backend.enums.VerificationTokenType;
 import com.example.backend.mapper.UserMapper;
 import com.example.backend.repository.UserRepository;
+import com.example.backend.repository.VerificationTokenRepository;
 import com.example.backend.security.CustomUserDetails;
 import com.example.backend.service.filestorage.FileStorageService;
 import com.example.backend.util.JwtUtil;
-import com.example.backend.util.PasswordGeneratorUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -27,13 +29,21 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Service
 @Transactional
 public class UserService {
 
+    private static final int TOKEN_EXPIRATION_IN_MINUTES = 15;
+    private static final Pattern PASSWORD_PATTERN = Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$");
+
+
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private VerificationTokenRepository verificationTokenRepository;
 
     @Autowired
     private UserMapper userMapper;
@@ -68,11 +78,14 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setStatus(UserStatus.INACTIVE);
         user.setAuthProvider(AuthProvider.LOCAL);
-        user.setActivationToken(UUID.randomUUID().toString());
+        User savedUser = userRepository.save(user);
 
-        userRepository.save(user);
+        // Create and send activation token
+        String token = UUID.randomUUID().toString();
+        VerificationToken verificationToken = new VerificationToken(token, savedUser, VerificationTokenType.ACCOUNT_ACTIVATION, TOKEN_EXPIRATION_IN_MINUTES * 4); // 1 hour for activation
+        verificationTokenRepository.save(verificationToken);
 
-        emailService.sendActivationEmail(user.getEmail(), user.getActivationToken());
+        emailService.sendActivationEmail(user.getEmail(), token);
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -100,56 +113,41 @@ public class UserService {
         return new AuthResponse(token, userResponse);
     }
 
-    public UserResponse updateAvatar(MultipartFile file) {
-        User currentUser = getCurrentUser();
-        String fileName = fileStorageService.storeFile(file);
-
-        String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/uploads/avatars/")
-                .path(fileName)
-                .toUriString();
-
-        currentUser.setAvatarUrl(fileDownloadUri);
-        User updatedUser = userRepository.save(currentUser);
-        return userMapper.toUserResponse(updatedUser);
-    }
-
     public void activateAccount(String token) {
-        User user = userRepository.findByActivationToken(token)
-                .orElseThrow(() -> new RuntimeException("Token kích hoạt không hợp lệ hoặc đã hết hạn!"));
+        VerificationToken verificationToken = validateToken(token, VerificationTokenType.ACCOUNT_ACTIVATION);
 
+        User user = verificationToken.getUser();
         user.setStatus(UserStatus.ACTIVE);
-        user.setActivationToken(null);
         userRepository.save(user);
+
+        verificationToken.setUsed(true);
+        verificationTokenRepository.save(verificationToken);
     }
 
-    public void forgotPassword(ForgotPasswordRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Email không tồn tại trong hệ thống!"));
-
-        String newPassword = PasswordGeneratorUtil.generateRandomPassword();
-        user.setPassword(passwordEncoder.encode(newPassword));
-
-        // Xóa token cũ nếu có để tránh nhầm lẫn
-        user.setResetPasswordToken(null);
-        user.setResetPasswordExpires(null);
-
-        userRepository.save(user);
-        emailService.sendNewPasswordEmail(user.getEmail(), newPassword);
+    public void requestPasswordReset(String email) {
+        userRepository.findByEmail(email).ifPresent(user -> {
+            String token = UUID.randomUUID().toString();
+            VerificationToken verificationToken = new VerificationToken(token, user, VerificationTokenType.PASSWORD_RESET, TOKEN_EXPIRATION_IN_MINUTES);
+            verificationTokenRepository.save(verificationToken);
+            emailService.sendPasswordResetEmail(user.getEmail(), token);
+        });
     }
 
-    public void resetPassword(ResetPasswordRequest request) {
-        User user = userRepository.findByResetPasswordToken(request.getToken())
-                .orElseThrow(() -> new RuntimeException("Token đặt lại mật khẩu không hợp lệ!"));
+    public void validatePasswordResetToken(String token) {
+        validateToken(token, VerificationTokenType.PASSWORD_RESET);
+    }
 
-        if (user.getResetPasswordExpires().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("Token đặt lại mật khẩu đã hết hạn!");
+    public void resetPassword(String token, String newPassword) {
+        if (!PASSWORD_PATTERN.matcher(newPassword).matches()) {
+            throw new RuntimeException("Mật khẩu phải có ít nhất 8 ký tự, bao gồm cả chữ và số.");
         }
-
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        user.setResetPasswordToken(null);
-        user.setResetPasswordExpires(null);
+        VerificationToken verificationToken = validateToken(token, VerificationTokenType.PASSWORD_RESET);
+        User user = verificationToken.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+
+        verificationToken.setUsed(true);
+        verificationTokenRepository.save(verificationToken);
     }
 
     public void changePassword(ChangePasswordRequest request) {
@@ -168,8 +166,28 @@ public class UserService {
         return userMapper.toUserResponse(updatedUser);
     }
 
+    public UserResponse updateAvatar(MultipartFile file) {
+        User currentUser = getCurrentUser();
+        String fileName = fileStorageService.storeFile(file);
+
+        String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/uploads/avatars/")
+                .path(fileName)
+                .toUriString();
+
+        currentUser.setAvatarUrl(fileDownloadUri);
+        User updatedUser = userRepository.save(currentUser);
+        return userMapper.toUserResponse(updatedUser);
+    }
+
     public UserResponse getCurrentUserProfile() {
         return userMapper.toUserResponse(getCurrentUser());
+    }
+
+    public void deleteAccount() {
+        User currentUser = getCurrentUser();
+        currentUser.setStatus(UserStatus.DELETED);
+        userRepository.save(currentUser);
     }
 
     private User getCurrentUser() {
@@ -181,9 +199,19 @@ public class UserService {
         return userDetails.getUser();
     }
 
-    public void deleteAccount() {
-        User currentUser = getCurrentUser();
-        currentUser.setStatus(UserStatus.DELETED);
-        userRepository.save(currentUser);
+    private VerificationToken validateToken(String token, VerificationTokenType type) {
+        VerificationToken verificationToken = verificationTokenRepository.findByToken(token)
+                .orElseThrow(() -> new RuntimeException("Token không hợp lệ."));
+
+        if (verificationToken.isUsed()) {
+            throw new RuntimeException("Token đã được sử dụng.");
+        }
+        if (verificationToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Token đã hết hạn.");
+        }
+        if (verificationToken.getType() != type) {
+            throw new RuntimeException("Token không đúng loại.");
+        }
+        return verificationToken;
     }
 }

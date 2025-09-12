@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,17 +23,13 @@ public class EmailService {
     @Value("${app.mail.enabled:false}")
     private boolean mailEnabled;
 
-    // Thêm một thuộc tính để định nghĩa URL của frontend
-    @Value("${app.frontend.url:http://localhost:3000}")
-    private String frontendUrl;
-
+    @Async
     public void sendActivationEmail(String toEmail, String activationToken) {
-        // **THAY ĐỔI QUAN TRỌNG: Link trỏ về trang /activate của Frontend**
-        String link = frontendUrl + "/activate?token=" + activationToken;
+        String link = "http://localhost:3000/activate?token=" + activationToken;
 
         if (!mailEnabled) {
             logger.info("[MAIL DISABLED] To enable mail sending, set 'app.mail.enabled=true' in application.properties");
-            logger.info("[MAIL DEBUG] Activation link for {}: {}", toEmail, link);
+            logger.info("[MAIL DEBUG] Activation link for {}: ", toEmail, link);
             return;
         }
 
@@ -55,57 +52,27 @@ public class EmailService {
         }
     }
 
-    public void sendResetPasswordEmail(String toEmail, String resetToken) {
-        String link = frontendUrl + "/reset-password?token=" + resetToken;
-
+    @Async
+    public void sendPasswordResetEmail(String toEmail, String token) {
+        String resetUrl = "http://localhost:3000/reset-password?token=" + token;
+        logger.info("[MAIL DEBUG] Frontend URL: http://localhost:3000");
+        logger.info("[MAIL DEBUG] Reset URL: {}", resetUrl);
         if (!mailEnabled) {
             logger.info("[MAIL DISABLED] To enable mail sending, set 'app.mail.enabled=true' in application.properties");
-            logger.info("[MAIL DEBUG] Reset password link for {}: {}", toEmail, link);
+            logger.info("[MAIL DEBUG] Password reset link for {}: ", toEmail, resetUrl);
             return;
         }
-
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
             message.setTo(toEmail);
             message.setSubject("Yêu cầu đặt lại mật khẩu");
-
-            String text = "Bạn đã nhận được email này vì bạn (hoặc ai đó) đã yêu cầu đặt lại mật khẩu cho tài khoản của bạn.\n\n" +
-                    "Vui lòng nhấp vào liên kết sau hoặc dán vào trình duyệt của bạn để hoàn tất quá trình:\n" +
-                    link + "\n\n" +
-                    "Nếu bạn không yêu cầu điều này, vui lòng bỏ qua email này và mật khẩu của bạn sẽ không thay đổi.";
-
-            message.setText(text);
+            message.setText("Để đặt lại mật khẩu của bạn, vui lòng nhấp vào liên kết dưới đây: " + resetUrl
+                    + "\n\nLiên kết này sẽ hết hạn sau 15 phút. Nếu bạn không yêu cầu điều này, vui lòng bỏ qua email này.");
             mailSender.send(message);
-            logger.info("Reset password email sent successfully to {}", toEmail);
+            logger.info("Password reset email sent successfully to {}", toEmail);
         } catch (Exception e) {
-            logger.error("Failed to send reset password email to {}: {}", toEmail, e.getMessage());
-        }
-    }
-
-    public void sendNewPasswordEmail(String toEmail, String newPassword) {
-        if (!mailEnabled) {
-            logger.info("[MAIL DISABLED] To enable mail sending, set 'app.mail.enabled=true' in application.properties");
-            logger.info("[MAIL DEBUG] New password for {}: {}", toEmail, newPassword);
-            return;
-        }
-
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromEmail);
-            message.setTo(toEmail);
-            message.setSubject("Mật khẩu mới cho tài khoản Finance Management của bạn");
-
-            String text = "Chào bạn,\n\n" +
-                    "Mật khẩu mới của bạn là: " + newPassword + "\n\n" +
-                    "Vì lý do bảo mật, chúng tôi thực sự khuyên bạn nên đăng nhập và đổi lại mật khẩu này ngay lập tức.\n\n" +
-                    "Trân trọng,\nĐội ngũ Finance Management";
-
-            message.setText(text);
-            mailSender.send(message);
-            logger.info("New password email sent successfully to {}", toEmail);
-        } catch (Exception e) {
-            logger.error("Failed to send new password email to {}: {}", toEmail, e.getMessage());
+            logger.error("Failed to send password reset email to {}: {}", toEmail, e.getMessage());
         }
     }
 }

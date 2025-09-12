@@ -1,7 +1,6 @@
 package com.example.backend.security;
 
 import com.example.backend.entity.User;
-import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,11 +13,7 @@ import java.util.Map;
 public class CustomUserDetails implements UserDetails, OAuth2User {
 
     private final transient User user;
-
-    @Getter
     private final Long id;
-
-    @Getter
     private Map<String, Object> attributes;
 
     public CustomUserDetails(User user) {
@@ -40,6 +35,15 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
         return new CustomUserDetails(user, attributes);
     }
 
+    public Long getId() {
+        return id;
+    }
+
+    @Override
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
@@ -57,9 +61,6 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
 
     @Override
     public String getName() {
-        // For OAuth2 users, this is typically the name provided by the OAuth2 provider.
-        // For local users, we can return email or username.
-        // Let's return email for consistency with getUsername for now.
         return user.getEmail();
     }
 

@@ -1,8 +1,10 @@
 package com.example.backend.entity;
 
-import com.example.backend.entity.User;
+import com.example.backend.enums.Currency;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -10,40 +12,35 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(
-    name = "wallets",
-    indexes = @Index(name = "idx_user_id", columnList = "user_id")
-)
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor @Builder
+@Table(name = "wallets")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Wallet {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(columnDefinition = "INT UNSIGNED")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false, columnDefinition = "INT UNSIGNED")
-    private User user;
-
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false)
     private String name;
 
-    @Column(length = 255)
+    @Column(nullable = false)
     private String icon;
 
-    @Column(precision = 15, scale = 2, nullable = false)
-    private BigDecimal balance = new BigDecimal("0.00");
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Currency currency;
 
-    @Column(name = "currency_code", length = 10, nullable = false)
-    private String currencyCode = "VND";
+    @Column(name = "initial_balance", nullable = false, precision = 19, scale = 4)
+    private BigDecimal initialBalance;
 
     @Lob
     private String description;
 
-    @Column(name = "is_archived", nullable = false)
-    private boolean archived = false;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

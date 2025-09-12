@@ -1,7 +1,6 @@
 package com.example.backend.security.oauth2;
 
 import com.example.backend.config.AppProperties;
-import com.example.backend.security.CustomUserDetails;
 import com.example.backend.util.CookieUtils;
 import com.example.backend.util.JwtUtil;
 import jakarta.servlet.ServletException;
