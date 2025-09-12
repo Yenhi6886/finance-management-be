@@ -1,5 +1,6 @@
 package com.example.backend.controller;
 
+import com.example.backend.annotation.RequireWalletPermission;
 import com.example.backend.dto.request.AssignPermissionRequest;
 import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.dto.response.PermissionResponse;
@@ -24,6 +25,7 @@ public class WalletPermissionController {
     private final WalletPermissionService walletPermissionService;
 
     @PostMapping("/{walletId}/users/{userId}")
+    @RequireWalletPermission(value = PermissionType.MANAGE_PERMISSIONS, requireOwnership = true)
     public ResponseEntity<ApiResponse<List<PermissionResponse>>> assignPermissions(
             @PathVariable Long walletId,
             @PathVariable Long userId,
@@ -72,6 +74,7 @@ public class WalletPermissionController {
     }
 
     @DeleteMapping("/{walletId}/users/{userId}/permissions/{permissionType}")
+    @RequireWalletPermission(value = PermissionType.MANAGE_PERMISSIONS, requireOwnership = true)
     public ResponseEntity<ApiResponse<Void>> revokePermission(
             @PathVariable Long walletId,
             @PathVariable Long userId,

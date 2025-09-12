@@ -83,4 +83,13 @@ public class WalletService {
         return userWalletResponses;
     }
 
+    /**
+     * Kiểm tra user có phải là chủ sở hữu ví không
+     */
+    public boolean isWalletOwner(Long walletId, Long userId) {
+        return walletRepository.findById(walletId)
+                .map(wallet -> wallet.getUser().getId().equals(userId))
+                .orElse(false);
+    }
+
 }

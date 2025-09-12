@@ -3,14 +3,12 @@ package com.example.backend.service;
 import com.example.backend.dto.request.AssignPermissionRequest;
 import com.example.backend.dto.response.PermissionResponse;
 import com.example.backend.dto.response.UserWalletPermissionsResponse;
-import com.example.backend.entity.User;
 import com.example.backend.entity.Wallet;
 import com.example.backend.entity.WalletPermission;
 import com.example.backend.entity.WalletShare;
 import com.example.backend.enums.PermissionType;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.exception.BadRequestException;
-import com.example.backend.repository.UserRepository;
 import com.example.backend.repository.WalletPermissionRepository;
 import com.example.backend.repository.WalletRepository;
 import com.example.backend.repository.WalletShareRepository;
@@ -31,7 +29,6 @@ public class WalletPermissionService {
     private final WalletPermissionRepository walletPermissionRepository;
     private final WalletShareRepository walletShareRepository;
     private final WalletRepository walletRepository;
-    private final UserRepository userRepository;
 
     @Transactional
     public List<PermissionResponse> assignPermissions(Long walletId, Long userId, AssignPermissionRequest request, Long ownerId) {
@@ -142,6 +139,12 @@ public class WalletPermissionService {
 
     public boolean hasPermission(Long walletId, Long userId, PermissionType permissionType) {
         return walletPermissionRepository.hasPermission(walletId, userId, permissionType);
+    }
+
+    @Transactional
+    public void deleteAllPermissionsByWalletShareId(Long walletShareId) {
+        walletPermissionRepository.deleteByWalletShareId(walletShareId);
+        log.info("Đã xóa tất cả quyền cho wallet share ID: {}", walletShareId);
     }
 
     @Transactional

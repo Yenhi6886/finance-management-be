@@ -35,7 +35,7 @@ public class WalletShare {
     private User sharedWithUser;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "permission_level", nullable = false)
     private PermissionLevel permissionLevel = PermissionLevel.VIEW;
 
     @Column(name = "is_active", nullable = false)

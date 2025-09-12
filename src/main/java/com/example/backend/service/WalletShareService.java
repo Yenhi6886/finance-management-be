@@ -11,7 +11,6 @@ import com.example.backend.exception.BadRequestException;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.repository.WalletRepository;
 import com.example.backend.repository.WalletShareRepository;
-import com.example.backend.service.WalletPermissionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -124,6 +123,34 @@ public class WalletShareService {
         log.info("Quyền truy cập ví '{}' với user '{}' đã được cập nhật thành '{}' bởi user '{}'", 
                 walletShare.getWallet().getName(), walletShare.getSharedWithUser().getEmail(), 
                 newPermission.getDisplayName(), ownerId);
+    }
+
+    @Transactional
+    public void removeSharedUser(Long walletId, Long userId, Long ownerId) {
+        // Kiểm tra ví có tồn tại và thuộc về user không
+        Wallet wallet = walletRepository.findById(walletId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ví với ID: " + walletId));
+
+        if (!wallet.getUser().getId().equals(ownerId)) {
+            throw new BadRequestException("Bạn không có quyền quản lý ví này");
+        }
+
+        // Tìm wallet share
+        WalletShare walletShare = walletShareRepository.findByWalletIdAndUserId(walletId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chia sẻ ví với user này"));
+
+        if (!walletShare.getOwner().getId().equals(ownerId)) {
+            throw new BadRequestException("Bạn không có quyền xóa chia sẻ ví này");
+        }
+
+        // Xóa tất cả quyền liên quan trước
+        walletPermissionService.deleteAllPermissionsByWalletShareId(walletShare.getId());
+
+        // Xóa wallet share record
+        walletShareRepository.delete(walletShare);
+
+        log.info("Đã xóa hoàn toàn chia sẻ ví '{}' với user '{}' bởi user '{}'", 
+                wallet.getName(), walletShare.getSharedWithUser().getEmail(), ownerId);
     }
 
     private ShareWalletResponse buildShareWalletResponse(WalletShare walletShare) {
