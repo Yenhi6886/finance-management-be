@@ -12,38 +12,35 @@ import java.util.Optional;
 @Repository
 public interface WalletShareRepository extends JpaRepository<WalletShare, Long> {
 
-    // Tìm ví được share với user cụ thể
     @Query("SELECT ws FROM WalletShare ws " +
-           "JOIN FETCH ws.wallet w " +
-           "JOIN FETCH ws.owner o " +
-           "WHERE ws.sharedWithUser.id = :userId AND ws.isActive = true")
+            "JOIN FETCH ws.wallet w " +
+            "JOIN FETCH ws.owner o " +
+            "WHERE ws.sharedWithUser.id = :userId AND ws.isActive = true")
     List<WalletShare> findSharedWalletsByUserId(@Param("userId") Long userId);
 
-    // Tìm ví được share bởi user cụ thể
     @Query("SELECT ws FROM WalletShare ws " +
-           "JOIN FETCH ws.wallet w " +
-           "JOIN FETCH ws.sharedWithUser swu " +
-           "WHERE ws.owner.id = :ownerId AND ws.isActive = true")
+            "JOIN FETCH ws.wallet w " +
+            "JOIN FETCH ws.sharedWithUser swu " +
+            "WHERE ws.owner.id = :ownerId AND ws.isActive = true")
     List<WalletShare> findWalletsSharedByUserId(@Param("ownerId") Long ownerId);
 
-    // Kiểm tra xem ví đã được share với user chưa
     @Query("SELECT ws FROM WalletShare ws " +
-           "WHERE ws.wallet.id = :walletId " +
-           "AND ws.sharedWithUser.email = :email " +
-           "AND ws.isActive = true")
+            "WHERE ws.wallet.id = :walletId " +
+            "AND ws.sharedWithUser.email = :email " +
+            "AND ws.isActive = true")
     Optional<WalletShare> findByWalletIdAndEmail(@Param("walletId") Long walletId, @Param("email") String email);
 
-    // Tìm ví share theo wallet ID và user ID
     @Query("SELECT ws FROM WalletShare ws " +
-           "JOIN FETCH ws.wallet w " +
-           "JOIN FETCH ws.owner o " +
-           "WHERE ws.wallet.id = :walletId " +
-           "AND ws.sharedWithUser.id = :userId " +
-           "AND ws.isActive = true")
+            "JOIN FETCH ws.wallet w " +
+            "JOIN FETCH ws.owner o " +
+            "WHERE ws.wallet.id = :walletId " +
+            "AND ws.sharedWithUser.id = :userId " +
+            "AND ws.isActive = true")
     Optional<WalletShare> findByWalletIdAndUserId(@Param("walletId") Long walletId, @Param("userId") Long userId);
 
-    // Đếm số lượng share của một ví
     @Query("SELECT COUNT(ws) FROM WalletShare ws " +
-           "WHERE ws.wallet.id = :walletId AND ws.isActive = true")
+            "WHERE ws.wallet.id = :walletId AND ws.isActive = true")
     Long countByWalletId(@Param("walletId") Long walletId);
+
+    void deleteByWalletId(Long walletId);
 }

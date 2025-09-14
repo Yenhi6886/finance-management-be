@@ -12,12 +12,15 @@ public class WalletResponse {
     private String name;
     private String icon;
     private Currency currency;
-    private BigDecimal initialBalance;// For simplicity, balance is same as initialBalance on creation
+    private BigDecimal balance;
     private String description;
+    private boolean isArchived;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    
-    // Fields for shared wallets
+
+    // THÊM TRƯỜNG MỚI
+    private BigDecimal totalDeposited;
+
     private String sharedBy;
     private String permissionLevel;
 }

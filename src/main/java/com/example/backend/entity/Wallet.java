@@ -32,8 +32,8 @@ public class Wallet {
     @Column(nullable = false)
     private Currency currency;
 
-    @Column(name = "initial_balance", nullable = false, precision = 19, scale = 4)
-    private BigDecimal initialBalance;
+    @Column(name = "balance", nullable = false, precision = 19, scale = 4)
+    private BigDecimal balance;
 
     @Lob
     private String description;
@@ -41,6 +41,9 @@ public class Wallet {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @Column(name = "is_archived", nullable = false)
+    private boolean isArchived = false;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

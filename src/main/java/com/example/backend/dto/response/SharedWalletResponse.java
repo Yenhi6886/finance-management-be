@@ -19,7 +19,7 @@ public class SharedWalletResponse {
     private String name;
     private String icon;
     private String currency;
-    private BigDecimal initialBalance;
+    private BigDecimal balance;
     private String description;
     private String ownerName;
     private String ownerEmail;

@@ -62,12 +62,12 @@ public class WalletSelectionService {
         List<Wallet> wallets = listUserWallets(userId);
         return wallets.stream()
                 .collect(java.util.stream.Collectors.groupingBy(
-                    wallet -> wallet.getCurrency().name(),
-                    java.util.stream.Collectors.reducing(
-                        BigDecimal.ZERO,
-                        Wallet::getInitialBalance,
-                        BigDecimal::add
-                    )
+                        wallet -> wallet.getCurrency().name(),
+                        java.util.stream.Collectors.reducing(
+                                BigDecimal.ZERO,
+                                Wallet::getBalance,
+                                BigDecimal::add
+                        )
                 ));
     }
 
@@ -77,7 +77,7 @@ public class WalletSelectionService {
         BigDecimal totalVND = BigDecimal.ZERO;
 
         for (Wallet wallet : wallets) {
-            BigDecimal balanceInVND = convertToVND(wallet.getInitialBalance(), wallet.getCurrency());
+            BigDecimal balanceInVND = convertToVND(wallet.getBalance(), wallet.getCurrency());
             totalVND = totalVND.add(balanceInVND);
         }
 

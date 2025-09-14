@@ -70,7 +70,7 @@ public class WalletShareService {
         // Gửi email thông báo
         emailService.sendWalletShareNotification(savedWalletShare, request.getMessage());
 
-        log.info("Ví '{}' đã được chia sẻ với user '{}' bởi user '{}'", 
+        log.info("Ví '{}' đã được chia sẻ với user '{}' bởi user '{}'",
                 wallet.getName(), sharedWithUser.getEmail(), wallet.getUser().getEmail());
 
         return buildShareWalletResponse(savedWalletShare);
@@ -78,7 +78,7 @@ public class WalletShareService {
 
     public List<SharedWalletResponse> getSharedWallets(Long userId) {
         List<WalletShare> walletShares = walletShareRepository.findSharedWalletsByUserId(userId);
-        
+
         return walletShares.stream()
                 .map(this::buildSharedWalletResponse)
                 .collect(Collectors.toList());
@@ -86,7 +86,7 @@ public class WalletShareService {
 
     public List<ShareWalletResponse> getWalletsSharedByMe(Long ownerId) {
         List<WalletShare> walletShares = walletShareRepository.findWalletsSharedByUserId(ownerId);
-        
+
         return walletShares.stream()
                 .map(this::buildShareWalletResponse)
                 .collect(Collectors.toList());
@@ -104,7 +104,7 @@ public class WalletShareService {
         walletShare.setIsActive(false);
         walletShareRepository.save(walletShare);
 
-        log.info("Chia sẻ ví '{}' với user '{}' đã được thu hồi bởi user '{}'", 
+        log.info("Chia sẻ ví '{}' với user '{}' đã được thu hồi bởi user '{}'",
                 walletShare.getWallet().getName(), walletShare.getSharedWithUser().getEmail(), ownerId);
     }
 
@@ -120,8 +120,8 @@ public class WalletShareService {
         walletShare.setPermissionLevel(newPermission);
         walletShareRepository.save(walletShare);
 
-        log.info("Quyền truy cập ví '{}' với user '{}' đã được cập nhật thành '{}' bởi user '{}'", 
-                walletShare.getWallet().getName(), walletShare.getSharedWithUser().getEmail(), 
+        log.info("Quyền truy cập ví '{}' với user '{}' đã được cập nhật thành '{}' bởi user '{}'",
+                walletShare.getWallet().getName(), walletShare.getSharedWithUser().getEmail(),
                 newPermission.getDisplayName(), ownerId);
     }
 
@@ -149,7 +149,7 @@ public class WalletShareService {
         // Xóa wallet share record
         walletShareRepository.delete(walletShare);
 
-        log.info("Đã xóa hoàn toàn chia sẻ ví '{}' với user '{}' bởi user '{}'", 
+        log.info("Đã xóa hoàn toàn chia sẻ ví '{}' với user '{}' bởi user '{}'",
                 wallet.getName(), walletShare.getSharedWithUser().getEmail(), ownerId);
     }
 
@@ -176,7 +176,7 @@ public class WalletShareService {
                 .name(wallet.getName())
                 .icon(wallet.getIcon())
                 .currency(wallet.getCurrency().name())
-                .initialBalance(wallet.getInitialBalance())
+                .balance(wallet.getBalance())
                 .description(wallet.getDescription())
                 .ownerName(owner.getFirstName() + " " + owner.getLastName())
                 .ownerEmail(owner.getEmail())
