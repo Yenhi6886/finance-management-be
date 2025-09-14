@@ -25,4 +25,12 @@ public class AppProperties {
     public Auth getOauth2() {
         return oauth2;
     }
+
+    public String getFrontendUrl() {
+        return frontendUrl;
+    }
+
+    public void setFrontendUrl(String frontendUrl) {
+        this.frontendUrl = frontendUrl;
+    }
 }
