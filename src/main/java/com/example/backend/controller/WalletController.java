@@ -132,16 +132,7 @@ public class WalletController {
         }
     }
 
-    @PostMapping("/{id}/share")
-    @RequireWalletPermission(value = PermissionType.MANAGE_PERMISSIONS, requireOwnership = true)
-    public ResponseEntity<ApiResponse<PermissionResponse>> shareWallet(
-            @PathVariable Long id,
-            @Valid @RequestBody ShareWalletRequest request,
-            @AuthenticationPrincipal CustomUserDetails currentUser) {
-        PermissionResponse response = walletShareService.shareWallet(id, request, currentUser.getId());
-        ApiResponse<PermissionResponse> apiResponse = new ApiResponse<>(true, "Chia sẻ ví thành công", response);
-        return ResponseEntity.ok(apiResponse);
-    }
+
 
     @DeleteMapping("/{id}/share/{userId}")
     @RequireWalletPermission(value = PermissionType.MANAGE_PERMISSIONS, requireOwnership = true)
