@@ -31,6 +31,13 @@ public class GlobalExceptionHandler {
     }
 
     
+    
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        ApiResponse<Void> response = new ApiResponse<>(false, ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(AccessDeniedException ex) {
         ApiResponse<Void> response = new ApiResponse<>(false, "Bạn không có quyền thực hiện hành động này.");
