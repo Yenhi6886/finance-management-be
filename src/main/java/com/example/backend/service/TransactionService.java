@@ -9,6 +9,7 @@ import com.example.backend.enums.TransactionType;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.repository.TransactionRepository;
 import com.example.backend.dto.request.ExpenseRequest;
+import com.example.backend.dto.request.UpdateExpenseRequest;
 import com.example.backend.entity.Category;
 import com.example.backend.exception.InsufficientBalanceException;
 import com.example.backend.repository.CategoryRepository;
@@ -61,10 +62,12 @@ public class TransactionService {
             throw new AccessDeniedException("Bạn không có quyền thực hiện hành động này trên ví.");
         }
 
-        // 3. Cập nhật số dư ví
+        // 5. Cập nhật số dư ví
+        log.info("Wallet {} balance before deposit: {}", walletId, wallet.getBalance());
         wallet.setBalance(wallet.getBalance().add(request.getAmount()));
+        log.info("Wallet {} balance after deposit (before save): {}", walletId, wallet.getBalance());
         walletRepository.save(wallet);
-        log.info("Đã cập nhật số dư cho ví {}. Số dư mới: {}", walletId, wallet.getBalance());
+        log.info("Wallet {} balance after save: {}", walletId, wallet.getBalance());
 
         // 4. Tạo và lưu giao dịch mới
         // Find or create a default category for INCOME transactions
@@ -79,7 +82,6 @@ public class TransactionService {
 
         Transaction transaction = Transaction.builder()
                 .wallet(wallet)
-                .user(currentUser.getUser()) // Gán user thực hiện giao dịch
                 .category(defaultIncomeCategory) // Gán danh mục mặc định
                 .amount(request.getAmount())
                 .type(TransactionType.INCOME) // Giao dịch nạp tiền là INCOME
@@ -97,7 +99,6 @@ public class TransactionService {
                 .description(savedTransaction.getDescription())
                 .transactionDate(savedTransaction.getTransactionDate())
                 .walletId(savedTransaction.getWallet().getId())
-                .userId(savedTransaction.getUser().getId())
                 .build();
     }
 
@@ -139,14 +140,15 @@ public class TransactionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục với ID: " + categoryId));
 
         // 5. Cập nhật số dư ví
+        log.info("Wallet {} balance before expense: {}", walletId, wallet.getBalance());
         wallet.setBalance(wallet.getBalance().subtract(request.getAmount()));
+        log.info("Wallet {} balance after expense (before save): {}", walletId, wallet.getBalance());
         walletRepository.save(wallet);
-        log.info("Đã cập nhật số dư cho ví {}. Số dư mới: {}", walletId, wallet.getBalance());
+        log.info("Wallet {} balance after save: {}", walletId, wallet.getBalance());
 
         // 6. Tạo và lưu giao dịch mới
         Transaction transaction = Transaction.builder()
                 .wallet(wallet)
-                .user(currentUser.getUser()) // Gán user thực hiện giao dịch
                 .category(category) // Gán danh mục
                 .amount(request.getAmount())
                 .type(TransactionType.EXPENSE) // Giao dịch là EXPENSE
@@ -165,7 +167,6 @@ public class TransactionService {
                 .description(savedTransaction.getDescription())
                 .transactionDate(savedTransaction.getTransactionDate())
                 .walletId(savedTransaction.getWallet().getId())
-                .userId(savedTransaction.getUser().getId())
                 .build();
     }
 }

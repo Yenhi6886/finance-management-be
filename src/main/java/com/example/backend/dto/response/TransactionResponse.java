@@ -17,5 +17,4 @@ public class TransactionResponse {
     private String description;
     private LocalDateTime transactionDate;
     private Long walletId;
-    private Long userId;
 }
