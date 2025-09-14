@@ -7,6 +7,7 @@ import java.util.List;
 
 @ConfigurationProperties(prefix = "app")
 public class AppProperties {
+    private String frontendUrl;
     private final Auth oauth2 = new Auth();
 
     public static class Auth {

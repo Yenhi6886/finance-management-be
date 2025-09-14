@@ -1,6 +1,7 @@
 package com.example.backend.controller;
 
 import com.example.backend.dto.request.DepositRequest;
+import com.example.backend.dto.request.ExpenseRequest;
 import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.dto.response.TransactionResponse;
 import com.example.backend.security.CustomUserDetails;
@@ -31,6 +32,22 @@ public class TransactionController {
         ApiResponse<TransactionResponse> response = new ApiResponse<>(
                 true,
                 "Nạp tiền vào ví thành công",
+                transactionResponse
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/expense")
+    public ResponseEntity<ApiResponse<TransactionResponse>> createExpense(
+            @Valid @RequestBody ExpenseRequest expenseRequest,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+
+        TransactionResponse transactionResponse = transactionService.createExpense(expenseRequest, currentUser);
+
+        ApiResponse<TransactionResponse> response = new ApiResponse<>(
+                true,
+                "Thêm khoản chi thành công",
                 transactionResponse
         );
 

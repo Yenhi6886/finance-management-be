@@ -2,12 +2,15 @@
 package com.example.backend.controller;
 
 import com.example.backend.dto.request.DepositRequest;
+import com.example.backend.dto.request.ExpenseRequest;
+import com.example.backend.entity.Category;
 import com.example.backend.entity.User;
 import com.example.backend.entity.Wallet;
 import com.example.backend.entity.WalletPermission;
 import com.example.backend.entity.WalletShare;
 import com.example.backend.enums.Currency;
 import com.example.backend.enums.PermissionType;
+import com.example.backend.repository.CategoryRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.repository.WalletPermissionRepository;
 import com.example.backend.repository.WalletRepository;
@@ -28,6 +31,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -62,10 +66,15 @@ public class TransactionControllerTest {
     @Autowired
     private WalletPermissionRepository walletPermissionRepository;
 
+    @Autowired
+    private CategoryRepository categoryRepository;
+
     private Wallet userWallet;
     private Authentication userAuthentication;
     private Authentication otherUserAuthentication;
     private Authentication viewUserAuthentication;
+
+    private Category defaultCategory;
 
     @BeforeEach
     void setUp() {
@@ -130,6 +139,12 @@ public class TransactionControllerTest {
         viewWalletPermission.setGrantedBy(user.getId());
         walletPermissionRepository.save(viewWalletPermission);
         
+        // Tạo một category mặc định cho test
+        defaultCategory = new Category();
+        defaultCategory.setName("Food");
+        defaultCategory.setNotes("Default category for expenses");
+        defaultCategory = categoryRepository.save(defaultCategory);
+
         // Xóa context giữa các bài test
         SecurityContextHolder.clearContext();
     }
@@ -225,5 +240,88 @@ public class TransactionControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isForbidden()); // Mong muốn lỗi 403 Forbidden
+    }
+
+    // Test cases for createExpense
+
+    @Test
+    void createExpense_whenSuccess_shouldReturn200AndTransactionResponse() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(userAuthentication);
+
+        BigDecimal expenseAmount = new BigDecimal("100000");
+        ExpenseRequest request = new ExpenseRequest(userWallet.getId(), defaultCategory.getId(), expenseAmount, "Mua sắm", LocalDateTime.now());
+
+        mockMvc.perform(post("/api/transactions/expense")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("Thêm khoản chi thành công"))
+                .andExpect(jsonPath("$.data.amount").value(expenseAmount))
+                .andExpect(jsonPath("$.data.type").value("EXPENSE"));
+
+        Wallet updatedWallet = walletRepository.findById(userWallet.getId()).get();
+        assertThat(updatedWallet.getBalance()).isEqualByComparingTo(new BigDecimal("900000")); // 1000000 - 100000
+    }
+
+    @Test
+    void createExpense_whenInsufficientBalance_shouldReturn400() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(userAuthentication);
+
+        BigDecimal expenseAmount = new BigDecimal("2000000"); // Vượt quá số dư
+        ExpenseRequest request = new ExpenseRequest(userWallet.getId(), defaultCategory.getId(), expenseAmount, "Chi quá số dư", LocalDateTime.now());
+
+        mockMvc.perform(post("/api/transactions/expense")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Số dư trong ví không đủ để thực hiện khoản chi này."));
+    }
+
+    @Test
+    void createExpense_whenWalletNotFound_shouldReturn404() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(userAuthentication);
+
+        BigDecimal expenseAmount = new BigDecimal("100000");
+        ExpenseRequest request = new ExpenseRequest(999L, defaultCategory.getId(), expenseAmount, "Ví không tồn tại", LocalDateTime.now());
+
+        mockMvc.perform(post("/api/transactions/expense")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Không tìm thấy ví với ID: 999"));
+    }
+
+    @Test
+    void createExpense_whenCategoryNotFound_shouldReturn404() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(userAuthentication);
+
+        BigDecimal expenseAmount = new BigDecimal("100000");
+        ExpenseRequest request = new ExpenseRequest(userWallet.getId(), 999L, expenseAmount, "Danh mục không tồn tại", LocalDateTime.now());
+
+        mockMvc.perform(post("/api/transactions/expense")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Không tìm thấy danh mục với ID: 999"));
+    }
+
+    @Test
+    void createExpense_whenUserHasNoPermission_shouldReturn403() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(otherUserAuthentication);
+
+        BigDecimal expenseAmount = new BigDecimal("100000");
+        ExpenseRequest request = new ExpenseRequest(userWallet.getId(), defaultCategory.getId(), expenseAmount, "Chi trái phép", LocalDateTime.now());
+
+        mockMvc.perform(post("/api/transactions/expense")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print()) // Thêm dòng này
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Bạn không có quyền thực hiện hành động này."));
     }
 }

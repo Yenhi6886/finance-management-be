@@ -1,25 +1,25 @@
-
-2025-09-10T10:50:26.892+07:00  INFO 247782 --- [backend] [  restartedMain] com.example.backend.BackendApplication   : Starting BackendApplication using Java 17.0.16 with PID 247782 (/home/ducthien/module6/finance-management-be/build/classes/java/main started by ducthien in /home/ducthien/module6/finance-management-be)
-2025-09-10T10:50:26.893+07:00 DEBUG 247782 --- [backend] [  restartedMain] com.example.backend.BackendApplication   : Running with Spring Boot v3.5.5, Spring v6.2.10
-2025-09-10T10:50:26.894+07:00  INFO 247782 --- [backend] [  restartedMain] com.example.backend.BackendApplication   : No active profile set, falling back to 1 default profile: "default"
-2025-09-10T10:50:26.933+07:00  INFO 247782 --- [backend] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
-2025-09-10T10:50:26.933+07:00  INFO 247782 --- [backend] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
-2025-09-10T10:50:27.368+07:00  INFO 247782 --- [backend] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2025-09-10T10:50:27.411+07:00  INFO 247782 --- [backend] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 36 ms. Found 1 JPA repository interface.
-2025-09-10T10:50:28.088+07:00  INFO 247782 --- [backend] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
-2025-09-10T10:50:28.098+07:00  INFO 247782 --- [backend] [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2025-09-10T10:50:28.098+07:00  INFO 247782 --- [backend] [  restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.44]
-2025-09-10T10:50:28.123+07:00  INFO 247782 --- [backend] [  restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
-2025-09-10T10:50:28.124+07:00  INFO 247782 --- [backend] [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1190 ms
-2025-09-10T10:50:28.235+07:00  INFO 247782 --- [backend] [  restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
-2025-09-10T10:50:28.275+07:00  INFO 247782 --- [backend] [  restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.26.Final
-2025-09-10T10:50:28.298+07:00  INFO 247782 --- [backend] [  restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
-2025-09-10T10:50:28.520+07:00  INFO 247782 --- [backend] [  restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
-2025-09-10T10:50:28.539+07:00  INFO 247782 --- [backend] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
-2025-09-10T10:50:28.757+07:00  INFO 247782 --- [backend] [  restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@1e7ad262
-2025-09-10T10:50:28.759+07:00  INFO 247782 --- [backend] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
-2025-09-10T10:50:28.799+07:00  WARN 247782 --- [backend] [  restartedMain] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-2025-09-10T10:50:28.813+07:00  INFO 247782 --- [backend] [  restartedMain] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+﻿
+2025-09-15T05:51:37.106+07:00  INFO 242353 --- [backend] [  restartedMain] com.example.backend.BackendApplication   : Starting BackendApplication using Java 17.0.16 with PID 242353 (/home/ducthien/module6/finance-management-be/build/classes/java/main started by ducthien in /home/ducthien/module6/finance-management-be)
+2025-09-15T05:51:37.108+07:00 DEBUG 242353 --- [backend] [  restartedMain] com.example.backend.BackendApplication   : Running with Spring Boot v3.5.5, Spring v6.2.10
+2025-09-15T05:51:37.108+07:00  INFO 242353 --- [backend] [  restartedMain] com.example.backend.BackendApplication   : No active profile set, falling back to 1 default profile: "default"
+2025-09-15T05:51:37.141+07:00  INFO 242353 --- [backend] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-09-15T05:51:37.141+07:00  INFO 242353 --- [backend] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-09-15T05:51:37.549+07:00  INFO 242353 --- [backend] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-09-15T05:51:37.606+07:00  INFO 242353 --- [backend] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 51 ms. Found 8 JPA repository interfaces.
+2025-09-15T05:51:38.371+07:00  INFO 242353 --- [backend] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2025-09-15T05:51:38.386+07:00  INFO 242353 --- [backend] [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-09-15T05:51:38.387+07:00  INFO 242353 --- [backend] [  restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.44]
+2025-09-15T05:51:38.419+07:00  INFO 242353 --- [backend] [  restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-09-15T05:51:38.420+07:00  INFO 242353 --- [backend] [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1279 ms
+2025-09-15T05:51:38.584+07:00  INFO 242353 --- [backend] [  restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-09-15T05:51:38.639+07:00  INFO 242353 --- [backend] [  restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.26.Final
+2025-09-15T05:51:38.681+07:00  INFO 242353 --- [backend] [  restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-09-15T05:51:38.939+07:00  INFO 242353 --- [backend] [  restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-09-15T05:51:38.974+07:00  INFO 242353 --- [backend] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-09-15T05:51:39.280+07:00  INFO 242353 --- [backend] [  restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@18c4ef67
+2025-09-15T05:51:39.282+07:00  INFO 242353 --- [backend] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-09-15T05:51:39.331+07:00  WARN 242353 --- [backend] [  restartedMain] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-09-15T05:51:39.348+07:00  INFO 242353 --- [backend] [  restartedMain] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
 	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
 	Database driver: undefined/unknown
 	Database version: 8.0.43
@@ -27,29 +27,25 @@
 	Isolation level: undefined/unknown
 	Minimum pool size: undefined/unknown
 	Maximum pool size: undefined/unknown
-2025-09-10T10:50:29.445+07:00  INFO 247782 --- [backend] [  restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2025-09-10T10:50:29.488+07:00  INFO 247782 --- [backend] [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
-2025-09-10T10:50:29.766+07:00 DEBUG 247782 --- [backend] [  restartedMain] c.e.b.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
-2025-09-10T10:50:29.880+07:00  INFO 247782 --- [backend] [  restartedMain] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
-2025-09-10T10:50:29.881+07:00  WARN 247782 --- [backend] [  restartedMain] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
-2025-09-10T10:50:29.958+07:00  WARN 247782 --- [backend] [  restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
-2025-09-10T10:50:30.272+07:00 DEBUG 247782 --- [backend] [  restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with filters: DisableEncodeUrlFilter, WebAsyncManagerIntegrationFilter, SecurityContextHolderFilter, HeaderWriterFilter, CorsFilter, LogoutFilter, OAuth2AuthorizationRequestRedirectFilter, OAuth2LoginAuthenticationFilter, JwtAuthenticationFilter, DefaultResourcesFilter, DefaultLoginPageGeneratingFilter, DefaultLogoutPageGeneratingFilter, RequestCacheAwareFilter, SecurityContextHolderAwareRequestFilter, AnonymousAuthenticationFilter, SessionManagementFilter, ExceptionTranslationFilter, AuthorizationFilter
-2025-09-10T10:50:30.510+07:00  INFO 247782 --- [backend] [  restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
-2025-09-10T10:50:30.546+07:00  INFO 247782 --- [backend] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
-2025-09-10T10:50:30.554+07:00  INFO 247782 --- [backend] [  restartedMain] com.example.backend.BackendApplication   : Started BackendApplication in 4.001 seconds (process running for 4.498)
-2025-09-10T10:51:35.048+07:00  INFO 247782 --- [backend] [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
-2025-09-10T10:51:35.048+07:00  INFO 247782 --- [backend] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
-2025-09-10T10:51:35.050+07:00  INFO 247782 --- [backend] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
-2025-09-10T10:51:35.062+07:00 DEBUG 247782 --- [backend] [nio-8080-exec-2] o.s.security.web.FilterChainProxy        : Securing POST /api/auth/forgot-password
-2025-09-10T10:51:35.062+07:00 DEBUG 247782 --- [backend] [nio-8080-exec-1] o.s.security.web.FilterChainProxy        : Securing POST /api/auth/forgot-password
-2025-09-10T10:51:35.067+07:00 DEBUG 247782 --- [backend] [nio-8080-exec-1] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
-2025-09-10T10:51:35.067+07:00 DEBUG 247782 --- [backend] [nio-8080-exec-2] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
-2025-09-10T10:51:35.068+07:00 DEBUG 247782 --- [backend] [nio-8080-exec-2] o.s.security.web.FilterChainProxy        : Secured POST /api/auth/forgot-password
-2025-09-10T10:51:35.068+07:00 DEBUG 247782 --- [backend] [nio-8080-exec-1] o.s.security.web.FilterChainProxy        : Secured POST /api/auth/forgot-password
+2025-09-15T05:51:40.224+07:00  INFO 242353 --- [backend] [  restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-09-15T05:51:40.332+07:00  INFO 242353 --- [backend] [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-09-15T05:51:40.598+07:00 DEBUG 242353 --- [backend] [  restartedMain] c.e.b.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
+2025-09-15T05:51:40.654+07:00  INFO 242353 --- [backend] [  restartedMain] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-09-15T05:51:41.419+07:00  INFO 242353 --- [backend] [  restartedMain] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2025-09-15T05:51:41.420+07:00  WARN 242353 --- [backend] [  restartedMain] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2025-09-15T05:51:41.550+07:00  WARN 242353 --- [backend] [  restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-09-15T05:51:41.882+07:00 DEBUG 242353 --- [backend] [  restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with filters: DisableEncodeUrlFilter, WebAsyncManagerIntegrationFilter, SecurityContextHolderFilter, HeaderWriterFilter, CorsFilter, LogoutFilter, OAuth2AuthorizationRequestRedirectFilter, OAuth2LoginAuthenticationFilter, JwtAuthenticationFilter, DefaultResourcesFilter, DefaultLoginPageGeneratingFilter, DefaultLogoutPageGeneratingFilter, RequestCacheAwareFilter, SecurityContextHolderAwareRequestFilter, AnonymousAuthenticationFilter, SessionManagementFilter, ExceptionTranslationFilter, AuthorizationFilter
+2025-09-15T05:51:42.142+07:00  INFO 242353 --- [backend] [  restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2025-09-15T05:51:42.181+07:00  INFO 242353 --- [backend] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2025-09-15T05:51:42.189+07:00  INFO 242353 --- [backend] [  restartedMain] com.example.backend.BackendApplication   : Started BackendApplication in 5.381 seconds (process running for 5.848)
+2025-09-15T05:51:44.735+07:00  INFO 242353 --- [backend] [nio-8080-exec-2] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-09-15T05:51:44.735+07:00  INFO 242353 --- [backend] [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-09-15T05:51:44.736+07:00  INFO 242353 --- [backend] [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2025-09-15T05:51:44.748+07:00 DEBUG 242353 --- [backend] [nio-8080-exec-2] o.s.security.web.FilterChainProxy        : Securing GET /api/wallets
+2025-09-15T05:51:44.748+07:00 DEBUG 242353 --- [backend] [nio-8080-exec-1] o.s.security.web.FilterChainProxy        : Securing GET /api/user/profile
 Hibernate:
     select
         u1_0.id,
-        u1_0.activation_token,
         u1_0.auth_provider,
         u1_0.avatar_url,
         u1_0.created_at,
@@ -59,8 +55,6 @@ Hibernate:
         u1_0.password,
         u1_0.phone_number,
         u1_0.provider_id,
-        u1_0.reset_password_expires,
-        u1_0.reset_password_token,
         u1_0.status,
         u1_0.updated_at,
         u1_0.username
@@ -71,7 +65,6 @@ Hibernate:
 Hibernate:
     select
         u1_0.id,
-        u1_0.activation_token,
         u1_0.auth_provider,
         u1_0.avatar_url,
         u1_0.created_at,
@@ -81,8 +74,6 @@ Hibernate:
         u1_0.password,
         u1_0.phone_number,
         u1_0.provider_id,
-        u1_0.reset_password_expires,
-        u1_0.reset_password_token,
         u1_0.status,
         u1_0.updated_at,
         u1_0.username
@@ -90,16 +81,79 @@ Hibernate:
         users u1_0
     where
         u1_0.email=?
-2025-09-10T10:52:51.872+07:00 DEBUG 247782 --- [backend] [nio-8080-exec-3] o.s.security.web.FilterChainProxy        : Securing POST /api/auth/forgot-password
-2025-09-10T10:52:51.872+07:00 DEBUG 247782 --- [backend] [nio-8080-exec-4] o.s.security.web.FilterChainProxy        : Securing POST /api/auth/forgot-password
-2025-09-10T10:52:51.872+07:00 DEBUG 247782 --- [backend] [nio-8080-exec-4] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
-2025-09-10T10:52:51.872+07:00 DEBUG 247782 --- [backend] [nio-8080-exec-3] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
-2025-09-10T10:52:51.872+07:00 DEBUG 247782 --- [backend] [nio-8080-exec-4] o.s.security.web.FilterChainProxy        : Secured POST /api/auth/forgot-password
-2025-09-10T10:52:51.872+07:00 DEBUG 247782 --- [backend] [nio-8080-exec-3] o.s.security.web.FilterChainProxy        : Secured POST /api/auth/forgot-password
+2025-09-15T05:51:44.932+07:00 DEBUG 242353 --- [backend] [nio-8080-exec-1] o.s.security.web.FilterChainProxy        : Secured GET /api/user/profile
+2025-09-15T05:51:44.932+07:00 DEBUG 242353 --- [backend] [nio-8080-exec-2] o.s.security.web.FilterChainProxy        : Secured GET /api/wallets
+2025-09-15T05:51:44.946+07:00 DEBUG 242353 --- [backend] [nio-8080-exec-1] horizationManagerBeforeMethodInterceptor : Authorizing method invocation ReflectiveMethodInvocation: public org.springframework.http.ResponseEntity com.example.backend.controller.UserController.getCurrentUserProfile(); target is of class [com.example.backend.controller.UserController]
+Hibernate:
+    select
+        w1_0.id,
+        w1_0.balance,
+        w1_0.created_at,
+        w1_0.currency,
+        w1_0.description,
+        w1_0.icon,
+        w1_0.is_archived,
+        w1_0.name,
+        w1_0.updated_at,
+        w1_0.user_id
+    from
+        wallets w1_0
+    left join
+        users u1_0
+            on u1_0.id=w1_0.user_id
+    where
+        u1_0.id=?
+        and w1_0.is_archived=?
+2025-09-15T05:51:44.979+07:00 DEBUG 242353 --- [backend] [nio-8080-exec-1] horizationManagerBeforeMethodInterceptor : Authorized method invocation ReflectiveMethodInvocation: public org.springframework.http.ResponseEntity com.example.backend.controller.UserController.getCurrentUserProfile(); target is of class [com.example.backend.controller.UserController]
+Hibernate:
+    select
+        ws1_0.id,
+        ws1_0.created_at,
+        ws1_0.is_active,
+        ws1_0.owner_id,
+        o1_0.id,
+        o1_0.auth_provider,
+        o1_0.avatar_url,
+        o1_0.created_at,
+        o1_0.email,
+        o1_0.first_name,
+        o1_0.last_name,
+        o1_0.password,
+        o1_0.phone_number,
+        o1_0.provider_id,
+        o1_0.status,
+        o1_0.updated_at,
+        o1_0.username,
+        ws1_0.permission_level,
+        ws1_0.shared_with_user_id,
+        ws1_0.updated_at,
+        ws1_0.wallet_id,
+        w1_0.id,
+        w1_0.balance,
+        w1_0.created_at,
+        w1_0.currency,
+        w1_0.description,
+        w1_0.icon,
+        w1_0.is_archived,
+        w1_0.name,
+        w1_0.updated_at,
+        w1_0.user_id
+    from
+        wallet_shares ws1_0
+    join
+        wallets w1_0
+            on w1_0.id=ws1_0.wallet_id
+    join
+        users o1_0
+            on o1_0.id=ws1_0.owner_id
+    where
+        ws1_0.shared_with_user_id=?
+        and ws1_0.is_active=1
+2025-09-15T05:51:45.049+07:00 DEBUG 242353 --- [backend] [nio-8080-exec-3] o.s.security.web.FilterChainProxy        : Securing GET /api/user/profile
+2025-09-15T05:51:45.051+07:00 DEBUG 242353 --- [backend] [nio-8080-exec-4] o.s.security.web.FilterChainProxy        : Securing GET /api/wallets
 Hibernate:
     select
         u1_0.id,
-        u1_0.activation_token,
         u1_0.auth_provider,
         u1_0.avatar_url,
         u1_0.created_at,
@@ -109,8 +163,6 @@ Hibernate:
         u1_0.password,
         u1_0.phone_number,
         u1_0.provider_id,
-        u1_0.reset_password_expires,
-        u1_0.reset_password_token,
         u1_0.status,
         u1_0.updated_at,
         u1_0.username
@@ -121,7 +173,6 @@ Hibernate:
 Hibernate:
     select
         u1_0.id,
-        u1_0.activation_token,
         u1_0.auth_provider,
         u1_0.avatar_url,
         u1_0.created_at,
@@ -131,8 +182,6 @@ Hibernate:
         u1_0.password,
         u1_0.phone_number,
         u1_0.provider_id,
-        u1_0.reset_password_expires,
-        u1_0.reset_password_token,
         u1_0.status,
         u1_0.updated_at,
         u1_0.username
@@ -140,45 +189,285 @@ Hibernate:
         users u1_0
     where
         u1_0.email=?
-2025-09-10T10:52:57.031+07:00  INFO 247782 --- [backend] [nio-8080-exec-3] c.example.backend.service.EmailService   : New password email sent successfully to ducthien190203@gmail.com
-2025-09-10T10:52:57.031+07:00  INFO 247782 --- [backend] [nio-8080-exec-4] c.example.backend.service.EmailService   : New password email sent successfully to ducthien190203@gmail.com
+2025-09-15T05:51:45.056+07:00 DEBUG 242353 --- [backend] [nio-8080-exec-3] o.s.security.web.FilterChainProxy        : Secured GET /api/user/profile
+2025-09-15T05:51:45.057+07:00 DEBUG 242353 --- [backend] [nio-8080-exec-3] horizationManagerBeforeMethodInterceptor : Authorizing method invocation ReflectiveMethodInvocation: public org.springframework.http.ResponseEntity com.example.backend.controller.UserController.getCurrentUserProfile(); target is of class [com.example.backend.controller.UserController]
+2025-09-15T05:51:45.057+07:00 DEBUG 242353 --- [backend] [nio-8080-exec-3] horizationManagerBeforeMethodInterceptor : Authorized method invocation ReflectiveMethodInvocation: public org.springframework.http.ResponseEntity com.example.backend.controller.UserController.getCurrentUserProfile(); target is of class [com.example.backend.controller.UserController]
+2025-09-15T05:51:45.059+07:00 DEBUG 242353 --- [backend] [nio-8080-exec-4] o.s.security.web.FilterChainProxy        : Secured GET /api/wallets
 Hibernate:
-    update
-        users
-    set
-        activation_token=?,
-        auth_provider=?,
-        avatar_url=?,
-        email=?,
-        first_name=?,
-        last_name=?,
-        password=?,
-        phone_number=?,
-        provider_id=?,
-        reset_password_expires=?,
-        reset_password_token=?,
-        status=?,
-        updated_at=?,
-        username=?
+    select
+        w1_0.id,
+        w1_0.balance,
+        w1_0.created_at,
+        w1_0.currency,
+        w1_0.description,
+        w1_0.icon,
+        w1_0.is_archived,
+        w1_0.name,
+        w1_0.updated_at,
+        w1_0.user_id
+    from
+        wallets w1_0
+    left join
+        users u1_0
+            on u1_0.id=w1_0.user_id
     where
-        id=?
+        u1_0.id=?
+        and w1_0.is_archived=?
 Hibernate:
-    update
-        users
-    set
-        activation_token=?,
-        auth_provider=?,
-        avatar_url=?,
-        email=?,
-        first_name=?,
-        last_name=?,
-        password=?,
-        phone_number=?,
-        provider_id=?,
-        reset_password_expires=?,
-        reset_password_token=?,
-        status=?,
-        updated_at=?,
-        username=?
+    select
+        ws1_0.id,
+        ws1_0.created_at,
+        ws1_0.is_active,
+        ws1_0.owner_id,
+        o1_0.id,
+        o1_0.auth_provider,
+        o1_0.avatar_url,
+        o1_0.created_at,
+        o1_0.email,
+        o1_0.first_name,
+        o1_0.last_name,
+        o1_0.password,
+        o1_0.phone_number,
+        o1_0.provider_id,
+        o1_0.status,
+        o1_0.updated_at,
+        o1_0.username,
+        ws1_0.permission_level,
+        ws1_0.shared_with_user_id,
+        ws1_0.updated_at,
+        ws1_0.wallet_id,
+        w1_0.id,
+        w1_0.balance,
+        w1_0.created_at,
+        w1_0.currency,
+        w1_0.description,
+        w1_0.icon,
+        w1_0.is_archived,
+        w1_0.name,
+        w1_0.updated_at,
+        w1_0.user_id
+    from
+        wallet_shares ws1_0
+    join
+        wallets w1_0
+            on w1_0.id=ws1_0.wallet_id
+    join
+        users o1_0
+            on o1_0.id=ws1_0.owner_id
     where
-        id=?
+        ws1_0.shared_with_user_id=?
+        and ws1_0.is_active=1
+2025-09-15T05:51:45.082+07:00 DEBUG 242353 --- [backend] [nio-8080-exec-5] o.s.security.web.FilterChainProxy        : Securing GET /api/wallets
+Hibernate:
+    select
+        u1_0.id,
+        u1_0.auth_provider,
+        u1_0.avatar_url,
+        u1_0.created_at,
+        u1_0.email,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.password,
+        u1_0.phone_number,
+        u1_0.provider_id,
+        u1_0.status,
+        u1_0.updated_at,
+        u1_0.username
+    from
+        users u1_0
+    where
+        u1_0.email=?
+2025-09-15T05:51:45.087+07:00 DEBUG 242353 --- [backend] [nio-8080-exec-5] o.s.security.web.FilterChainProxy        : Secured GET /api/wallets
+Hibernate:
+    select
+        w1_0.id,
+        w1_0.balance,
+        w1_0.created_at,
+        w1_0.currency,
+        w1_0.description,
+        w1_0.icon,
+        w1_0.is_archived,
+        w1_0.name,
+        w1_0.updated_at,
+        w1_0.user_id
+    from
+        wallets w1_0
+    left join
+        users u1_0
+            on u1_0.id=w1_0.user_id
+    where
+        u1_0.id=?
+        and w1_0.is_archived=?
+Hibernate:
+    select
+        ws1_0.id,
+        ws1_0.created_at,
+        ws1_0.is_active,
+        ws1_0.owner_id,
+        o1_0.id,
+        o1_0.auth_provider,
+        o1_0.avatar_url,
+        o1_0.created_at,
+        o1_0.email,
+        o1_0.first_name,
+        o1_0.last_name,
+        o1_0.password,
+        o1_0.phone_number,
+        o1_0.provider_id,
+        o1_0.status,
+        o1_0.updated_at,
+        o1_0.username,
+        ws1_0.permission_level,
+        ws1_0.shared_with_user_id,
+        ws1_0.updated_at,
+        ws1_0.wallet_id,
+        w1_0.id,
+        w1_0.balance,
+        w1_0.created_at,
+        w1_0.currency,
+        w1_0.description,
+        w1_0.icon,
+        w1_0.is_archived,
+        w1_0.name,
+        w1_0.updated_at,
+        w1_0.user_id
+    from
+        wallet_shares ws1_0
+    join
+        wallets w1_0
+            on w1_0.id=ws1_0.wallet_id
+    join
+        users o1_0
+            on o1_0.id=ws1_0.owner_id
+    where
+        ws1_0.shared_with_user_id=?
+        and ws1_0.is_active=1
+2025-09-15T05:51:45.099+07:00 DEBUG 242353 --- [backend] [nio-8080-exec-6] o.s.security.web.FilterChainProxy        : Securing GET /api/wallets
+Hibernate:
+    select
+        u1_0.id,
+        u1_0.auth_provider,
+        u1_0.avatar_url,
+        u1_0.created_at,
+        u1_0.email,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.password,
+        u1_0.phone_number,
+        u1_0.provider_id,
+        u1_0.status,
+        u1_0.updated_at,
+        u1_0.username
+    from
+        users u1_0
+    where
+        u1_0.email=?
+2025-09-15T05:51:45.105+07:00 DEBUG 242353 --- [backend] [nio-8080-exec-6] o.s.security.web.FilterChainProxy        : Secured GET /api/wallets
+Hibernate:
+    select
+        w1_0.id,
+        w1_0.balance,
+        w1_0.created_at,
+        w1_0.currency,
+        w1_0.description,
+        w1_0.icon,
+        w1_0.is_archived,
+        w1_0.name,
+        w1_0.updated_at,
+        w1_0.user_id
+    from
+        wallets w1_0
+    left join
+        users u1_0
+            on u1_0.id=w1_0.user_id
+    where
+        u1_0.id=?
+        and w1_0.is_archived=?
+Hibernate:
+    select
+        ws1_0.id,
+        ws1_0.created_at,
+        ws1_0.is_active,
+        ws1_0.owner_id,
+        o1_0.id,
+        o1_0.auth_provider,
+        o1_0.avatar_url,
+        o1_0.created_at,
+        o1_0.email,
+        o1_0.first_name,
+        o1_0.last_name,
+        o1_0.password,
+        o1_0.phone_number,
+        o1_0.provider_id,
+        o1_0.status,
+        o1_0.updated_at,
+        o1_0.username,
+        ws1_0.permission_level,
+        ws1_0.shared_with_user_id,
+        ws1_0.updated_at,
+        ws1_0.wallet_id,
+        w1_0.id,
+        w1_0.balance,
+        w1_0.created_at,
+        w1_0.currency,
+        w1_0.description,
+        w1_0.icon,
+        w1_0.is_archived,
+        w1_0.name,
+        w1_0.updated_at,
+        w1_0.user_id
+    from
+        wallet_shares ws1_0
+    join
+        wallets w1_0
+            on w1_0.id=ws1_0.wallet_id
+    join
+        users o1_0
+            on o1_0.id=ws1_0.owner_id
+    where
+        ws1_0.shared_with_user_id=?
+        and ws1_0.is_active=1
+2025-09-15T05:51:45.114+07:00 DEBUG 242353 --- [backend] [nio-8080-exec-7] o.s.security.web.FilterChainProxy        : Securing GET /api/categories/expense
+Hibernate:
+    select
+        u1_0.id,
+        u1_0.auth_provider,
+        u1_0.avatar_url,
+        u1_0.created_at,
+        u1_0.email,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.password,
+        u1_0.phone_number,
+        u1_0.provider_id,
+        u1_0.status,
+        u1_0.updated_at,
+        u1_0.username
+    from
+        users u1_0
+    where
+        u1_0.email=?
+2025-09-15T05:51:45.121+07:00 DEBUG 242353 --- [backend] [nio-8080-exec-7] o.s.security.web.FilterChainProxy        : Secured GET /api/categories/expense
+2025-09-15T05:51:45.127+07:00  WARN 242353 --- [backend] [nio-8080-exec-7] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.web.servlet.resource.NoResourceFoundException: No static resource api/categories/expense.]
+2025-09-15T05:51:45.129+07:00 DEBUG 242353 --- [backend] [nio-8080-exec-8] o.s.security.web.FilterChainProxy        : Securing GET /api/categories/expense
+Hibernate:
+    select
+        u1_0.id,
+        u1_0.auth_provider,
+        u1_0.avatar_url,
+        u1_0.created_at,
+        u1_0.email,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.password,
+        u1_0.phone_number,
+        u1_0.provider_id,
+        u1_0.status,
+        u1_0.updated_at,
+        u1_0.username
+    from
+        users u1_0
+    where
+        u1_0.email=?
+2025-09-15T05:51:45.136+07:00 DEBUG 242353 --- [backend] [nio-8080-exec-8] o.s.security.web.FilterChainProxy        : Secured GET /api/categories/expense
+2025-09-15T05:51:45.138+07:00  WARN 242353 --- [backend] [nio-8080-exec-8] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.web.servlet.resource.NoResourceFoundException: No static resource api/categories/expense.]
