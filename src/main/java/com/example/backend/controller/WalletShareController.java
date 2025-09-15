@@ -78,6 +78,20 @@ public class WalletShareController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @DeleteMapping("/{shareId}")
+    public ResponseEntity<ApiResponse<Void>> revokeWalletShareById(
+            @PathVariable Long shareId,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+
+        walletShareService.revokeWalletShareById(shareId, currentUser.getId());
+        ApiResponse<Void> apiResponse = new ApiResponse<>(
+                true, 
+                "Thu hồi chia sẻ ví thành công", 
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
+    }
+
     @PutMapping("/{walletId}/users/{userId}/permission")
     public ResponseEntity<ApiResponse<Void>> updateWalletSharePermission(
             @PathVariable Long walletId,

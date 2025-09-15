@@ -24,4 +24,5 @@ public class ShareWalletResponse {
     private Boolean isActive;
     private LocalDateTime createdAt;
     private String message;
+    private WalletResponse wallet;
 }

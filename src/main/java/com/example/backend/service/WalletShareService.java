@@ -3,6 +3,7 @@ package com.example.backend.service;
 import com.example.backend.dto.request.ShareWalletRequest;
 import com.example.backend.dto.response.ShareWalletResponse;
 import com.example.backend.dto.response.SharedWalletResponse;
+import com.example.backend.dto.response.WalletResponse;
 import com.example.backend.entity.User;
 import com.example.backend.entity.Wallet;
 import com.example.backend.entity.WalletShare;
@@ -126,6 +127,22 @@ public class WalletShareService {
     }
 
     @Transactional
+    public void revokeWalletShareById(Long shareId, Long ownerId) {
+        WalletShare walletShare = walletShareRepository.findById(shareId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chia sẻ ví với ID: " + shareId));
+
+        if (!walletShare.getOwner().getId().equals(ownerId)) {
+            throw new BadRequestException("Bạn không có quyền thu hồi chia sẻ ví này");
+        }
+
+        walletShare.setIsActive(false);
+        walletShareRepository.save(walletShare);
+
+        log.info("Chia sẻ ví '{}' với user '{}' đã được thu hồi bởi user '{}'",
+                walletShare.getWallet().getName(), walletShare.getSharedWithUser().getEmail(), ownerId);
+    }
+
+    @Transactional
     public void removeSharedUser(Long walletId, Long userId, Long ownerId) {
         // Kiểm tra ví có tồn tại và thuộc về user không
         Wallet wallet = walletRepository.findById(walletId)
@@ -154,17 +171,33 @@ public class WalletShareService {
     }
 
     private ShareWalletResponse buildShareWalletResponse(WalletShare walletShare) {
+        Wallet wallet = walletShare.getWallet();
         return ShareWalletResponse.builder()
                 .id(walletShare.getId())
-                .walletId(walletShare.getWallet().getId())
-                .walletName(walletShare.getWallet().getName())
+                .walletId(wallet.getId())
+                .walletName(wallet.getName())
                 .ownerName(walletShare.getOwner().getFirstName() + " " + walletShare.getOwner().getLastName())
                 .sharedWithEmail(walletShare.getSharedWithUser().getEmail())
                 .sharedWithName(walletShare.getSharedWithUser().getFirstName() + " " + walletShare.getSharedWithUser().getLastName())
                 .permissionLevel(walletShare.getPermissionLevel())
                 .isActive(walletShare.getIsActive())
                 .createdAt(walletShare.getCreatedAt())
+                .wallet(createWalletResponse(wallet))
                 .build();
+    }
+
+    private WalletResponse createWalletResponse(Wallet wallet) {
+        WalletResponse response = new WalletResponse();
+        response.setId(wallet.getId());
+        response.setName(wallet.getName());
+        response.setBalance(wallet.getBalance());
+        response.setCurrency(wallet.getCurrency());
+        response.setIcon(wallet.getIcon());
+        response.setDescription(wallet.getDescription());
+        response.setArchived(wallet.isArchived());
+        response.setCreatedAt(wallet.getCreatedAt());
+        response.setUpdatedAt(wallet.getUpdatedAt());
+        return response;
     }
 
     private SharedWalletResponse buildSharedWalletResponse(WalletShare walletShare) {
