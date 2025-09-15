@@ -18,7 +18,6 @@ public class ShareWalletRequest {
     @NotNull(message = "ID ví không được để trống")
     private Long walletId;
 
-    @NotBlank(message = "Email người nhận không được để trống")
     @Email(message = "Email không hợp lệ")
     private String email;
 
