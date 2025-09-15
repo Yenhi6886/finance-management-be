@@ -20,6 +20,7 @@ public class WalletSelectionService {
     private final WalletRepository walletRepository;
     private final UserSettingsRepository userSettingsRepository;
     private final UserRepository userRepository;
+    private final ExchangeRateService exchangeRateService;
 
     public List<Wallet> listUserWallets(Long userId) {
         return  walletRepository.findAllByUserId(userId);
@@ -71,25 +72,47 @@ public class WalletSelectionService {
                 ));
     }
 
-    // Tính tổng số dư quy đổi về VND (giả sử tỷ giá cố định)
+    // Tính tổng số dư quy đổi về VND sử dụng tỷ giá động
     public BigDecimal getTotalBalanceInVND(Long userId) {
         List<Wallet> wallets = listUserWallets(userId);
         BigDecimal totalVND = BigDecimal.ZERO;
 
         for (Wallet wallet : wallets) {
-            BigDecimal balanceInVND = convertToVND(wallet.getBalance(), wallet.getCurrency());
+            BigDecimal balanceInVND = exchangeRateService.convertCurrency(
+                wallet.getBalance(),
+                wallet.getCurrency(),
+                com.example.backend.enums.Currency.VND
+            );
             totalVND = totalVND.add(balanceInVND);
         }
 
         return totalVND;
     }
 
-    // Phương thức quy đổi tiền tệ về VND (có thể tùy chỉnh tỷ giá)
-    private BigDecimal convertToVND(BigDecimal amount, com.example.backend.enums.Currency currency) {
-        return switch (currency) {
-            case VND -> amount;
-            case USD -> amount.multiply(new BigDecimal("24000")); // 1 USD = 24,000 VND
-            default -> amount; // Mặc định giữ nguyên
-        };
+    // Tính tổng số dư quy đổi về USD
+    public BigDecimal getTotalBalanceInUSD(Long userId) {
+        List<Wallet> wallets = listUserWallets(userId);
+        BigDecimal totalUSD = BigDecimal.ZERO;
+
+        for (Wallet wallet : wallets) {
+            BigDecimal balanceInUSD = exchangeRateService.convertToUSD(wallet.getBalance(), wallet.getCurrency());
+            totalUSD = totalUSD.add(balanceInUSD);
+        }
+
+        return totalUSD;
+    }
+
+    // Lấy thông tin tổng số dư theo tất cả loại tiền tệ
+    public Map<String, Object> getWalletSummary(Long userId) {
+        Map<String, BigDecimal> balanceByCurrency = getTotalBalanceByCurrency(userId);
+        BigDecimal totalVND = getTotalBalanceInVND(userId);
+        BigDecimal totalUSD = getTotalBalanceInUSD(userId);
+
+        return Map.of(
+            "balanceByCurrency", balanceByCurrency,
+            "totalVND", totalVND,
+            "totalUSD", totalUSD,
+            "walletCount", listUserWallets(userId).size()
+        );
     }
 }
