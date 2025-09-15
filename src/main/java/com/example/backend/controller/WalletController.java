@@ -44,6 +44,7 @@ public class WalletController {
     }
 
     @PutMapping("/{walletId}")
+    @RequireWalletPermission(PermissionType.EDIT_WALLET)
     public ResponseEntity<ApiResponse<WalletResponse>> updateWallet(
             @PathVariable Long walletId,
             @Valid @RequestBody UpdateWalletRequest request,
