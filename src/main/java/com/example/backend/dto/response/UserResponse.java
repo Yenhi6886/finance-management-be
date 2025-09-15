@@ -10,11 +10,14 @@ import java.time.LocalDateTime;
 public class UserResponse {
     private Long id;
     private String email;
+    private String username;
     private String firstName;
     private String lastName;
     private String phoneNumber;
+    private String avatarUrl;
     private UserStatus status;
     private AuthProvider authProvider;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
 }

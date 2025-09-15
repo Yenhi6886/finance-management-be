@@ -10,53 +10,52 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/user")
-@CrossOrigin(origins = "*")
-@PreAuthorize("hasRole('USER')")
 public class UserController {
 
     @Autowired
     private UserService userService;
 
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/profile")
-    public ResponseEntity<ApiResponse> getCurrentUserProfile() {
-        try {
-            UserResponse userResponse = userService.getCurrentUserProfile();
-            return ResponseEntity.ok(ApiResponse.success("Lấy thông tin profile thành công!", userResponse));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+    public ResponseEntity<ApiResponse<UserResponse>> getCurrentUserProfile() {
+        UserResponse userResponse = userService.getCurrentUserProfile();
+        ApiResponse<UserResponse> response = new ApiResponse<>(true, "Lấy thông tin profile thành công!", userResponse);
+        return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasRole('USER')")
     @PutMapping("/profile")
-    public ResponseEntity<ApiResponse> updateProfile(@Valid @RequestBody UpdateProfileRequest request) {
-        try {
-            UserResponse userResponse = userService.updateProfile(request);
-            return ResponseEntity.ok(ApiResponse.success("Cập nhật profile thành công!", userResponse));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+    public ResponseEntity<ApiResponse<UserResponse>> updateProfile(@Valid @RequestBody UpdateProfileRequest request) {
+        UserResponse userResponse = userService.updateProfile(request);
+        ApiResponse<UserResponse> response = new ApiResponse<>(true, "Cập nhật profile thành công!", userResponse);
+        return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasRole('USER')")
+    @PostMapping("/avatar")
+    public ResponseEntity<ApiResponse<UserResponse>> updateAvatar(@RequestParam("avatar") MultipartFile file) {
+        UserResponse userResponse = userService.updateAvatar(file);
+        ApiResponse<UserResponse> response = new ApiResponse<>(true, "Cập nhật ảnh đại diện thành công!", userResponse);
+        return ResponseEntity.ok(response);
+    }
+
+    @PreAuthorize("hasRole('USER')")
     @PostMapping("/change-password")
-    public ResponseEntity<ApiResponse> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
-        try {
-            userService.changePassword(request);
-            return ResponseEntity.ok(ApiResponse.success("Đổi mật khẩu thành công!"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+    public ResponseEntity<ApiResponse<Void>> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        userService.changePassword(request);
+        ApiResponse<Void> response = new ApiResponse<>(true, "Đổi mật khẩu thành công!");
+        return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasRole('USER')")
     @DeleteMapping("/account")
-    public ResponseEntity<ApiResponse> deleteAccount() {
-        try {
-            userService.deleteAccount();
-            return ResponseEntity.ok(ApiResponse.success("Xóa tài khoản thành công!"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+    public ResponseEntity<ApiResponse<Void>> deleteAccount() {
+        userService.deleteAccount();
+        ApiResponse<Void> response = new ApiResponse<>(true, "Xóa tài khoản thành công!");
+        return ResponseEntity.ok(response);
     }
 }

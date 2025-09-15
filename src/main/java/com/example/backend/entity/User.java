@@ -2,6 +2,7 @@ package com.example.backend.entity;
 
 import com.example.backend.enums.AuthProvider;
 import com.example.backend.enums.UserStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,6 +11,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -25,17 +28,23 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
+    @Column(unique = true, nullable = false)
+    private String username;
+
     @Column(nullable = false)
     private String password;
 
-    @Column(name = "first_name")
+    @Column(name = "first_name", nullable = false)
     private String firstName;
 
-    @Column(name = "last_name")
+    @Column(name = "last_name", nullable = false)
     private String lastName;
 
     @Column(name = "phone_number")
     private String phoneNumber;
+
+    @Column(name = "avatar_url")
+    private String avatarUrl;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -48,15 +57,6 @@ public class User {
     @Column(name = "provider_id")
     private String providerId;
 
-    @Column(name = "activation_token")
-    private String activationToken;
-
-    @Column(name = "reset_password_token")
-    private String resetPasswordToken;
-
-    @Column(name = "reset_password_expires")
-    private LocalDateTime resetPasswordExpires;
-
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -64,4 +64,8 @@ public class User {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Wallet> wallets = new ArrayList<>();
 }

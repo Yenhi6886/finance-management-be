@@ -1,6 +1,7 @@
 package com.example.backend.security;
 
 import com.example.backend.util.JwtUtil;
+import com.example.backend.service.JwtBlacklistService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,12 +30,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
+    @Autowired
+    private JwtBlacklistService jwtBlacklistService;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
         try {
             String jwt = parseJwt(request);
-            if (jwt != null && jwtUtil.validateToken(jwt)) {
+            if (jwt != null && jwtUtil.validateToken(jwt) && !jwtBlacklistService.isBlacklisted(jwt)) {
                 String username = jwtUtil.getUsernameFromToken(jwt);
 
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);

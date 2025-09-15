@@ -31,11 +31,13 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
     
     // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+    implementation 'com.nimbusds:nimbus-jose-jwt:9.37.3' // For StringUtils and other JWT/OAuth2 utilities
     
     // MapStruct for DTO mapping
     implementation 'org.mapstruct:mapstruct:1.5.5.Final'
@@ -53,3 +55,4 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+

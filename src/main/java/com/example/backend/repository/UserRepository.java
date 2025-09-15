@@ -13,14 +13,11 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByEmail(String email);
-
-    Optional<User> findByActivationToken(String activationToken);
-
-    Optional<User> findByResetPasswordToken(String resetPasswordToken);
+    Optional<User> findByUsername(String username);
 
     boolean existsByEmail(String email);
+    boolean existsByUsername(String username);
+    boolean existsByPhoneNumber(String phoneNumber);
 
     List<User> findByStatus(UserStatus status);
-
-    List<User> findByResetPasswordExpiresLessThan(LocalDateTime dateTime);
 }
