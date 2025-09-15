@@ -131,6 +131,21 @@ public class WalletController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @GetMapping("/total-balance-usd")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getTotalBalanceInUSD(@AuthenticationPrincipal CustomUserDetails currentUser) {
+        BigDecimal totalBalanceUSD = walletSelectionService.getTotalBalanceInUSD(currentUser.getId());
+        int totalWallets = walletService.getAllWalletsByUserId(currentUser.getId()).size();
+
+        Map<String, Object> response = Map.of(
+            "totalBalanceUSD", totalBalanceUSD,
+            "totalWallets", totalWallets,
+            "currency", "USD"
+        );
+
+        ApiResponse<Map<String, Object>> apiResponse = new ApiResponse<>(true, "Lấy tổng số dư theo USD thành công", response);
+        return ResponseEntity.ok(apiResponse);
+    }
+
     @PostMapping("/transfer")
     public ResponseEntity<ApiResponse<?>> transferMoney(
             @AuthenticationPrincipal CustomUserDetails currentUser,
