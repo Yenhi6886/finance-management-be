@@ -4,11 +4,9 @@ import com.example.backend.dto.request.ShareWalletRequest;
 import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.dto.response.ShareWalletResponse;
 import com.example.backend.dto.response.SharedWalletResponse;
-import com.example.backend.dto.response.WalletShareLinkResponse;
 import com.example.backend.entity.WalletShare;
 import com.example.backend.security.CustomUserDetails;
 import com.example.backend.service.WalletShareService;
-import com.example.backend.service.WalletShareLinkService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,7 +22,6 @@ import java.util.List;
 public class WalletShareController {
 
     private final WalletShareService walletShareService;
-    private final WalletShareLinkService walletShareLinkService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<ShareWalletResponse>> shareWallet(
@@ -41,12 +38,12 @@ public class WalletShareController {
     }
 
     @PostMapping("/create-link")
-    public ResponseEntity<ApiResponse<WalletShareLinkResponse>> createShareLink(
+    public ResponseEntity<ApiResponse<ShareWalletResponse>> createShareLink(
             @Valid @RequestBody ShareWalletRequest request,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
 
-        WalletShareLinkResponse response = walletShareLinkService.createShareLink(request, currentUser.getId());
-        ApiResponse<WalletShareLinkResponse> apiResponse = new ApiResponse<>(
+        ShareWalletResponse response = walletShareService.createShareLink(request, currentUser.getId());
+        ApiResponse<ShareWalletResponse> apiResponse = new ApiResponse<>(
                 true, 
                 "Tạo link chia sẻ thành công", 
                 response
@@ -55,41 +52,14 @@ public class WalletShareController {
     }
 
     @GetMapping("/link/{shareToken}")
-    public ResponseEntity<ApiResponse<WalletShareLinkResponse>> getShareLinkInfo(
+    public ResponseEntity<ApiResponse<ShareWalletResponse>> getShareLinkInfo(
             @PathVariable String shareToken) {
 
-        WalletShareLinkResponse response = walletShareLinkService.getShareLinkInfo(shareToken);
-        ApiResponse<WalletShareLinkResponse> apiResponse = new ApiResponse<>(
+        ShareWalletResponse response = walletShareService.getShareLinkInfo(shareToken);
+        ApiResponse<ShareWalletResponse> apiResponse = new ApiResponse<>(
                 true, 
                 "Lấy thông tin link chia sẻ thành công", 
                 response
-        );
-        return ResponseEntity.ok(apiResponse);
-    }
-
-    @GetMapping("/links")
-    public ResponseEntity<ApiResponse<List<WalletShareLinkResponse>>> getShareLinks(
-            @AuthenticationPrincipal CustomUserDetails currentUser) {
-
-        List<WalletShareLinkResponse> shareLinks = walletShareLinkService.getShareLinksByOwner(currentUser.getId());
-        ApiResponse<List<WalletShareLinkResponse>> apiResponse = new ApiResponse<>(
-                true, 
-                "Lấy danh sách link chia sẻ thành công", 
-                shareLinks
-        );
-        return ResponseEntity.ok(apiResponse);
-    }
-
-    @DeleteMapping("/link/{shareLinkId}")
-    public ResponseEntity<ApiResponse<Void>> revokeShareLink(
-            @PathVariable Long shareLinkId,
-            @AuthenticationPrincipal CustomUserDetails currentUser) {
-
-        walletShareLinkService.revokeShareLink(shareLinkId, currentUser.getId());
-        ApiResponse<Void> apiResponse = new ApiResponse<>(
-                true, 
-                "Thu hồi link chia sẻ thành công", 
-                null
         );
         return ResponseEntity.ok(apiResponse);
     }
