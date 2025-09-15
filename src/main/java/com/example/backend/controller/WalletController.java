@@ -44,6 +44,7 @@ public class WalletController {
     }
 
     @PutMapping("/{walletId}")
+    @RequireWalletPermission(PermissionType.EDIT_WALLET)
     public ResponseEntity<ApiResponse<WalletResponse>> updateWallet(
             @PathVariable Long walletId,
             @Valid @RequestBody UpdateWalletRequest request,
@@ -131,13 +132,28 @@ public class WalletController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @GetMapping("/total-balance-usd")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getTotalBalanceInUSD(@AuthenticationPrincipal CustomUserDetails currentUser) {
+        BigDecimal totalBalanceUSD = walletSelectionService.getTotalBalanceInUSD(currentUser.getId());
+        int totalWallets = walletService.getAllWalletsByUserId(currentUser.getId()).size();
+
+        Map<String, Object> response = Map.of(
+            "totalBalanceUSD", totalBalanceUSD,
+            "totalWallets", totalWallets,
+            "currency", "USD"
+        );
+
+        ApiResponse<Map<String, Object>> apiResponse = new ApiResponse<>(true, "Lấy tổng số dư theo USD thành công", response);
+        return ResponseEntity.ok(apiResponse);
+    }
+
     @PostMapping("/transfer")
     public ResponseEntity<ApiResponse<?>> transferMoney(
             @AuthenticationPrincipal CustomUserDetails currentUser,
             @Valid @RequestBody WalletTransferRequest request) {
         try {
             WalletTransferResponse response = walletTransferService.transferMoney(currentUser.getId(), request);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Chuyện tiền thành công", response));
+            return ResponseEntity.ok(new ApiResponse<>(true, "Chuyển tiền thành công", response));
         } catch (InsufficientBalanceException | WalletNotFoundException | IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
         }
@@ -156,6 +172,8 @@ public class WalletController {
             return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), Map.of("valid", false)));
         }
     }
+
+
 
     @DeleteMapping("/{id}/share/{userId}")
     @RequireWalletPermission(value = PermissionType.MANAGE_PERMISSIONS, requireOwnership = true)

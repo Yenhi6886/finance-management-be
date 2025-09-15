@@ -42,5 +42,11 @@ public interface WalletShareRepository extends JpaRepository<WalletShare, Long> 
             "WHERE ws.wallet.id = :walletId AND ws.isActive = true")
     Long countByWalletId(@Param("walletId") Long walletId);
 
+    @Query("SELECT ws FROM WalletShare ws " +
+            "JOIN FETCH ws.wallet w " +
+            "JOIN FETCH ws.owner o " +
+            "WHERE ws.shareToken = :shareToken AND ws.isActive = true")
+    Optional<WalletShare> findByShareToken(@Param("shareToken") String shareToken);
+
     void deleteByWalletId(Long walletId);
 }
