@@ -59,7 +59,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         // The frontend's actual URL where it expects to receive the token after successful OAuth2 login.
         // Thiện, you MUST replace this with the actual frontend URL provided by the frontend team.
         // Example: "http://localhost:3000/oauth2/callback" or "http://localhost:5173/auth/callback"
-        String frontendCallbackUrl = "http://localhost:3000/oauth2/callback"; // <<< QUAN TRỌNG: Thiện, hãy thay đổi cái này!
+        String frontendCallbackUrl = appProperties.getFrontendUrl();
 
         String targetUrl = redirectUri.orElse(frontendCallbackUrl);
 

@@ -15,12 +15,12 @@ import java.time.LocalDateTime;
 public class UserSettings {
 
     @Id
-    @Column(name = "user_id", columnDefinition = "INT UNSIGNED")
+    @Column(name = "user_id")
     private Long userId;
 
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
-    @JoinColumn(name = "user_id", columnDefinition = "INT UNSIGNED")
+    @JoinColumn(name = "user_id")
     private User user;
 
     @Column(length = 10)
@@ -44,7 +44,7 @@ public class UserSettings {
     private boolean monthlyReport = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "current_wallet_id", columnDefinition = "INT UNSIGNED")
+    @JoinColumn(name = "current_wallet_id")
     private Wallet currentWallet;
 
     @UpdateTimestamp
