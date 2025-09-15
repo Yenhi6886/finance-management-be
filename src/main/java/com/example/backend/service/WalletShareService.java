@@ -77,6 +77,66 @@ public class WalletShareService {
         return buildShareWalletResponse(savedWalletShare);
     }
 
+    @Transactional
+    public ShareWalletResponse createShareLink(ShareWalletRequest request, Long ownerId) {
+        // Kiểm tra ví có tồn tại và thuộc về user không
+        Wallet wallet = walletRepository.findById(request.getWalletId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ví với ID: " + request.getWalletId()));
+
+        if (!wallet.getUser().getId().equals(ownerId)) {
+            throw new BadRequestException("Bạn không có quyền chia sẻ ví này");
+        }
+
+        // Tạo unique share token
+        String shareToken = generateShareToken();
+
+        // Tạo wallet share với share token
+        WalletShare walletShare = new WalletShare();
+        walletShare.setWallet(wallet);
+        walletShare.setOwner(wallet.getUser());
+        walletShare.setSharedWithUser(null); // Link share không cần specific user
+        walletShare.setPermissionLevel(request.getPermissionLevel());
+        walletShare.setIsActive(true);
+        walletShare.setShareToken(shareToken);
+        walletShare.setMessage(request.getMessage());
+        
+        // Set expiry time if provided
+        if (request.getExpiryDate() != null) {
+            walletShare.setExpiresAt(request.getExpiryDate());
+        }
+
+        WalletShare savedWalletShare = walletShareRepository.save(walletShare);
+
+        // Gán quyền mặc định
+        walletPermissionService.assignDefaultPermissions(savedWalletShare);
+
+        log.info("Link chia sẻ ví '{}' đã được tạo bởi user '{}' với token '{}'",
+                wallet.getName(), wallet.getUser().getEmail(), shareToken);
+
+        return buildShareWalletResponse(savedWalletShare);
+    }
+
+    public ShareWalletResponse getShareLinkInfo(String shareToken) {
+        WalletShare walletShare = walletShareRepository.findByShareToken(shareToken)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy link chia sẻ"));
+
+        // Kiểm tra link có hết hạn không
+        if (walletShare.getExpiresAt() != null && walletShare.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("Link chia sẻ đã hết hạn");
+        }
+
+        // Kiểm tra link có active không
+        if (!walletShare.getIsActive()) {
+            throw new BadRequestException("Link chia sẻ đã bị thu hồi");
+        }
+
+        return buildShareWalletResponse(walletShare);
+    }
+
+    private String generateShareToken() {
+        return java.util.UUID.randomUUID().toString().replace("-", "");
+    }
+
     public List<SharedWalletResponse> getSharedWallets(Long userId) {
         List<WalletShare> walletShares = walletShareRepository.findSharedWalletsByUserId(userId);
 

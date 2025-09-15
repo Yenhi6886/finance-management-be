@@ -25,4 +25,6 @@ public class ShareWalletResponse {
     private LocalDateTime createdAt;
     private String message;
     private WalletResponse wallet;
+    private String shareToken;
+    private LocalDateTime expiresAt;
 }

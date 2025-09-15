@@ -37,6 +37,33 @@ public class WalletShareController {
         return new ResponseEntity<>(apiResponse, HttpStatus.CREATED);
     }
 
+    @PostMapping("/create-link")
+    public ResponseEntity<ApiResponse<ShareWalletResponse>> createShareLink(
+            @Valid @RequestBody ShareWalletRequest request,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+
+        ShareWalletResponse response = walletShareService.createShareLink(request, currentUser.getId());
+        ApiResponse<ShareWalletResponse> apiResponse = new ApiResponse<>(
+                true, 
+                "Tạo link chia sẻ thành công", 
+                response
+        );
+        return new ResponseEntity<>(apiResponse, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/link/{shareToken}")
+    public ResponseEntity<ApiResponse<ShareWalletResponse>> getShareLinkInfo(
+            @PathVariable String shareToken) {
+
+        ShareWalletResponse response = walletShareService.getShareLinkInfo(shareToken);
+        ApiResponse<ShareWalletResponse> apiResponse = new ApiResponse<>(
+                true, 
+                "Lấy thông tin link chia sẻ thành công", 
+                response
+        );
+        return ResponseEntity.ok(apiResponse);
+    }
+
     @GetMapping("/shared-with-me")
     public ResponseEntity<ApiResponse<List<SharedWalletResponse>>> getSharedWallets(
             @AuthenticationPrincipal CustomUserDetails currentUser) {
