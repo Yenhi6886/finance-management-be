@@ -232,18 +232,26 @@ public class WalletShareService {
 
     private ShareWalletResponse buildShareWalletResponse(WalletShare walletShare) {
         Wallet wallet = walletShare.getWallet();
-        return ShareWalletResponse.builder()
+        ShareWalletResponse.ShareWalletResponseBuilder builder = ShareWalletResponse.builder()
                 .id(walletShare.getId())
                 .walletId(wallet.getId())
                 .walletName(wallet.getName())
                 .ownerName(walletShare.getOwner().getFirstName() + " " + walletShare.getOwner().getLastName())
-                .sharedWithEmail(walletShare.getSharedWithUser().getEmail())
-                .sharedWithName(walletShare.getSharedWithUser().getFirstName() + " " + walletShare.getSharedWithUser().getLastName())
                 .permissionLevel(walletShare.getPermissionLevel())
                 .isActive(walletShare.getIsActive())
                 .createdAt(walletShare.getCreatedAt())
-                .wallet(createWalletResponse(wallet))
-                .build();
+                .message(walletShare.getMessage())
+                .shareToken(walletShare.getShareToken())
+                .expiresAt(walletShare.getExpiresAt())
+                .wallet(createWalletResponse(wallet));
+
+        // Chỉ set sharedWithUser nếu có (không phải link share)
+        if (walletShare.getSharedWithUser() != null) {
+            builder.sharedWithEmail(walletShare.getSharedWithUser().getEmail())
+                   .sharedWithName(walletShare.getSharedWithUser().getFirstName() + " " + walletShare.getSharedWithUser().getLastName());
+        }
+
+        return builder.build();
     }
 
     private WalletResponse createWalletResponse(Wallet wallet) {
