@@ -49,7 +49,8 @@ public class WalletService {
         return wallets.stream()
                 .map(wallet -> {
                     WalletResponse response = walletMapper.toWalletResponse(wallet);
-                    BigDecimal totalDeposited = transactionRepository.calculateTotalByWalletIdAndType(wallet.getId(), TransactionType.INCOME);
+                    BigDecimal totalDeposited = transactionRepository.calculateTotalByWalletIdAndType(wallet.getId(),
+                            TransactionType.INCOME);
                     response.setTotalDeposited(totalDeposited);
                     return response;
                 })
@@ -59,7 +60,8 @@ public class WalletService {
     @Transactional
     public WalletResponse updateWallet(Long walletId, UpdateWalletRequest request, Long userId) {
         Wallet wallet = walletRepository.findByIdAndUserId(walletId, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ví hoặc bạn không có quyền chỉnh sửa ví này"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Không tìm thấy ví hoặc bạn không có quyền chỉnh sửa ví này"));
 
         checkIfWalletIsArchived(wallet);
 
@@ -144,14 +146,15 @@ public class WalletService {
     @Transactional
     public void deleteWallet(Long walletId, Long userId) {
         Wallet walletToDelete = walletRepository.findByIdAndUserId(walletId, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ví hoặc bạn không có quyền xóa ví này"));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Không tìm thấy ví hoặc bạn không có quyền xóa ví này"));
 
         checkIfWalletIsArchived(walletToDelete);
 
         // Xóa hết số tiền có trong ví
         walletToDelete.setBalance(BigDecimal.ZERO);
-        
-        // Xóa hết các giao dịch của ví  
+
+        // Xóa hết các giao dịch của ví
         transactionRepository.deleteByWalletId(walletId);
 
         // Cập nhật user settings nếu có
@@ -169,7 +172,8 @@ public class WalletService {
     @Transactional
     public WalletResponse archiveWallet(Long walletId, Long userId) {
         Wallet wallet = walletRepository.findByIdAndUserId(walletId, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ví hoặc bạn không có quyền thực hiện hành động này"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Không tìm thấy ví hoặc bạn không có quyền thực hiện hành động này"));
         wallet.setArchived(true);
         Wallet savedWallet = walletRepository.save(wallet);
         return walletMapper.toWalletResponse(savedWallet);
@@ -178,7 +182,8 @@ public class WalletService {
     @Transactional
     public WalletResponse unarchiveWallet(Long walletId, Long userId) {
         Wallet wallet = walletRepository.findByIdAndUserId(walletId, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ví hoặc bạn không có quyền thực hiện hành động này"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Không tìm thấy ví hoặc bạn không có quyền thực hiện hành động này"));
         wallet.setArchived(false);
         Wallet savedWallet = walletRepository.save(wallet);
         return walletMapper.toWalletResponse(savedWallet);
