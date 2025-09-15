@@ -7,6 +7,7 @@ import java.util.List;
 
 @ConfigurationProperties(prefix = "app")
 public class AppProperties {
+    private String frontendUrl;
     private final Auth oauth2 = new Auth();
 
     public static class Auth {
@@ -24,5 +25,13 @@ public class AppProperties {
 
     public Auth getOauth2() {
         return oauth2;
+    }
+
+    public String getFrontendUrl() {
+        return frontendUrl;
+    }
+
+    public void setFrontendUrl(String frontendUrl) {
+        this.frontendUrl = frontendUrl;
     }
 }
