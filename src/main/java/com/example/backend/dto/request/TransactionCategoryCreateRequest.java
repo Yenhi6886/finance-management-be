@@ -18,10 +18,9 @@ public class TransactionCategoryCreateRequest {
     private String name;
 
     private String description;
-
-    @NotNull(message = "Số tiền không được để trống")
+    @NotNull(message = "Ngân sách không được để trống")
     @DecimalMin(value = "0.01", message = "Số tiền phải lớn hơn 0")
-    private BigDecimal budget;
+    private BigDecimal budget; // Bỏ @NotNull để cho phép null
 
     private Currency currency = Currency.VND;
 }

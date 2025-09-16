@@ -35,18 +35,27 @@ public class TransactionCategoryService {
     }
 
     public TransactionCategoryResponse createCategory(TransactionCategoryCreateRequest request) {
+        // Debug logging để xem giá trị thực tế
+        System.out.println("Debug - Name: " + request.getName());
+        System.out.println("Debug - Description: " + request.getDescription());
+        System.out.println("Debug - Budget: " + request.getBudget());
+        System.out.println("Debug - Currency: " + request.getCurrency());
+
         TransactionCategory category = TransactionCategory.builder()
                 .name(request.getName())
                 .description(request.getDescription())
                 .budget(request.getBudget())
                 .currency(request.getCurrency())
                 .build();
+
         TransactionCategory savedCategory = categoryRepository.save(category);
+
         return TransactionCategoryResponse.builder()
                 .id(savedCategory.getId())
                 .name(savedCategory.getName())
                 .description(savedCategory.getDescription())
                 .budget(savedCategory.getBudget())
+                .currency(savedCategory.getCurrency()) // Thêm currency vào response
                 .build();
     }
 }

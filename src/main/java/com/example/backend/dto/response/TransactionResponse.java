@@ -16,6 +16,5 @@ public class TransactionResponse {
     private Long walletId;
     private String walletName;
     private String categoryName; // Only keep category name, remove categoryType
-    private String fromWalletName;
-    private String toWalletName;
+
 }

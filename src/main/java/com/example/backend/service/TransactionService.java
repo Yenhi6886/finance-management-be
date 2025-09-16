@@ -145,8 +145,9 @@ public class TransactionService {
             throw new BadRequestException("Bạn không có quyền chỉnh sửa khoản chi này");
         }
 
-        // Validate wallet exists and belongs to user or user has permission
-        Wallet wallet = walletRepository.findById(request.getWalletId())
+        // Lấy ví cũ và ví mới
+        Wallet oldWallet = existingExpense.getWallet();
+        Wallet newWallet = walletRepository.findById(request.getWalletId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ví với ID: " + request.getWalletId()));
 
         // Validate category exists
@@ -156,39 +157,47 @@ public class TransactionService {
         // Lấy currency của request, mặc định là VND
         Currency transactionCurrency = request.getCurrency() != null ? request.getCurrency() : Currency.VND;
 
-        // Tính số tiền đã quy đổi của giao dịch cũ
+        // Tính số tiền đã quy đổi của giao dịch cũ theo currency của ví cũ
         BigDecimal oldConvertedAmount = currencyService.convertToWalletCurrency(
-                existingExpense.getAmount(), transactionCurrency, wallet.getCurrency(), userId);
+                existingExpense.getAmount(), transactionCurrency, oldWallet.getCurrency(), userId);
 
-        // Kiểm tra số dư ví có đủ không (sau khi quy đổi tiền tệ nếu cần)
-        if (!currencyService.hasSufficientBalance(wallet.getBalance().add(oldConvertedAmount),
-                wallet.getCurrency(), request.getAmount(), transactionCurrency, userId)) {
-            throw new BadRequestException("Số dư ví không đủ để thực hiện giao dịch này");
+        // Hoàn tiền vào ví cũ
+        oldWallet.setBalance(oldWallet.getBalance().add(oldConvertedAmount));
+        walletRepository.save(oldWallet);
+
+        // Tính số tiền mới cần trừ từ ví mới
+        BigDecimal newConvertedAmount = currencyService.convertToWalletCurrency(
+                request.getAmount(), transactionCurrency, newWallet.getCurrency(), userId);
+
+        // Kiểm tra số dư ví mới có đủ không
+        if (!currencyService.hasSufficientBalance(newWallet.getBalance(), newWallet.getCurrency(),
+                request.getAmount(), transactionCurrency, userId)) {
+            // Rollback: hoàn lại trạng thái ví cũ
+            oldWallet.setBalance(oldWallet.getBalance().subtract(oldConvertedAmount));
+            walletRepository.save(oldWallet);
+            throw new BadRequestException("Số dư ví mới không đủ để thực hiện giao dịch này");
         }
 
-        // Quy đổi số tiền giao dịch mới sang đơn vị tiền tệ của ví
-        BigDecimal newConvertedAmount = currencyService.convertToWalletCurrency(
-                request.getAmount(), transactionCurrency, wallet.getCurrency(), userId);
-
-        // Cập nhật số dư ví (hoàn tiền giao dịch cũ và trừ tiền giao dịch mới)
-        wallet.setBalance(wallet.getBalance().add(oldConvertedAmount).subtract(newConvertedAmount));
-        walletRepository.save(wallet);
+        // Trừ tiền từ ví mới
+        newWallet.setBalance(newWallet.getBalance().subtract(newConvertedAmount));
+        walletRepository.save(newWallet);
 
         // Cập nhật thông tin giao dịch
         existingExpense.setAmount(request.getAmount());
         existingExpense.setCategory(category);
-        existingExpense.setWallet(wallet);
+        existingExpense.setWallet(newWallet);
         existingExpense.setDescription(request.getDescription());
         existingExpense.setDate(request.getTransactionDate() != null ? request.getTransactionDate() : LocalDateTime.now());
         Transaction updatedTransaction = transactionRepository.save(existingExpense);
+
         // Return response với thông tin giao dịch đã cập nhật
         return TransactionResponse.builder()
                 .id(updatedTransaction.getId())
                 .amount(updatedTransaction.getAmount())
                 .description(updatedTransaction.getDescription())
                 .date(updatedTransaction.getDate())
-                .walletId(wallet.getId())
-                .walletName(wallet.getName())
+                .walletId(newWallet.getId())
+                .walletName(newWallet.getName())
                 .categoryName(category.getName())
                 .build();
     }
@@ -215,5 +224,3 @@ public class TransactionService {
 
 }
 }
-
-

@@ -8,6 +8,7 @@ import com.example.backend.security.CustomUserDetails;
 import com.example.backend.service.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/transactions")
 @RequiredArgsConstructor
+@Slf4j
 public class TransactionController {
 
     private final TransactionService transactionService;
@@ -27,9 +29,25 @@ public class TransactionController {
             @Valid @RequestBody ExpenseCreateRequest request,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
 
-        TransactionResponse expense = transactionService.createExpense(request, currentUser.getId());
-        ApiResponse<TransactionResponse> response = new ApiResponse<>(true, "Ghi lại khoản chi thành công", expense);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        log.info("=== CREATE EXPENSE API CALLED ===");
+        log.info("Request: {}", request);
+        log.info("User ID: {}", currentUser != null ? currentUser.getId() : "NULL");
+
+        try {
+            TransactionResponse expense = transactionService.createExpense(request, currentUser.getId());
+            log.info("Service returned expense: {}", expense);
+
+            ApiResponse<TransactionResponse> response = new ApiResponse<>(true, "Ghi lại khoản chi thành công", expense);
+            log.info("Created API response: {}", response);
+            
+            ResponseEntity<ApiResponse<TransactionResponse>> responseEntity = ResponseEntity.status(HttpStatus.CREATED).body(response);
+            log.info("Final response entity: {}", responseEntity);
+            
+            return responseEntity;
+        } catch (Exception e) {
+            log.error("Error in createExpense", e);
+            throw e;
+        }
     }
 
     @GetMapping
@@ -37,7 +55,7 @@ public class TransactionController {
             @AuthenticationPrincipal CustomUserDetails currentUser,
             @RequestParam(required = false) String type,
             @RequestParam(defaultValue = "10") int limit) {
-        
+
         List<TransactionResponse> transactions = transactionService.getTransactions(currentUser.getId(), type, limit);
         ApiResponse<List<TransactionResponse>> response = new ApiResponse<>(true, "Lấy danh sách giao dịch thành công", transactions);
         return ResponseEntity.ok(response);
