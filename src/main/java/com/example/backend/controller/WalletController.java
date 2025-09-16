@@ -12,6 +12,8 @@ import com.example.backend.security.CustomUserDetails;
 import com.example.backend.service.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -78,6 +80,26 @@ public class WalletController {
             @AuthenticationPrincipal CustomUserDetails currentUser) {
         WalletResponse wallet = walletService.getWalletById(walletId, currentUser.getId());
         ApiResponse<WalletResponse> apiResponse = new ApiResponse<>(true, "Lấy thông tin ví thành công", wallet);
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @GetMapping("/{walletId}/transactions")
+    @RequireWalletPermission(value = PermissionType.VIEW_TRANSACTIONS, walletId = "#walletId")
+    public ResponseEntity<ApiResponse<Page<TransactionResponse>>> getWalletTransactions(
+            @PathVariable Long walletId,
+            Pageable pageable) {
+        Page<TransactionResponse> transactions = walletService.getTransactionsByWalletId(walletId, pageable);
+        ApiResponse<Page<TransactionResponse>> apiResponse = new ApiResponse<>(true, "Lấy lịch sử giao dịch thành công", transactions);
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @GetMapping("/{walletId}/balance-history")
+    @RequireWalletPermission(value = PermissionType.VIEW_BALANCE, walletId = "#walletId")
+    public ResponseEntity<ApiResponse<List<BalanceHistoryResponse>>> getBalanceHistory(
+            @PathVariable Long walletId,
+            @RequestParam(defaultValue = "30d") String period) {
+        List<BalanceHistoryResponse> history = walletService.getBalanceHistory(walletId, period);
+        ApiResponse<List<BalanceHistoryResponse>> apiResponse = new ApiResponse<>(true, "Lấy lịch sử số dư thành công", history);
         return ResponseEntity.ok(apiResponse);
     }
 
@@ -148,7 +170,7 @@ public class WalletController {
             @AuthenticationPrincipal CustomUserDetails currentUser,
             @Valid @RequestBody WalletTransferRequest request) {
         WalletTransferResponse response = walletTransferService.transferMoney(currentUser.getId(), request);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Chuyển tiền thành công", response));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Chuyện tiền thành công", response));
     }
 
     @GetMapping("/{walletId}/validate-amount")

@@ -3,20 +3,25 @@ package com.example.backend.service;
 import com.example.backend.dto.request.AddMoneyRequest;
 import com.example.backend.dto.request.CreateWalletRequest;
 import com.example.backend.dto.request.UpdateWalletRequest;
+import com.example.backend.dto.response.BalanceHistoryResponse;
 import com.example.backend.dto.response.TransactionResponse;
 import com.example.backend.dto.response.WalletResponse;
 import com.example.backend.entity.*;
 import com.example.backend.enums.PermissionType;
+import com.example.backend.enums.TransactionType;
 import com.example.backend.exception.BadRequestException;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.mapper.WalletMapper;
 import com.example.backend.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +37,6 @@ public class WalletService {
     private final WalletShareRepository walletShareRepository;
     private final UserSettingsRepository userSettingsRepository;
     private final TransactionRepository transactionRepository;
-    private final TransactionCategoryRepository transactionCategoryRepository;
     private final WalletPermissionRepository walletPermissionRepository;
 
     @Transactional
@@ -58,23 +62,22 @@ public class WalletService {
 
         checkIfWalletIsArchived(wallet);
 
-        wallet.setBalance(wallet.getBalance().add(request.getAmount()));
+        BigDecimal newBalance = wallet.getBalance().add(request.getAmount());
+        wallet.setBalance(newBalance);
         walletRepository.save(wallet);
 
         String finalDescription = String.format("Nạp tiền qua %s%s",
                 request.getMethod(),
                 (request.getDescription() != null && !request.getDescription().isBlank()) ? ": " + request.getDescription() : "");
 
-        // Get or create default income category for money deposits
-        TransactionCategory incomeCategory = getDefaultIncomeCategory();
-
         Transaction transaction = Transaction.builder()
                 .user(user)
                 .wallet(wallet)
-                .category(incomeCategory)
+                .type(TransactionType.INCOME)
                 .amount(request.getAmount())
                 .description(finalDescription)
                 .date(LocalDateTime.now())
+                .balanceAfterTransaction(newBalance)
                 .build();
 
         Transaction savedTransaction = transactionRepository.save(transaction);
@@ -82,11 +85,11 @@ public class WalletService {
         return TransactionResponse.builder()
                 .id(savedTransaction.getId())
                 .amount(savedTransaction.getAmount())
+                .type(savedTransaction.getType())
                 .description(savedTransaction.getDescription())
                 .date(savedTransaction.getDate())
                 .walletId(wallet.getId())
                 .walletName(wallet.getName())
-                .categoryName(incomeCategory.getName()) // Only use category name
                 .build();
     }
 
@@ -116,40 +119,13 @@ public class WalletService {
         return wallets.stream()
                 .map(wallet -> {
                     WalletResponse response = walletMapper.toWalletResponse(wallet);
-                    // Calculate total deposited by finding all income categories (by name pattern) and summing their transactions
-                    List<TransactionCategory> incomeCategories = transactionCategoryRepository.findByNameContainingIgnoreCase("thu");
-                    List<Long> incomeCategoryIds = incomeCategories.stream()
-                            .map(TransactionCategory::getId)
-                            .collect(Collectors.toList());
-
-                    if (!incomeCategoryIds.isEmpty()) {
-                        BigDecimal totalDeposited = transactionRepository.calculateTotalByWalletIdAndCategories(wallet.getId(), incomeCategoryIds);
-                        if (totalDeposited != null) {
-                            response.setTotalDeposited(totalDeposited);
-                        }
+                    BigDecimal totalDeposited = transactionRepository.calculateTotalByWalletIdAndType(wallet.getId(), TransactionType.INCOME);
+                    if (totalDeposited != null) {
+                        response.setTotalDeposited(totalDeposited);
                     }
                     return response;
                 })
                 .collect(Collectors.toList());
-    }
-
-    private TransactionCategory getDefaultIncomeCategory() {
-        // Try to find existing income category by name pattern
-        List<TransactionCategory> incomeCategories = transactionCategoryRepository.findByNameContainingIgnoreCase("thu");
-
-        if (!incomeCategories.isEmpty()) {
-            // Return the first income category found
-            return incomeCategories.get(0);
-        }
-
-        // Create default income category if none exists
-        TransactionCategory defaultIncomeCategory = TransactionCategory.builder()
-                .name("Thu nhập - Nạp tiền")
-                .description("Danh mục mặc định cho việc nạp tiền vào ví")
-                .budget(BigDecimal.ZERO)
-                .build();
-
-        return transactionCategoryRepository.save(defaultIncomeCategory);
     }
 
     @Transactional
@@ -219,6 +195,46 @@ public class WalletService {
 
         userWalletResponses.addAll(sharedWalletResponses);
         return userWalletResponses;
+    }
+
+    public Page<TransactionResponse> getTransactionsByWalletId(Long walletId, Pageable pageable) {
+        Page<Transaction> transactions = transactionRepository.findByWalletId(walletId, pageable);
+        return transactions.map(transaction -> TransactionResponse.builder()
+                .id(transaction.getId())
+                .amount(transaction.getAmount())
+                .type(transaction.getType())
+                .description(transaction.getDescription())
+                .date(transaction.getDate())
+                .category(transaction.getCategory() != null ? transaction.getCategory().getName() : null)
+                .walletId(transaction.getWallet().getId())
+                .walletName(transaction.getWallet().getName())
+                .build());
+    }
+
+    public List<BalanceHistoryResponse> getBalanceHistory(Long walletId, String period) {
+        LocalDateTime startDate;
+        switch (period) {
+            case "7d":
+                startDate = LocalDateTime.now().minusDays(7);
+                break;
+            case "1m":
+                startDate = LocalDateTime.now().minusMonths(1);
+                break;
+            case "3m":
+                startDate = LocalDateTime.now().minusMonths(3);
+                break;
+            default:
+                startDate = LocalDateTime.now().minusDays(30);
+                break;
+        }
+
+        List<Object[]> results = transactionRepository.findClosingBalanceByDate(walletId, startDate);
+        return results.stream()
+                .map(result -> new BalanceHistoryResponse(
+                        ((Timestamp) result[0]).toLocalDateTime().toLocalDate(),
+                        (BigDecimal) result[1]
+                ))
+                .collect(Collectors.toList());
     }
 
     public List<WalletResponse> getArchivedWalletsByUserId(Long userId) {

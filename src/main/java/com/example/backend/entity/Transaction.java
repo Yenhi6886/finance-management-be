@@ -1,5 +1,6 @@
 package com.example.backend.entity;
 
+import com.example.backend.enums.TransactionType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,9 +30,9 @@ public class Transaction {
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal amount;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
-    private TransactionCategory category;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "transaction_type", nullable = false)
+    private TransactionType type;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "wallet_id", nullable = false)
@@ -50,4 +51,16 @@ public class Transaction {
 
     private String description;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
+
+    @Column(name = "from_wallet_id")
+    private Long fromWalletId;
+
+    @Column(name = "to_wallet_id")
+    private Long toWalletId;
+
+    @Column(name = "balance_after_transaction")
+    private BigDecimal balanceAfterTransaction;
 }

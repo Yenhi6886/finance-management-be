@@ -3,12 +3,11 @@ package com.example.backend.service;
 import com.example.backend.dto.request.WalletTransferRequest;
 import com.example.backend.dto.response.WalletTransferResponse;
 import com.example.backend.entity.Transaction;
-import com.example.backend.entity.TransactionCategory;
 import com.example.backend.entity.User;
 import com.example.backend.entity.Wallet;
+import com.example.backend.enums.TransactionType;
 import com.example.backend.exception.InsufficientBalanceException;
 import com.example.backend.exception.WalletNotFoundException;
-import com.example.backend.repository.TransactionCategoryRepository;
 import com.example.backend.repository.TransactionRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.repository.WalletRepository;
@@ -25,7 +24,6 @@ public class WalletTransferService {
 
     private final WalletRepository walletRepository;
     private final TransactionRepository transactionRepository;
-    private final TransactionCategoryRepository transactionCategoryRepository;
     private final UserRepository userRepository;
 
     @Transactional
@@ -53,18 +51,15 @@ public class WalletTransferService {
 
         LocalDateTime transactionTime = (request.getDate() != null) ? request.getDate() : LocalDateTime.now();
 
-        // Get or create categories for transfer operations
-        TransactionCategory transferCategory = getOrCreateTransferCategory();
-        TransactionCategory expenseCategory = getOrCreateExpenseCategory();
-        TransactionCategory incomeCategory = getOrCreateIncomeCategory();
-
-        // 1. Tạo giao dịch cha (meta-transaction) with transfer category
+        // 1. Tạo giao dịch cha (meta-transaction)
         Transaction parentTransaction = Transaction.builder()
                 .user(currentUser)
-                .wallet(fromWallet)
-                .category(transferCategory)
+                .wallet(fromWallet) // Giao dịch tổng quan thuộc về ví nguồn
+                .type(TransactionType.TRANSFER)
                 .amount(request.getAmount())
                 .description(request.getDescription())
+                .fromWalletId(fromWallet.getId())
+                .toWalletId(toWallet.getId())
                 .date(transactionTime)
                 .build();
         Transaction savedParent = transactionRepository.save(parentTransaction);
@@ -74,7 +69,7 @@ public class WalletTransferService {
                 .parentTransaction(savedParent)
                 .user(currentUser)
                 .wallet(fromWallet)
-                .category(expenseCategory)
+                .type(TransactionType.EXPENSE)
                 .amount(request.getAmount().negate())
                 .description(String.format("Chi tiết chuyển tiền đến ví '%s'", toWallet.getName()))
                 .date(transactionTime)
@@ -85,7 +80,7 @@ public class WalletTransferService {
                 .parentTransaction(savedParent)
                 .user(toWallet.getUser())
                 .wallet(toWallet)
-                .category(incomeCategory)
+                .type(TransactionType.INCOME)
                 .amount(request.getAmount())
                 .description(String.format("Chi tiết nhận tiền từ ví '%s'", fromWallet.getName()))
                 .date(transactionTime)
@@ -105,46 +100,8 @@ public class WalletTransferService {
                 .fromWalletBalance(fromWallet.getBalance())
                 .toWalletBalance(toWallet.getBalance())
                 .transferTime(LocalDateTime.now())
+                .success(true)
                 .build();
-    }
-
-    private TransactionCategory getOrCreateTransferCategory() {
-        return transactionCategoryRepository.findByName("Chuyển khoản")
-                .stream()
-                .findFirst()
-                .orElseGet(() -> transactionCategoryRepository.save(
-                        TransactionCategory.builder()
-                                .name("Chuyển khoản")
-                                .description("Danh mục cho giao dịch chuyển tiền giữa các ví")
-                                .budget(BigDecimal.ZERO)
-                                .build()
-                ));
-    }
-
-    private TransactionCategory getOrCreateExpenseCategory() {
-        return transactionCategoryRepository.findByNameContainingIgnoreCase("chi")
-                .stream()
-                .findFirst()
-                .orElseGet(() -> transactionCategoryRepository.save(
-                        TransactionCategory.builder()
-                                .name("Chi tiêu - Chuyển khoản")
-                                .description("Danh mục cho việc chi tiền khi chuyển khoản")
-                                .budget(BigDecimal.ZERO)
-                                .build()
-                ));
-    }
-
-    private TransactionCategory getOrCreateIncomeCategory() {
-        return transactionCategoryRepository.findByNameContainingIgnoreCase("thu")
-                .stream()
-                .findFirst()
-                .orElseGet(() -> transactionCategoryRepository.save(
-                        TransactionCategory.builder()
-                                .name("Thu nhập - Chuyển khoản")
-                                .description("Danh mục cho việc nhận tiền từ chuyển khoản")
-                                .budget(BigDecimal.ZERO)
-                                .build()
-                ));
     }
 
     public boolean validateTransferAmount(Long walletId, Long userId, BigDecimal amount) {

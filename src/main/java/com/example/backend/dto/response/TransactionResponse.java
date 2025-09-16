@@ -1,5 +1,6 @@
 package com.example.backend.dto.response;
 
+import com.example.backend.enums.TransactionType;
 import lombok.Builder;
 import lombok.Data;
 
@@ -11,10 +12,12 @@ import java.time.LocalDateTime;
 public class TransactionResponse {
     private Long id;
     private BigDecimal amount;
+    private TransactionType type;
     private String description;
     private LocalDateTime date;
+    private String category;
     private Long walletId;
     private String walletName;
-    private String categoryName; // Only keep category name, remove categoryType
-
+    private String fromWalletName;
+    private String toWalletName;
 }
