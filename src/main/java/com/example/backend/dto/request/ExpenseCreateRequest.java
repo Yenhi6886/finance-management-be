@@ -1,5 +1,6 @@
 package com.example.backend.dto.request;
 
+import com.example.backend.enums.Currency;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -27,4 +28,7 @@ public class ExpenseCreateRequest {
     private String description; // Ghi chú
 
     private LocalDateTime transactionDate; // Thời gian (mặc định lấy thời gian hiện tại nếu null)
+
+    // Loại tiền tệ của giao dịch (mặc định sẽ là VND nếu không được chỉ định)
+    private Currency currency = Currency.VND;
 }
