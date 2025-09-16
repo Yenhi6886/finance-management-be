@@ -1,5 +1,7 @@
 package com.example.backend.dto.response;
 
+import com.example.backend.enums.Currency;
+import com.example.backend.enums.TransactionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,4 +18,5 @@ public class TransactionCategoryResponse {
     private String name;
     private String description;
     private BigDecimal budget;
+    private Currency currency;
 }

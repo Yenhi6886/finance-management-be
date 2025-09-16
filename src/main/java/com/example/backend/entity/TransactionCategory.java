@@ -1,5 +1,6 @@
 package com.example.backend.entity;
 
+import com.example.backend.enums.Currency;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,4 +25,6 @@ public class TransactionCategory {
     private String description;
     @Column(nullable = false, name = "budget", precision = 19, scale = 4)
     private BigDecimal budget;
+
+    private Currency currency = Currency.VND;
 }

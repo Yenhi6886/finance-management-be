@@ -1,11 +1,13 @@
 package com.example.backend.controller;
 
+import com.example.backend.dto.request.TransactionCategoryCreateRequest;
 import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.dto.response.TransactionCategoryResponse;
 import com.example.backend.service.TransactionCategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,6 +24,12 @@ public class TransactionCategoryController {
     public ResponseEntity<ApiResponse<List<TransactionCategoryResponse>>> getAllCategories() {
         List<TransactionCategoryResponse> categories = categoryService.getAllCategories();
         ApiResponse<List<TransactionCategoryResponse>> response = new ApiResponse<>(true, "Lấy danh sách danh mục thành công", categories);
+        return ResponseEntity.ok(response);
+    }
+    @PostMapping("/create")
+    public ResponseEntity<ApiResponse<TransactionCategoryResponse>> createCategory(TransactionCategoryCreateRequest request) {
+        TransactionCategoryResponse category = categoryService.createCategory( request );
+        ApiResponse<TransactionCategoryResponse> response = new ApiResponse<>(true, "Tạo danh mục thành công", category);
         return ResponseEntity.ok(response);
     }
 }
