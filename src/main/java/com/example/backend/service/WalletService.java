@@ -137,8 +137,6 @@ public class WalletService {
 
         wallet.setName(request.getName());
         wallet.setIcon(request.getIcon());
-        wallet.setBalance(request.getBalance());
-        wallet.setCurrency(request.getCurrency());
         wallet.setDescription(request.getDescription());
 
         Wallet updatedWallet = walletRepository.save(wallet);
