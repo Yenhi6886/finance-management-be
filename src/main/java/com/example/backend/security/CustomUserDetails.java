@@ -1,6 +1,7 @@
 package com.example.backend.security;
 
 import com.example.backend.entity.User;
+import com.example.backend.enums.UserStatus;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,27 +13,36 @@ import java.util.Map;
 
 public class CustomUserDetails implements UserDetails, OAuth2User {
 
-    private final transient User user;
     private final Long id;
+    private final String email;
+    private final String password;
+    private final UserStatus status;
+    private final Collection<? extends GrantedAuthority> authorities;
     private Map<String, Object> attributes;
 
-    public CustomUserDetails(User user) {
-        this.user = user;
-        this.id = user.getId();
-    }
-
-    public CustomUserDetails(User user, Map<String, Object> attributes) {
-        this.user = user;
-        this.id = user.getId();
-        this.attributes = attributes;
+    // Constructor for standard login
+    public CustomUserDetails(Long id, String email, String password, UserStatus status, Collection<? extends GrantedAuthority> authorities) {
+        this.id = id;
+        this.email = email;
+        this.password = password;
+        this.status = status;
+        this.authorities = authorities;
     }
 
     public static CustomUserDetails create(User user) {
-        return new CustomUserDetails(user);
+        return new CustomUserDetails(
+                user.getId(),
+                user.getEmail(),
+                user.getPassword(),
+                user.getStatus(),
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
+        );
     }
 
     public static CustomUserDetails create(User user, Map<String, Object> attributes) {
-        return new CustomUserDetails(user, attributes);
+        CustomUserDetails userDetails = CustomUserDetails.create(user);
+        userDetails.setAttributes(attributes);
+        return userDetails;
     }
 
     public Long getId() {
@@ -40,28 +50,13 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
     }
 
     @Override
-    public Map<String, Object> getAttributes() {
-        return attributes;
-    }
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
-    }
-
-    @Override
     public String getPassword() {
-        return user.getPassword();
+        return password;
     }
 
     @Override
     public String getUsername() {
-        return user.getEmail();
-    }
-
-    @Override
-    public String getName() {
-        return user.getEmail();
+        return email;
     }
 
     @Override
@@ -81,10 +76,26 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
 
     @Override
     public boolean isEnabled() {
-        return user.getStatus().name().equals("ACTIVE");
+        return status == UserStatus.ACTIVE;
     }
 
-    public User getUser() {
-        return user;
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return authorities;
+    }
+
+    @Override
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(Map<String, Object> attributes) {
+        this.attributes = attributes;
+    }
+
+    @Override
+    public String getName() {
+        // For OAuth2, typically this would be a unique ID, but returning email is fine if consistent
+        return String.valueOf(id);
     }
 }

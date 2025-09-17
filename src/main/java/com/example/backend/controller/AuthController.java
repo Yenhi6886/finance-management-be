@@ -10,6 +10,9 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -24,6 +27,7 @@ public class AuthController {
     @Autowired
     private JwtUtil jwtUtil;
 
+    // --- CÁC ENDPOINT CŨ GIỮ NGUYÊN ---
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<Void>> register(@Valid @RequestBody RegisterRequest request) {
         userService.register(request);
@@ -38,6 +42,7 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    // ... (các endpoint khác như activate, forgot-password, reset-password giữ nguyên)
     @GetMapping("/activate")
     public ResponseEntity<ApiResponse<Void>> activateAccount(@RequestParam String token) {
         userService.activateAccount(token);
@@ -76,5 +81,20 @@ public class AuthController {
         }
         ApiResponse<Void> response = new ApiResponse<>(true, "Đăng xuất thành công!");
         return ResponseEntity.ok(response);
+    }
+
+    // --- ENDPOINT MỚI ĐỂ BẮT ĐẦU LUỒNG GOOGLE LOGIN ---
+    @GetMapping("/oauth2/google")
+    public RedirectView googleLogin() {
+        String redirectUrl = userService.getGoogleOAuth2Url();
+        return new RedirectView(redirectUrl);
+    }
+
+    // --- ENDPOINT MỚI ĐỂ XỬ LÝ CALLBACK TỪ GOOGLE ---
+    @GetMapping("/oauth2/callback/google")
+    public RedirectView handleGoogleCallback(@RequestParam("code") String code) throws IOException {
+        String jwtToken = userService.processGoogleCallback(code);
+        String frontendRedirectUrl = "http://localhost:3000/oauth-callback?token=" + jwtToken;
+        return new RedirectView(frontendRedirectUrl);
     }
 }

@@ -28,7 +28,7 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, length = 255)
     private String username;
 
     @Column(nullable = false)
@@ -54,7 +54,7 @@ public class User {
     @Column(name = "auth_provider")
     private AuthProvider authProvider = AuthProvider.LOCAL;
 
-    @Column(name = "provider_id")
+    @Column(name = "provider_id", length = 255)
     private String providerId;
 
     @CreationTimestamp

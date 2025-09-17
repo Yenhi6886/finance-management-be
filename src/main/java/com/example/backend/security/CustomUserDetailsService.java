@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
@@ -17,6 +18,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     private UserRepository userRepository;
 
     @Override
+    @Transactional
     public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
         User user;
         if (identifier != null && identifier.contains("@")) {
@@ -31,6 +33,6 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new BadCredentialsException("Tài khoản của bạn chưa được kích hoạt. Vui lòng kiểm tra email để kích hoạt.");
         }
 
-        return new CustomUserDetails(user);
+        return CustomUserDetails.create(user);
     }
 }

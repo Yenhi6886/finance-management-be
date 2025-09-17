@@ -11,6 +11,7 @@ import com.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -71,6 +72,7 @@ public class CategoryService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public void deleteCategory(Long categoryId, Long userId) {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục với ID: " + categoryId));
@@ -78,6 +80,8 @@ public class CategoryService {
         if (!category.getUser().getId().equals(userId)) {
             throw new AccessDeniedException("Bạn không có quyền xóa danh mục này.");
         }
+
+        transactionRepository.setCategoryToNullByCategoryId(categoryId);
         categoryRepository.delete(category);
     }
 
@@ -86,17 +90,14 @@ public class CategoryService {
         LocalDateTime startOfMonth = today.withDayOfMonth(1).atStartOfDay();
         LocalDateTime endOfMonth = today.withDayOfMonth(today.lengthOfMonth()).atTime(LocalTime.MAX);
 
-        BigDecimal spentAmount = BigDecimal.ZERO;
+        // Luôn tính toán số tiền đã chi và đã thu
+        BigDecimal spentAmount = transactionRepository.sumExpensesByCategoryIdAndDateRange(category.getId(), startOfMonth, endOfMonth);
+        BigDecimal earnedAmount = transactionRepository.sumIncomesByCategoryIdAndDateRange(category.getId(), startOfMonth, endOfMonth);
+
         BigDecimal remainingAmount = null;
-
+        // Chỉ tính số tiền còn lại nếu có đặt ngân sách
         if (category.getBudgetAmount() != null && category.getBudgetAmount().compareTo(BigDecimal.ZERO) > 0) {
-            spentAmount = transactionRepository.sumExpensesByCategoryIdAndDateRange(category.getId(), startOfMonth, endOfMonth);
             remainingAmount = category.getBudgetAmount().subtract(spentAmount);
-        }
-
-        BigDecimal earnedAmount = BigDecimal.ZERO;
-        if(category.getIncomeTargetAmount() != null && category.getIncomeTargetAmount().compareTo(BigDecimal.ZERO) > 0) {
-            earnedAmount = transactionRepository.sumIncomesByCategoryIdAndDateRange(category.getId(), startOfMonth, endOfMonth);
         }
 
         return CategoryResponse.builder()
