@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,6 +33,45 @@ public class WalletShareService {
     private final UserRepository userRepository;
     private final EmailService emailService;
     private final WalletPermissionService walletPermissionService;
+
+    private static final DateTimeFormatter ISO_DATE_TIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+
+    /**
+     * Validates and parses the expiry date string
+     * @param expiryDateString The date string to validate
+     * @return LocalDateTime if valid, null if empty, throws exception if invalid
+     */
+    private LocalDateTime validateAndParseExpiryDate(String expiryDateString) {
+        if (expiryDateString == null || expiryDateString.trim().isEmpty()) {
+            return null;
+        }
+        
+        try {
+            // Try to parse as ISO Local DateTime first
+            LocalDateTime parsedDate = LocalDateTime.parse(expiryDateString, ISO_DATE_TIME_FORMATTER);
+            
+            // Check if the date is in the future
+            if (parsedDate.isBefore(LocalDateTime.now())) {
+                throw new BadRequestException("Ngày hết hạn phải là ngày trong tương lai");
+            }
+            
+            return parsedDate;
+        } catch (DateTimeParseException e) {
+            // If parsing fails, try to parse as ISO string with timezone
+            try {
+                LocalDateTime parsedDate = LocalDateTime.parse(expiryDateString.replace("Z", ""));
+                
+                // Check if the date is in the future
+                if (parsedDate.isBefore(LocalDateTime.now())) {
+                    throw new BadRequestException("Ngày hết hạn phải là ngày trong tương lai");
+                }
+                
+                return parsedDate;
+            } catch (DateTimeParseException ex) {
+                throw new BadRequestException("Định dạng ngày không hợp lệ. Vui lòng chọn lại ngày hết hạn.");
+            }
+        }
+    }
 
     @Transactional
     public ShareWalletResponse shareWallet(ShareWalletRequest request, Long ownerId) {
@@ -91,8 +132,10 @@ public class WalletShareService {
         walletShare.setShareToken(shareToken);
         walletShare.setMessage(request.getMessage());
 
-        if (request.getExpiryDate() != null) {
-            walletShare.setExpiresAt(request.getExpiryDate());
+        // Validate and set expiry date
+        if (request.getExpiryDate() != null && !request.getExpiryDate().trim().isEmpty()) {
+            LocalDateTime validatedExpiryDate = validateAndParseExpiryDate(request.getExpiryDate());
+            walletShare.setExpiresAt(validatedExpiryDate);
         }
 
         WalletShare savedWalletShare = walletShareRepository.save(walletShare);
