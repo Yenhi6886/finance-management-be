@@ -4,7 +4,6 @@ import com.example.backend.dto.request.AssignPermissionRequest;
 import com.example.backend.dto.response.PermissionResponse;
 import com.example.backend.dto.response.UserWalletPermissionsResponse;
 import com.example.backend.entity.User;
-import com.example.backend.entity.Wallet;
 import com.example.backend.entity.WalletPermission;
 import com.example.backend.entity.WalletShare;
 import com.example.backend.enums.PermissionType;

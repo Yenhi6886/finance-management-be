@@ -1,7 +1,5 @@
 package com.example.backend.entity;
 
-import com.example.backend.entity.User;
-import com.example.backend.entity.Wallet;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;

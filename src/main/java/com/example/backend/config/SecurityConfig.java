@@ -1,11 +1,7 @@
 package com.example.backend.config;
 
-import com.example.backend.security.CustomOAuth2UserService;
 import com.example.backend.security.CustomUserDetailsService;
 import com.example.backend.security.JwtAuthenticationFilter;
-import com.example.backend.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
-import com.example.backend.security.oauth2.OAuth2AuthenticationFailureHandler;
-import com.example.backend.security.oauth2.OAuth2LoginSuccessHandler;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -17,7 +13,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -30,35 +25,18 @@ public class SecurityConfig {
 
     @Autowired
     private CustomUserDetailsService userDetailsService;
-
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
-
     @Autowired
     private CorsConfigurationSource corsConfigurationSource;
-
     @Autowired
-    private CustomOAuth2UserService customOAuth2UserService;
-
-    @Autowired
-    private OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
-
-    @Autowired
-    private OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
-
-    @Autowired
-    private HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+    private PasswordEncoder passwordEncoder;
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
+        authProvider.setPasswordEncoder(passwordEncoder);
         return authProvider;
     }
 
@@ -82,30 +60,12 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(
-                                "/api/auth/**",
-                                "/oauth2/**",
-                                "/login/oauth2/code/**", // Thêm dòng này
+                                "/api/auth/**", // Cho phép tất cả các endpoint trong /api/auth
                                 "/error",
                                 "/uploads/avatars/**",
                                 "/public/**"
                         ).permitAll()
                         .anyRequest().authenticated()
-                );
-
-        http
-                .oauth2Login(oauth2 -> oauth2
-                        .authorizationEndpoint(endpoint -> endpoint
-                                .baseUri("/oauth2/authorize")
-                                .authorizationRequestRepository(httpCookieOAuth2AuthorizationRequestRepository)
-                        )
-                        .redirectionEndpoint(redirection -> redirection
-                                .baseUri("/login/oauth2/code/*") // Sửa lại callback URI tại đây
-                        )
-                        .userInfoEndpoint(userInfo -> userInfo
-                                .userService(customOAuth2UserService)
-                        )
-                        .successHandler(oAuth2LoginSuccessHandler)
-                        .failureHandler(oAuth2AuthenticationFailureHandler)
                 );
 
         http.authenticationProvider(authenticationProvider());

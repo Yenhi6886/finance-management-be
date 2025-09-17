@@ -3,8 +3,10 @@ package com.example.backend.controller;
 import com.example.backend.dto.request.CategoryRequest;
 import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.dto.response.CategoryResponse;
+import com.example.backend.dto.response.TransactionResponse;
 import com.example.backend.security.CustomUserDetails;
 import com.example.backend.service.CategoryService;
+import com.example.backend.service.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,8 @@ import java.util.List;
 public class CategoryController {
 
     private final CategoryService categoryService;
+    private final TransactionService transactionService;
+
 
     @PostMapping
     public ResponseEntity<ApiResponse<CategoryResponse>> createCategory(
@@ -53,6 +57,15 @@ public class CategoryController {
             @AuthenticationPrincipal CustomUserDetails currentUser) {
         categoryService.deleteCategory(id, currentUser.getId());
         ApiResponse<Void> response = new ApiResponse<>(true, "Xóa danh mục thành công", null);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}/transactions")
+    public ResponseEntity<ApiResponse<List<TransactionResponse>>> getTransactionsByCategoryId(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        List<TransactionResponse> transactions = transactionService.getTransactionsByCategoryId(id, currentUser.getId());
+        ApiResponse<List<TransactionResponse>> response = new ApiResponse<>(true, "Lấy giao dịch theo danh mục thành công", transactions);
         return ResponseEntity.ok(response);
     }
 }

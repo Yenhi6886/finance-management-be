@@ -33,10 +33,29 @@ public class TransactionController {
     public ResponseEntity<ApiResponse<List<TransactionResponse>>> getTransactions(
             @AuthenticationPrincipal CustomUserDetails currentUser,
             @RequestParam(required = false) String type,
-            @RequestParam(defaultValue = "10") int limit) {
+            @RequestParam(defaultValue = "50") int limit) {
 
         List<TransactionResponse> transactions = transactionService.getTransactions(currentUser.getId(), type, limit);
         ApiResponse<List<TransactionResponse>> response = new ApiResponse<>(true, "Lấy danh sách giao dịch thành công", transactions);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<TransactionResponse>> updateTransaction(
+            @PathVariable Long id,
+            @Valid @RequestBody TransactionRequest request,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        TransactionResponse transaction = transactionService.updateTransaction(id, request, currentUser.getId());
+        ApiResponse<TransactionResponse> response = new ApiResponse<>(true, "Cập nhật giao dịch thành công", transaction);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteTransaction(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        transactionService.deleteTransaction(id, currentUser.getId());
+        ApiResponse<Void> response = new ApiResponse<>(true, "Xóa giao dịch thành công", null);
         return ResponseEntity.ok(response);
     }
 }

@@ -5,6 +5,7 @@ import com.example.backend.enums.TransactionType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -27,6 +28,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     List<Transaction> findByWallet_User_IdAndType(Long userId, TransactionType type, Pageable pageable);
 
+    List<Transaction> findByWallet_User_IdAndTypeInAndCategoryIsNotNull(Long userId, List<TransactionType> types, Pageable pageable);
+
     @Query("SELECT t FROM Transaction t WHERE t.user.id = :userId AND t.type = 'TRANSFER' ORDER BY t.date DESC")
     List<Transaction> findTransferTransactionsByUserId(@Param("userId") Long userId, Pageable pageable);
 
@@ -43,4 +46,10 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.category.id = :categoryId AND t.type = 'INCOME' AND t.date BETWEEN :startDate AND :endDate")
     BigDecimal sumIncomesByCategoryIdAndDateRange(@Param("categoryId") Long categoryId, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+
+    @Modifying
+    @Query("UPDATE Transaction t SET t.category = null WHERE t.category.id = :categoryId")
+    void setCategoryToNullByCategoryId(@Param("categoryId") Long categoryId);
+
+    List<Transaction> findByCategoryIdOrderByDateDesc(Long categoryId);
 }
