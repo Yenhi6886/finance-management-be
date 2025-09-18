@@ -62,4 +62,20 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("endOfDay") LocalDateTime endOfDay,
             Pageable pageable
     );
+    @Query("""
+    SELECT t FROM Transaction t
+    WHERE t.user.id = :userId
+      AND (:walletId IS NULL OR t.wallet.id = :walletId)
+      AND (:startDate IS NULL OR t.date >= :startDate)
+      AND (:endDate IS NULL OR t.date <= :endDate)
+    ORDER BY t.date DESC
+    """)
+    Page<Transaction> getTransactionStatistics(
+            @Param("userId") Long userId,
+            @Param("walletId") Long walletId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            Pageable pageable
+    );
+
 }

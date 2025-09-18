@@ -263,5 +263,8 @@ public class TransactionService {
         Page<Transaction> transactions= transactionRepository.findTransactionsTodayByUser(userId, startOfDay, endOfDay, pageable);
         return transactions.map(this::mapToTransactionResponse);
     }
-
+    public Page<TransactionResponse> getTransactionsByTime(Long userId,LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
+        Page<Transaction> transactions = transactionRepository.getTransactionStatistics(userId, null, startDate, endDate, pageable);
+        return transactions.map(this::mapToTransactionResponse);
+    }
 }

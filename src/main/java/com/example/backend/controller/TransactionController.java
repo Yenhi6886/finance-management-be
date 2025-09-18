@@ -1,6 +1,7 @@
 package com.example.backend.controller;
 
 import com.example.backend.dto.request.TransactionRequest;
+import com.example.backend.dto.request.TransactionStatisticRequest;
 import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.dto.response.TransactionResponse;
 import com.example.backend.entity.Transaction;
@@ -72,6 +73,17 @@ public class TransactionController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date"));
         Page<TransactionResponse> transactions = transactionService.getTransactionsToday(currentUser.getId(), pageable);
         ApiResponse<Page<TransactionResponse>> response = new ApiResponse<>(true, "Lấy danh sách giao dịch hôm nay thành công", transactions);
+        return ResponseEntity.ok(response);
+    }
+    @GetMapping("/statistics" )
+    public ResponseEntity<ApiResponse<Page<TransactionResponse>>> getTransactionStatistics(
+            @AuthenticationPrincipal CustomUserDetails currentUser,
+            @RequestBody TransactionStatisticRequest request,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date"));
+        Page<TransactionResponse> transactions = transactionService.getTransactionsByTime(currentUser.getId(), request.getStartDate(), request.getEndDate(), pageable);
+        ApiResponse<Page<TransactionResponse>> response = new ApiResponse<>(true, "Lấy danh sách giao dịch theo thời gian thành công", transactions);
         return ResponseEntity.ok(response);
     }
 }
