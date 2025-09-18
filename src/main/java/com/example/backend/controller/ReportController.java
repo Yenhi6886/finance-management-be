@@ -5,6 +5,9 @@ import com.example.backend.dto.response.ReportDataResponse;
 import com.example.backend.service.ExcelService;
 import com.example.backend.service.PDFService;
 import com.example.backend.service.ReportService;
+import com.example.backend.service.EmailService;
+import com.example.backend.service.ReportEmailSettingService;
+import com.example.backend.entity.ReportEmailSetting;
 import com.example.backend.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -27,6 +30,8 @@ public class ReportController {
     private final ReportService reportService;
     private final ExcelService excelService;
     private final PDFService pdfService;
+    private final EmailService emailService;
+    private final ReportEmailSettingService settingService;
 
     @PostMapping("/export/excel")
     public ResponseEntity<byte[]> exportExcelReport(
@@ -92,6 +97,35 @@ public class ReportController {
         }
     }
 
+    @PostMapping("/email/pdf")
+    public ResponseEntity<Void> emailPDFReport(
+            @RequestBody ReportRequest request,
+            Authentication authentication) {
+        try {
+            if (request.getStartDate() == null || request.getEndDate() == null) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            Long userId = userDetails.getId();
+
+            ReportDataResponse reportData = reportService.generateReportData(request, userId);
+            byte[] pdfBytes = pdfService.generatePDFReport(reportData);
+
+            String fileName = generateFileName("BaoCaoTaiChinh", "pdf");
+            String subject = "Báo cáo tài chính của bạn";
+            String body = "Đính kèm là báo cáo tài chính theo khoảng thời gian bạn đã chọn.";
+
+            emailService.sendEmailWithAttachment(userDetails.getUsername(), subject, body, pdfBytes, fileName, "application/pdf");
+
+            return ResponseEntity.ok().build();
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
     @PostMapping("/preview")
     public ResponseEntity<ReportDataResponse> previewReport(
             @RequestBody ReportRequest request,
@@ -110,6 +144,57 @@ public class ReportController {
             
             return ResponseEntity.ok(reportData);
             
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
+    // ========== Email report settings ==========
+    @GetMapping("/email/settings")
+    public ResponseEntity<ReportEmailSetting> getEmailSettings(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        Long userId = userDetails.getId();
+        ReportEmailSetting setting = settingService.getByUserId(userId).orElse(null);
+        return ResponseEntity.ok(setting);
+    }
+
+    @PostMapping("/email/settings")
+    public ResponseEntity<ReportEmailSetting> saveEmailSettings(
+            @RequestBody ReportEmailSetting payload,
+            Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        Long userId = userDetails.getId();
+        ReportEmailSetting saved = settingService.upsert(userId, payload);
+        return ResponseEntity.ok(saved);
+    }
+
+    @PostMapping("/email/send-now")
+    public ResponseEntity<Void> sendNow(
+            @RequestBody ReportRequest request,
+            Authentication authentication) {
+        try {
+            if (request.getStartDate() == null || request.getEndDate() == null) {
+                return ResponseEntity.badRequest().build();
+            }
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            Long userId = userDetails.getId();
+
+            ReportDataResponse reportData = reportService.generateReportData(request, userId);
+            byte[] pdfBytes = pdfService.generatePDFReport(reportData);
+
+            String fileName = generateFileName("BaoCaoTaiChinh", "pdf");
+            String subject = "Báo cáo tài chính của bạn";
+            String body = "Đính kèm là báo cáo tài chính theo khoảng thời gian bạn đã chọn.";
+
+            String toEmail = settingService.getByUserId(userId)
+                    .map(ReportEmailSetting::getTargetEmail)
+                    .filter(e -> e != null && !e.isBlank())
+                    .orElse(userDetails.getUsername());
+
+            emailService.sendEmailWithAttachment(toEmail, subject, body, pdfBytes, fileName, "application/pdf");
+            return ResponseEntity.ok().build();
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
