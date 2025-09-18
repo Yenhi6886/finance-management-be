@@ -14,9 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -87,8 +85,8 @@ public class CategoryService {
 
     private CategoryResponse mapToCategoryResponse(Category category) {
         LocalDate today = LocalDate.now();
-        LocalDateTime startOfMonth = today.withDayOfMonth(1).atStartOfDay();
-        LocalDateTime endOfMonth = today.withDayOfMonth(today.lengthOfMonth()).atTime(LocalTime.MAX);
+        Instant startOfMonth = today.withDayOfMonth(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+        Instant endOfMonth = today.withDayOfMonth(today.lengthOfMonth()).atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC);
 
         // Luôn tính toán số tiền đã chi và đã thu
         BigDecimal spentAmount = transactionRepository.sumExpensesByCategoryIdAndDateRange(category.getId(), startOfMonth, endOfMonth);

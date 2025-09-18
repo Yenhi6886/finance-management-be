@@ -23,10 +23,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.YearMonth;
-import java.time.LocalDateTime;
+
+import java.time.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -91,11 +89,20 @@ public class TransactionService {
         return response;
     }
 
-    public List<TransactionResponse> getTransactions(Long userId, String type, int limit) {
-        Pageable pageable = PageRequest.of(0, limit, Sort.by("date").descending());
+    public List<TransactionResponse> getTransactions(Long userId, String type, Long categoryId, LocalDate date, int limit) {
+        Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "date", "id"));
         List<Transaction> transactions;
 
-        if ("transfer".equalsIgnoreCase(type)) {
+        Instant startOfDay = (date != null) ? date.atStartOfDay(ZoneOffset.UTC).toInstant() : null;
+        Instant endOfDay = (date != null) ? date.atTime(LocalTime.MAX).atZone(ZoneOffset.UTC).toInstant() : null;
+
+        if (startOfDay != null && categoryId != null) {
+            transactions = transactionRepository.findByUser_IdAndCategoryIdAndDateBetweenOrderByDateDescIdDesc(userId, categoryId, startOfDay, endOfDay, pageable);
+        } else if (startOfDay != null) {
+            transactions = transactionRepository.findByUser_IdAndDateBetweenOrderByDateDescIdDesc(userId, startOfDay, endOfDay, pageable);
+        } else if (categoryId != null) {
+            transactions = transactionRepository.findByWallet_User_IdAndCategoryId(userId, categoryId, pageable);
+        } else if ("transfer".equalsIgnoreCase(type)) {
             transactions = transactionRepository.findTransferTransactionsByUserId(userId, pageable);
         } else if (type != null && !type.isBlank()) {
             transactions = transactionRepository.findByWallet_User_IdAndType(userId, TransactionType.valueOf(type.toUpperCase()), pageable);
@@ -207,8 +214,8 @@ public class TransactionService {
     private boolean checkBudgetAndCreateNotification(User user, Category category) {
         if (category != null && category.getBudgetAmount() != null && category.getBudgetAmount().compareTo(BigDecimal.ZERO) > 0) {
             YearMonth currentMonth = YearMonth.now();
-            LocalDateTime startDate = currentMonth.atDay(1).atStartOfDay();
-            LocalDateTime endDate = currentMonth.atEndOfMonth().atTime(23, 59, 59);
+            Instant startDate = currentMonth.atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+            Instant endDate = currentMonth.atEndOfMonth().atTime(23, 59, 59).toInstant(ZoneOffset.UTC);
 
             BigDecimal totalSpent = transactionRepository.sumExpensesByCategoryIdAndDateRange(category.getId(), startDate, endDate);
 
@@ -250,7 +257,7 @@ public class TransactionService {
             throw new AccessDeniedException("Bạn không có quyền truy cập danh mục này.");
         }
 
-        List<Transaction> transactions = transactionRepository.findByCategoryIdOrderByDateDesc(categoryId);
+        List<Transaction> transactions = transactionRepository.findByCategoryIdOrderByDateDescIdDesc(categoryId);
         return transactions.stream()
                 .map(this::mapToTransactionResponse)
                 .collect(Collectors.toList());
