@@ -30,7 +30,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     List<Transaction> findByWallet_User_IdAndTypeInAndCategoryIsNotNull(Long userId, List<TransactionType> types, Pageable pageable);
 
-    @Query("SELECT t FROM Transaction t WHERE t.user.id = :userId AND t.type = 'TRANSFER' ORDER BY t.date DESC")
+    @Query("SELECT t FROM Transaction t WHERE t.user.id = :userId AND t.type = 'TRANSFER'")
     List<Transaction> findTransferTransactionsByUserId(@Param("userId") Long userId, Pageable pageable);
 
     @Query(value = "SELECT date(t.date) as transaction_date, " +
@@ -51,5 +51,5 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     @Query("UPDATE Transaction t SET t.category = null WHERE t.category.id = :categoryId")
     void setCategoryToNullByCategoryId(@Param("categoryId") Long categoryId);
 
-    List<Transaction> findByCategoryIdOrderByDateDesc(Long categoryId);
+    List<Transaction> findByCategoryIdOrderByDateDescIdDesc(Long categoryId);
 }
