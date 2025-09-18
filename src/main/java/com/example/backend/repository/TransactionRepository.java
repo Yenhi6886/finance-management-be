@@ -52,4 +52,14 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     void setCategoryToNullByCategoryId(@Param("categoryId") Long categoryId);
 
     List<Transaction> findByCategoryIdOrderByDateDesc(Long categoryId);
+
+    @Query("SELECT t FROM Transaction t " +
+            "WHERE t.user.id = :userId " +
+            "AND t.date BETWEEN :startOfDay AND :endOfDay")
+    Page<Transaction> findTransactionsTodayByUser(
+            @Param("userId") Long userId,
+            @Param("startOfDay") LocalDateTime startOfDay,
+            @Param("endOfDay") LocalDateTime endOfDay,
+            Pageable pageable
+    );
 }

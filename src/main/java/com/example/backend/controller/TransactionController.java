@@ -3,10 +3,15 @@ package com.example.backend.controller;
 import com.example.backend.dto.request.TransactionRequest;
 import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.dto.response.TransactionResponse;
+import com.example.backend.entity.Transaction;
 import com.example.backend.security.CustomUserDetails;
 import com.example.backend.service.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -56,6 +61,17 @@ public class TransactionController {
             @AuthenticationPrincipal CustomUserDetails currentUser) {
         transactionService.deleteTransaction(id, currentUser.getId());
         ApiResponse<Void> response = new ApiResponse<>(true, "Xóa giao dịch thành công", null);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/today" )
+    public ResponseEntity<ApiResponse<Page<TransactionResponse>>> getTodayTransactions(
+            @AuthenticationPrincipal CustomUserDetails currentUser,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date"));
+        Page<TransactionResponse> transactions = transactionService.getTransactionsToday(currentUser.getId(), pageable);
+        ApiResponse<Page<TransactionResponse>> response = new ApiResponse<>(true, "Lấy danh sách giao dịch hôm nay thành công", transactions);
         return ResponseEntity.ok(response);
     }
 }

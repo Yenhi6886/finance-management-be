@@ -14,6 +14,7 @@ import com.example.backend.repository.TransactionRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -22,6 +23,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -252,4 +255,13 @@ public class TransactionService {
                 .map(this::mapToTransactionResponse)
                 .collect(Collectors.toList());
     }
+    public Page<TransactionResponse> getTransactionsToday(Long userId, Pageable pageable) {
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
+
+        Page<Transaction> transactions= transactionRepository.findTransactionsTodayByUser(userId, startOfDay, endOfDay, pageable);
+        return transactions.map(this::mapToTransactionResponse);
+    }
+
 }
