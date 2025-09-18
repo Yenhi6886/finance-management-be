@@ -14,6 +14,7 @@ import com.example.backend.repository.TransactionRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+
 import java.time.*;
 import java.util.List;
 import java.util.Map;
@@ -260,4 +262,46 @@ public class TransactionService {
                 .map(this::mapToTransactionResponse)
                 .collect(Collectors.toList());
     }
+
+    public Page<TransactionResponse> getTransactionsToday(Long userId, Pageable pageable) {
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
+
+        Page<Transaction> transactions= transactionRepository.findTransactionsTodayByUser(userId, startOfDay, endOfDay, pageable);
+        return transactions.map(this::mapToTransactionResponse);
+    }
+
+    public Page<TransactionResponse> getTransactionsByTime(Long userId,LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
+        Page<Transaction> transactions = transactionRepository.getTransactionStatistics(userId, null, startDate, endDate, pageable);
+        return transactions.map(this::mapToTransactionResponse);
+    }
+
+    public Page<TransactionResponse> getTransactionsTodayByWalletId(Long userId, Long walletId, Pageable pageable) {
+        Wallet wallet = walletRepository.findById(walletId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ví với ID: " + walletId));
+        if (!wallet.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException("Bạn không có quyền truy cập ví này.");
+        }
+
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
+
+        Page<Transaction> transactions = transactionRepository.getTransactionStatistics(userId, walletId, startOfDay, endOfDay, pageable);
+        return transactions.map(this::mapToTransactionResponse);
+    }
+
+    public Page<TransactionResponse> getTransactionsByWalletIdAndTime(Long userId, Long walletId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
+        Wallet wallet = walletRepository.findById(walletId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ví với ID: " + walletId));
+        if (!wallet.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException("Bạn không có quyền truy cập ví này.");
+        }
+
+        Page<Transaction> transactions = transactionRepository.getTransactionStatistics(userId, walletId, startDate, endDate, pageable);
+        return transactions.map(this::mapToTransactionResponse);
+    }
+
+
 }
