@@ -1,28 +1,22 @@
 package com.example.backend.controller;
 
 import com.example.backend.dto.request.TransactionRequest;
-import com.example.backend.dto.request.TransactionStatisticRequest;
 import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.dto.response.TransactionResponse;
-import com.example.backend.entity.Transaction;
+import com.example.backend.dto.response.TransactionStatisticResponse;
 import com.example.backend.security.CustomUserDetails;
 import com.example.backend.service.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-
 import org.springframework.format.annotation.DateTimeFormat;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-
 import java.time.LocalDate;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -75,75 +69,75 @@ public class TransactionController {
     }
 
     @GetMapping("/statistics/today")
-    public ResponseEntity<ApiResponse<Page<TransactionResponse>>> getTodayTransactions(
+    public ResponseEntity<ApiResponse<TransactionStatisticResponse>> getTodayTransactions(
             @AuthenticationPrincipal CustomUserDetails currentUser,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date"));
-        Page<TransactionResponse> transactions = transactionService.getTransactionsToday(currentUser.getId(), pageable);
-        ApiResponse<Page<TransactionResponse>> response = new ApiResponse<>(true, "Lấy danh sách giao dịch hôm nay thành công", transactions);
+        TransactionStatisticResponse statistics = transactionService.getTransactionsToday(currentUser.getId(), pageable);
+        ApiResponse<TransactionStatisticResponse> response = new ApiResponse<>(true, "Lấy danh sách giao dịch hôm nay thành công", statistics);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/statistics")
-    public ResponseEntity<ApiResponse<Page<TransactionResponse>>> getTransactionStatistics(
+    public ResponseEntity<ApiResponse<TransactionStatisticResponse>> getTransactionStatistics(
             @AuthenticationPrincipal CustomUserDetails currentUser,
-            @RequestParam(required = false) LocalDateTime startDate,
-            @RequestParam(required = false) LocalDateTime endDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date"));
-        Page<TransactionResponse> transactions = transactionService.getTransactionsByTime(
+        TransactionStatisticResponse statistics = transactionService.getTransactionsByTime(
                 currentUser.getId(),
                 startDate,
                 endDate,
                 pageable
         );
 
-        ApiResponse<Page<TransactionResponse>> response = new ApiResponse<>(
+        ApiResponse<TransactionStatisticResponse> response = new ApiResponse<>(
                 true,
                 "Lấy danh sách giao dịch theo thời gian thành công",
-                transactions
+                statistics
         );
         return ResponseEntity.ok(response);
     }
 
 
     @GetMapping("/statistics/wallet/today")
-    public ResponseEntity<ApiResponse<Page<TransactionResponse>>> getTodayWalletTransactions(
+    public ResponseEntity<ApiResponse<TransactionStatisticResponse>> getTodayWalletTransactions(
             @AuthenticationPrincipal CustomUserDetails currentUser,
             @RequestParam Long walletId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date"));
-        Page<TransactionResponse> transactions = transactionService.getTransactionsTodayByWalletId(
+        TransactionStatisticResponse statistics = transactionService.getTransactionsTodayByWalletId(
                 currentUser.getId(),
                 walletId,
                 pageable
         );
 
-        ApiResponse<Page<TransactionResponse>> response = new ApiResponse<>(
+        ApiResponse<TransactionStatisticResponse> response = new ApiResponse<>(
                 true,
                 "Lấy danh sách giao dịch hôm nay theo ví thành công",
-                transactions
+                statistics
         );
         return ResponseEntity.ok(response);
     }
 
 
-    @GetMapping("statistics/wallet")
-    public ResponseEntity<ApiResponse<Page<TransactionResponse>>> getWalletTransactions(
+    @GetMapping("/statistics/wallet")
+    public ResponseEntity<ApiResponse<TransactionStatisticResponse>> getWalletTransactions(
             @AuthenticationPrincipal CustomUserDetails currentUser,
             @RequestParam Long walletId,
-            @RequestParam(required = false) LocalDateTime startDate,
-            @RequestParam(required = false) LocalDateTime endDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date"));
-        Page<TransactionResponse> transactions = transactionService.getTransactionsByWalletIdAndTime(
+        TransactionStatisticResponse statistics = transactionService.getTransactionsByWalletIdAndTime(
                 currentUser.getId(),
                 walletId,
                 startDate,
@@ -151,10 +145,10 @@ public class TransactionController {
                 pageable
         );
 
-        ApiResponse<Page<TransactionResponse>> response = new ApiResponse<>(
+        ApiResponse<TransactionStatisticResponse> response = new ApiResponse<>(
                 true,
                 "Lấy danh sách giao dịch theo thời gian và ví thành công",
-                transactions
+                statistics
         );
         return ResponseEntity.ok(response);
     }
