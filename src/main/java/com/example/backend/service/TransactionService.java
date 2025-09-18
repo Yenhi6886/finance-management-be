@@ -2,6 +2,7 @@ package com.example.backend.service;
 
 import com.example.backend.dto.request.TransactionRequest;
 import com.example.backend.dto.response.TransactionResponse;
+import com.example.backend.dto.response.TransactionStatisticResponse;
 import com.example.backend.entity.Category;
 import com.example.backend.entity.Transaction;
 import com.example.backend.entity.User;
@@ -23,7 +24,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-
 import java.time.*;
 import java.util.List;
 import java.util.Map;
@@ -132,7 +132,6 @@ public class TransactionService {
         TransactionType oldType = transaction.getType();
         Category oldCategory = transaction.getCategory();
 
-        // Hoàn tác giao dịch cũ
         if (oldType == TransactionType.INCOME) {
             oldWallet.setBalance(oldWallet.getBalance().subtract(oldAmount));
         } else { // EXPENSE
@@ -149,7 +148,6 @@ public class TransactionService {
         Category newCategory = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục mới: " + request.getCategoryId()));
 
-        // Áp dụng giao dịch mới
         BigDecimal newAmount = request.getAmount();
         TransactionType newType = request.getType();
         if (newType == TransactionType.INCOME) {
@@ -159,7 +157,6 @@ public class TransactionService {
         }
         walletRepository.save(newWallet);
 
-        // Cập nhật thông tin giao dịch
         transaction.setAmount(newAmount);
         transaction.setType(newType);
         transaction.setWallet(newWallet);
@@ -169,7 +166,6 @@ public class TransactionService {
 
         Transaction updatedTransaction = transactionRepository.save(transaction);
 
-        // Kiểm tra ngân sách cho cả danh mục cũ và mới
         boolean budgetExceeded = checkBudgetAndCreateNotification(user, newCategory);
         if(!Objects.equals(oldCategory.getId(), newCategory.getId())) {
             checkBudgetAndCreateNotification(user, oldCategory);
@@ -195,7 +191,6 @@ public class TransactionService {
         Category category = transaction.getCategory();
         User user = transaction.getUser();
 
-        // Hoàn tác giao dịch
         if (transaction.getType() == TransactionType.INCOME) {
             wallet.setBalance(wallet.getBalance().subtract(amount));
         } else { // EXPENSE
@@ -205,7 +200,6 @@ public class TransactionService {
         walletRepository.save(wallet);
         transactionRepository.delete(transaction);
 
-        // Kiểm tra lại ngân sách sau khi xóa
         if (category != null) {
             checkBudgetAndCreateNotification(user, category);
         }
@@ -263,45 +257,45 @@ public class TransactionService {
                 .collect(Collectors.toList());
     }
 
-    public Page<TransactionResponse> getTransactionsToday(Long userId, Pageable pageable) {
+    private TransactionStatisticResponse getTransactionStatistics(Long userId, Long walletId, LocalDateTime startDateTime, LocalDateTime endDateTime, Pageable pageable) {
+        if (walletId != null) {
+            Wallet wallet = walletRepository.findById(walletId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ví với ID: " + walletId));
+            if (!wallet.getUser().getId().equals(userId)) {
+                throw new AccessDeniedException("Bạn không có quyền truy cập ví này.");
+            }
+        }
+
+        Instant startDate = (startDateTime != null) ? startDateTime.toInstant(ZoneOffset.UTC) : null;
+        Instant endDate = (endDateTime != null) ? endDateTime.toInstant(ZoneOffset.UTC) : null;
+
+        Page<Transaction> transactionsPage = transactionRepository.getTransactionStatistics(userId, walletId, startDate, endDate, pageable);
+        BigDecimal totalAmount = transactionRepository.sumAmountForStatistics(userId, walletId, startDate, endDate);
+
+        Page<TransactionResponse> transactionResponsesPage = transactionsPage.map(this::mapToTransactionResponse);
+
+        return new TransactionStatisticResponse(transactionResponsesPage, totalAmount);
+    }
+
+    public TransactionStatisticResponse getTransactionsToday(Long userId, Pageable pageable) {
         LocalDate today = LocalDate.now();
         LocalDateTime startOfDay = today.atStartOfDay();
         LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
-
-        Page<Transaction> transactions= transactionRepository.findTransactionsTodayByUser(userId, startOfDay, endOfDay, pageable);
-        return transactions.map(this::mapToTransactionResponse);
+        return getTransactionStatistics(userId, null, startOfDay, endOfDay, pageable);
     }
 
-    public Page<TransactionResponse> getTransactionsByTime(Long userId,LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
-        Page<Transaction> transactions = transactionRepository.getTransactionStatistics(userId, null, startDate, endDate, pageable);
-        return transactions.map(this::mapToTransactionResponse);
+    public TransactionStatisticResponse getTransactionsByTime(Long userId,LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
+        return getTransactionStatistics(userId, null, startDate, endDate, pageable);
     }
 
-    public Page<TransactionResponse> getTransactionsTodayByWalletId(Long userId, Long walletId, Pageable pageable) {
-        Wallet wallet = walletRepository.findById(walletId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ví với ID: " + walletId));
-        if (!wallet.getUser().getId().equals(userId)) {
-            throw new AccessDeniedException("Bạn không có quyền truy cập ví này.");
-        }
-
+    public TransactionStatisticResponse getTransactionsTodayByWalletId(Long userId, Long walletId, Pageable pageable) {
         LocalDate today = LocalDate.now();
         LocalDateTime startOfDay = today.atStartOfDay();
         LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
-
-        Page<Transaction> transactions = transactionRepository.getTransactionStatistics(userId, walletId, startOfDay, endOfDay, pageable);
-        return transactions.map(this::mapToTransactionResponse);
+        return getTransactionStatistics(userId, walletId, startOfDay, endOfDay, pageable);
     }
 
-    public Page<TransactionResponse> getTransactionsByWalletIdAndTime(Long userId, Long walletId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
-        Wallet wallet = walletRepository.findById(walletId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ví với ID: " + walletId));
-        if (!wallet.getUser().getId().equals(userId)) {
-            throw new AccessDeniedException("Bạn không có quyền truy cập ví này.");
-        }
-
-        Page<Transaction> transactions = transactionRepository.getTransactionStatistics(userId, walletId, startDate, endDate, pageable);
-        return transactions.map(this::mapToTransactionResponse);
+    public TransactionStatisticResponse getTransactionsByWalletIdAndTime(Long userId, Long walletId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
+        return getTransactionStatistics(userId, walletId, startDate, endDate, pageable);
     }
-
-
 }

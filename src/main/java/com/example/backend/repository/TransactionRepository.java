@@ -76,12 +76,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     Page<Transaction> getTransactionStatistics(
             @Param("userId") Long userId,
             @Param("walletId") Long walletId,
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate,
+            @Param("startDate") Instant startDate,
+            @Param("endDate") Instant endDate,
             Pageable pageable
     );
 
-  Page<Transaction> findAllByUserIdAndDateBetween(Long userId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
+    Page<Transaction> findAllByUserIdAndDateBetween(Long userId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
 
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.user.id = :userId AND t.type = :type AND t.date BETWEEN :startDate AND :endDate")
     BigDecimal sumAmountByTypeAndDateBetween(
@@ -89,6 +89,21 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("type") TransactionType type,
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
+    );
+
+    @Query("""
+    SELECT COALESCE(SUM(CASE WHEN t.type = com.example.backend.enums.TransactionType.INCOME THEN t.amount WHEN t.type = com.example.backend.enums.TransactionType.EXPENSE THEN -t.amount ELSE 0 END), 0)
+    FROM Transaction t
+    WHERE t.user.id = :userId
+      AND (:walletId IS NULL OR t.wallet.id = :walletId)
+      AND (:startDate IS NULL OR t.date >= :startDate)
+      AND (:endDate IS NULL OR t.date <= :endDate)
+    """)
+    BigDecimal sumAmountForStatistics(
+            @Param("userId") Long userId,
+            @Param("walletId") Long walletId,
+            @Param("startDate") Instant startDate,
+            @Param("endDate") Instant endDate
     );
 
     List<Transaction> findByCategoryIdOrderByDateDescIdDesc(Long categoryId);
