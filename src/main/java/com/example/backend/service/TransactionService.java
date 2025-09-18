@@ -89,7 +89,8 @@ public class TransactionService {
         return response;
     }
 
-    public List<TransactionResponse> getTransactions(Long userId, String type, Long categoryId, LocalDate date, int limit) {
+    public List<TransactionResponse> getTransactions(Long userId, String type, int limit) {
+
         Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "date", "id"));
         List<Transaction> transactions;
 
