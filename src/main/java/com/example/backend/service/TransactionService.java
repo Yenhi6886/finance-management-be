@@ -247,7 +247,7 @@ public class TransactionService {
             throw new AccessDeniedException("Bạn không có quyền truy cập danh mục này.");
         }
 
-        List<Transaction> transactions = transactionRepository.findByCategoryIdOrderByDateDescIdDesc(categoryId);
+        List<Transaction> transactions = transactionRepository.findByCategoryIdOrderByDateDesc(categoryId);
         return transactions.stream()
                 .map(this::mapToTransactionResponse)
                 .collect(Collectors.toList());
