@@ -8,8 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
-import jakarta.mail.internet.MimeMessage;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -146,37 +144,6 @@ public class EmailService {
             log.info("Email đặt lại mật khẩu đã được gửi đến: {}", email);
         } catch (Exception e) {
             log.error("Lỗi khi gửi email đặt lại mật khẩu: {}", e.getMessage(), e);
-        }
-    }
-
-    public void sendEmailWithAttachment(String toEmail,
-                                        String subject,
-                                        String textBody,
-                                        byte[] attachmentBytes,
-                                        String attachmentFilename,
-                                        String contentType) {
-        try {
-            MimeMessage mimeMessage = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
-            helper.setFrom(fromEmail);
-            helper.setTo(toEmail);
-            helper.setSubject(subject);
-            helper.setText(textBody, false);
-
-            if (attachmentBytes != null && attachmentBytes.length > 0 && attachmentFilename != null) {
-                helper.addAttachment(attachmentFilename, new org.springframework.core.io.ByteArrayResource(attachmentBytes) {
-                    @Override
-                    public String getFilename() {
-                        return attachmentFilename;
-                    }
-                }, contentType != null ? contentType : "application/octet-stream");
-            }
-
-            mailSender.send(mimeMessage);
-            log.info("Email với tệp đính kèm đã được gửi đến: {}", toEmail);
-        } catch (Exception e) {
-            log.error("Lỗi khi gửi email kèm tệp đính kèm: {}", e.getMessage(), e);
-            throw new RuntimeException("Không thể gửi email với tệp đính kèm", e);
         }
     }
 
