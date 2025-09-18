@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Service
@@ -49,7 +50,7 @@ public class WalletTransferService {
             throw new IllegalArgumentException("Chỉ có thể chuyển tiền giữa các ví cùng loại tiền tệ.");
         }
 
-        LocalDateTime transactionTime = (request.getDate() != null) ? request.getDate() : LocalDateTime.now();
+        Instant transactionTime = (request.getDate() != null) ? request.getDate() : Instant.now();
 
         // 1. Tạo giao dịch cha (meta-transaction)
         Transaction parentTransaction = Transaction.builder()

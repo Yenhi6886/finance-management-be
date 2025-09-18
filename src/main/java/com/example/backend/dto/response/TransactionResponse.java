@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Data
 @Builder
@@ -14,7 +14,7 @@ public class TransactionResponse {
     private BigDecimal amount;
     private TransactionType type;
     private String description;
-    private LocalDateTime date;
+    private Instant date;
     private Long categoryId;
     private String category;
     private Long walletId;

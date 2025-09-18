@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Data
 public class TransactionRequest {
@@ -25,5 +25,5 @@ public class TransactionRequest {
     private String description;
 
     @NotNull(message = "Thời gian không được để trống")
-    private LocalDateTime date;
+    private Instant date;
 }

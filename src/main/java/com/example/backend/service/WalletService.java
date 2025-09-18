@@ -22,7 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -76,7 +77,7 @@ public class WalletService {
                 .type(TransactionType.INCOME)
                 .amount(request.getAmount())
                 .description(finalDescription)
-                .date(LocalDateTime.now())
+                .date(Instant.now())
                 .balanceAfterTransaction(newBalance)
                 .build();
 
@@ -210,26 +211,26 @@ public class WalletService {
     }
 
     public List<BalanceHistoryResponse> getBalanceHistory(Long walletId, String period) {
-        LocalDateTime startDate;
+        Instant startDate;
         switch (period) {
             case "7d":
-                startDate = LocalDateTime.now().minusDays(7);
+                startDate = Instant.now().minus(7, ChronoUnit.DAYS);
                 break;
             case "1m":
-                startDate = LocalDateTime.now().minusMonths(1);
+                startDate = Instant.now().minus(30, ChronoUnit.DAYS); // Approximation for a month
                 break;
             case "3m":
-                startDate = LocalDateTime.now().minusMonths(3);
+                startDate = Instant.now().minus(90, ChronoUnit.DAYS); // Approximation for 3 months
                 break;
             default:
-                startDate = LocalDateTime.now().minusDays(30);
+                startDate = Instant.now().minus(30, ChronoUnit.DAYS);
                 break;
         }
 
         List<Object[]> results = transactionRepository.findClosingBalanceByDate(walletId, startDate);
         return results.stream()
                 .map(result -> new BalanceHistoryResponse(
-                        ((Timestamp) result[0]).toLocalDateTime().toLocalDate(),
+                        ((Timestamp) result[0]).toInstant().atZone(java.time.ZoneOffset.UTC).toLocalDate(),
                         (BigDecimal) result[1]
                 ))
                 .collect(Collectors.toList());

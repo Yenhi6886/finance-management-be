@@ -14,6 +14,7 @@ import com.example.backend.repository.TransactionRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -22,8 +23,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.YearMonth;
-import java.time.LocalDateTime;
+
+import java.time.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -89,10 +90,20 @@ public class TransactionService {
     }
 
     public List<TransactionResponse> getTransactions(Long userId, String type, int limit) {
+
         Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "date", "id"));
         List<Transaction> transactions;
 
-        if ("transfer".equalsIgnoreCase(type)) {
+        Instant startOfDay = (date != null) ? date.atStartOfDay(ZoneOffset.UTC).toInstant() : null;
+        Instant endOfDay = (date != null) ? date.atTime(LocalTime.MAX).atZone(ZoneOffset.UTC).toInstant() : null;
+
+        if (startOfDay != null && categoryId != null) {
+            transactions = transactionRepository.findByUser_IdAndCategoryIdAndDateBetweenOrderByDateDescIdDesc(userId, categoryId, startOfDay, endOfDay, pageable);
+        } else if (startOfDay != null) {
+            transactions = transactionRepository.findByUser_IdAndDateBetweenOrderByDateDescIdDesc(userId, startOfDay, endOfDay, pageable);
+        } else if (categoryId != null) {
+            transactions = transactionRepository.findByWallet_User_IdAndCategoryId(userId, categoryId, pageable);
+        } else if ("transfer".equalsIgnoreCase(type)) {
             transactions = transactionRepository.findTransferTransactionsByUserId(userId, pageable);
         } else if (type != null && !type.isBlank()) {
             transactions = transactionRepository.findByWallet_User_IdAndType(userId, TransactionType.valueOf(type.toUpperCase()), pageable);
@@ -204,8 +215,8 @@ public class TransactionService {
     private boolean checkBudgetAndCreateNotification(User user, Category category) {
         if (category != null && category.getBudgetAmount() != null && category.getBudgetAmount().compareTo(BigDecimal.ZERO) > 0) {
             YearMonth currentMonth = YearMonth.now();
-            LocalDateTime startDate = currentMonth.atDay(1).atStartOfDay();
-            LocalDateTime endDate = currentMonth.atEndOfMonth().atTime(23, 59, 59);
+            Instant startDate = currentMonth.atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+            Instant endDate = currentMonth.atEndOfMonth().atTime(23, 59, 59).toInstant(ZoneOffset.UTC);
 
             BigDecimal totalSpent = transactionRepository.sumExpensesByCategoryIdAndDateRange(category.getId(), startDate, endDate);
 
@@ -247,9 +258,51 @@ public class TransactionService {
             throw new AccessDeniedException("Bạn không có quyền truy cập danh mục này.");
         }
 
-        List<Transaction> transactions = transactionRepository.findByCategoryIdOrderByDateDesc(categoryId);
+        List<Transaction> transactions = transactionRepository.findByCategoryIdOrderByDateDescIdDesc(categoryId);
         return transactions.stream()
                 .map(this::mapToTransactionResponse)
                 .collect(Collectors.toList());
     }
+
+    public Page<TransactionResponse> getTransactionsToday(Long userId, Pageable pageable) {
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
+
+        Page<Transaction> transactions= transactionRepository.findTransactionsTodayByUser(userId, startOfDay, endOfDay, pageable);
+        return transactions.map(this::mapToTransactionResponse);
+    }
+
+    public Page<TransactionResponse> getTransactionsByTime(Long userId,LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
+        Page<Transaction> transactions = transactionRepository.getTransactionStatistics(userId, null, startDate, endDate, pageable);
+        return transactions.map(this::mapToTransactionResponse);
+    }
+
+    public Page<TransactionResponse> getTransactionsTodayByWalletId(Long userId, Long walletId, Pageable pageable) {
+        Wallet wallet = walletRepository.findById(walletId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ví với ID: " + walletId));
+        if (!wallet.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException("Bạn không có quyền truy cập ví này.");
+        }
+
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
+
+        Page<Transaction> transactions = transactionRepository.getTransactionStatistics(userId, walletId, startOfDay, endOfDay, pageable);
+        return transactions.map(this::mapToTransactionResponse);
+    }
+
+    public Page<TransactionResponse> getTransactionsByWalletIdAndTime(Long userId, Long walletId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
+        Wallet wallet = walletRepository.findById(walletId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ví với ID: " + walletId));
+        if (!wallet.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException("Bạn không có quyền truy cập ví này.");
+        }
+
+        Page<Transaction> transactions = transactionRepository.getTransactionStatistics(userId, walletId, startDate, endDate, pageable);
+        return transactions.map(this::mapToTransactionResponse);
+    }
+
+
 }

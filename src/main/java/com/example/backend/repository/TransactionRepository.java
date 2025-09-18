@@ -11,7 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Repository
@@ -33,25 +33,27 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     @Query("SELECT t FROM Transaction t WHERE t.user.id = :userId AND t.type = 'TRANSFER'")
     List<Transaction> findTransferTransactionsByUserId(@Param("userId") Long userId, Pageable pageable);
 
-    @Query(value = "SELECT date(t.date) as transaction_date, " +
-            "(SELECT t2.balance_after_transaction FROM transactions t2 WHERE t2.wallet_id = :walletId AND date(t2.date) <= date(t2.date) ORDER BY t2.date DESC, t2.id DESC LIMIT 1) as closing_balance " +
+    @Query(value = "SELECT date(t.transaction_date) as transaction_date, " +
+            "(SELECT t2.balance_after_transaction FROM transactions t2 WHERE t2.wallet_id = :walletId AND date(t2.transaction_date) <= date(t.transaction_date) ORDER BY t2.transaction_date DESC, t2.id DESC LIMIT 1) as closing_balance " +
             "FROM transactions t " +
-            "WHERE t.wallet_id = :walletId AND t.date >= :startDate " +
+            "WHERE t.wallet_id = :walletId AND t.transaction_date >= :startDate " +
             "GROUP BY transaction_date " +
             "ORDER BY transaction_date ASC", nativeQuery = true)
-    List<Object[]> findClosingBalanceByDate(@Param("walletId") Long walletId, @Param("startDate") LocalDateTime startDate);
+    List<Object[]> findClosingBalanceByDate(@Param("walletId") Long walletId, @Param("startDate") Instant startDate);
 
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.category.id = :categoryId AND t.type = 'EXPENSE' AND t.date BETWEEN :startDate AND :endDate")
-    BigDecimal sumExpensesByCategoryIdAndDateRange(@Param("categoryId") Long categoryId, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+    BigDecimal sumExpensesByCategoryIdAndDateRange(@Param("categoryId") Long categoryId, @Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
 
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.category.id = :categoryId AND t.type = 'INCOME' AND t.date BETWEEN :startDate AND :endDate")
-    BigDecimal sumIncomesByCategoryIdAndDateRange(@Param("categoryId") Long categoryId, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+    BigDecimal sumIncomesByCategoryIdAndDateRange(@Param("categoryId") Long categoryId, @Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
 
     @Modifying
     @Query("UPDATE Transaction t SET t.category = null WHERE t.category.id = :categoryId")
     void setCategoryToNullByCategoryId(@Param("categoryId") Long categoryId);
 
+
     List<Transaction> findByCategoryIdOrderByDateDesc(Long categoryId);
+
 
     @Query("SELECT t FROM Transaction t WHERE t.user.id = :userId " +
            "AND t.date BETWEEN :startDate AND :endDate " +
@@ -67,4 +69,49 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("transactionTypes") List<TransactionType> transactionTypes,
             @Param("categoryIds") List<Long> categoryIds
     );
+
+    @Query("SELECT t FROM Transaction t " +
+            "WHERE t.user.id = :userId " +
+            "AND t.date BETWEEN :startOfDay AND :endOfDay")
+    Page<Transaction> findTransactionsTodayByUser(
+            @Param("userId") Long userId,
+            @Param("startOfDay") LocalDateTime startOfDay,
+            @Param("endOfDay") LocalDateTime endOfDay,
+            Pageable pageable
+    );
+
+    @Query("""
+    SELECT t FROM Transaction t
+    WHERE t.user.id = :userId
+      AND (:walletId IS NULL OR t.wallet.id = :walletId)
+      AND (:startDate IS NULL OR t.date >= :startDate)
+      AND (:endDate IS NULL OR t.date <= :endDate)
+    ORDER BY t.date DESC
+    """)
+    Page<Transaction> getTransactionStatistics(
+            @Param("userId") Long userId,
+            @Param("walletId") Long walletId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            Pageable pageable
+    );
+
+  Page<Transaction> findAllByUserIdAndDateBetween(Long userId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
+
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.user.id = :userId AND t.type = :type AND t.date BETWEEN :startDate AND :endDate")
+    BigDecimal sumAmountByTypeAndDateBetween(
+            @Param("userId") Long userId,
+            @Param("type") TransactionType type,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    List<Transaction> findByCategoryIdOrderByDateDescIdDesc(Long categoryId);
+
+    List<Transaction> findByWallet_User_IdAndCategoryId(Long userId, Long categoryId, Pageable pageable);
+
+    List<Transaction> findByUser_IdAndDateBetweenOrderByDateDescIdDesc(Long userId, Instant startOfDay, Instant endOfDay, Pageable pageable);
+
+    List<Transaction> findByUser_IdAndCategoryIdAndDateBetweenOrderByDateDescIdDesc(Long userId, Long categoryId, Instant startOfDay, Instant endOfDay, Pageable pageable);
+
 }
