@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
+
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -36,19 +37,31 @@ public class BudgetService {
        Instant startDay = yearMonth.atDay(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
         Instant endDay = yearMonth.atEndOfMonth().atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant();
 
+        Instant startInstant = startDay.toInstant(ZoneOffset.UTC);
+        Instant endInstant = endDay.toInstant(ZoneOffset.UTC);
+
         BigDecimal totalBudget = categoryRepository.sumBudgetAmountByUserId(userId);
+        if (totalBudget == null) {
+            totalBudget = BigDecimal.ZERO;
+        }
 
         BigDecimal totalIncome = transactionRepository.sumAmountByTypeAndDateBetween(
-                userId, TransactionType.INCOME, startDay, endDay);
+                userId, TransactionType.INCOME, startInstant, endInstant);
+        if (totalIncome == null) {
+            totalIncome = BigDecimal.ZERO;
+        }
 
         BigDecimal totalExpense = transactionRepository.sumAmountByTypeAndDateBetween(
-                userId, TransactionType.EXPENSE, startDay, endDay);
+                userId, TransactionType.EXPENSE, startInstant, endInstant);
+        if (totalExpense == null) {
+            totalExpense = BigDecimal.ZERO;
+        }
 
         BigDecimal remainingAmount = totalBudget.subtract(totalExpense).add(totalIncome);
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("date").descending());
 
-        Page<Transaction> transactions =  transactionRepository.findAllByUserIdAndDateBetween(userId, startDay, endDay, pageable);
+        Page<Transaction> transactions =  transactionRepository.findAllByUserIdAndDateBetween(userId, startInstant, endInstant, pageable);
 
         Page<TransactionResponse> transactionResponses =  transactions.map(this::mapToTransactionResponse);
 

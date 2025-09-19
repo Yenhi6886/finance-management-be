@@ -51,7 +51,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     @Query("UPDATE Transaction t SET t.category = null WHERE t.category.id = :categoryId")
     void setCategoryToNullByCategoryId(@Param("categoryId") Long categoryId);
 
-
     List<Transaction> findByCategoryIdOrderByDateDesc(Long categoryId);
 
     @Query("SELECT t FROM Transaction t " +
@@ -112,5 +111,23 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     List<Transaction> findByUser_IdAndDateBetweenOrderByDateDescIdDesc(Long userId, Instant startOfDay, Instant endOfDay, Pageable pageable);
 
     List<Transaction> findByUser_IdAndCategoryIdAndDateBetweenOrderByDateDescIdDesc(Long userId, Long categoryId, Instant startOfDay, Instant endOfDay, Pageable pageable);
+
+    @Query("""
+        SELECT t FROM Transaction t
+        WHERE t.user.id = :userId
+          AND t.date BETWEEN :startDate AND :endDate
+          AND (:walletIds IS NULL OR t.wallet.id IN :walletIds)
+          AND (:transactionTypes IS NULL OR t.type IN :transactionTypes)
+          AND (:categoryIds IS NULL OR t.category.id IN :categoryIds)
+        ORDER BY t.date DESC
+        """)
+    List<Transaction> findByUserIdAndDateRangeAndFilters(
+            @Param("userId") Long userId,
+            @Param("startDate") Instant startDate,
+            @Param("endDate") Instant endDate,
+            @Param("walletIds") List<Long> walletIds,
+            @Param("transactionTypes") List<TransactionType> transactionTypes,
+            @Param("categoryIds") List<Long> categoryIds
+    );
 
 }
