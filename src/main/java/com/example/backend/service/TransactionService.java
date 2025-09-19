@@ -272,6 +272,10 @@ public class TransactionService {
         Page<Transaction> transactionsPage = transactionRepository.getTransactionStatistics(userId, walletId, startDate, endDate, pageable);
         BigDecimal totalAmount = transactionRepository.sumAmountForStatistics(userId, walletId, startDate, endDate);
 
+        if (totalAmount == null) {
+            totalAmount = BigDecimal.ZERO;
+        }
+
         Page<TransactionResponse> transactionResponsesPage = transactionsPage.map(this::mapToTransactionResponse);
 
         return new TransactionStatisticResponse(transactionResponsesPage, totalAmount);

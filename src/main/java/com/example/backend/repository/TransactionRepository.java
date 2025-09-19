@@ -52,18 +52,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     @Query("UPDATE Transaction t SET t.category = null WHERE t.category.id = :categoryId")
     void setCategoryToNullByCategoryId(@Param("categoryId") Long categoryId);
 
-
     List<Transaction> findByCategoryIdOrderByDateDesc(Long categoryId);
-
-    @Query("SELECT t FROM Transaction t " +
-            "WHERE t.user.id = :userId " +
-            "AND t.date BETWEEN :startOfDay AND :endOfDay")
-    Page<Transaction> findTransactionsTodayByUser(
-            @Param("userId") Long userId,
-            @Param("startOfDay") LocalDateTime startOfDay,
-            @Param("endOfDay") LocalDateTime endOfDay,
-            Pageable pageable
-    );
 
     @Query("""
     SELECT t FROM Transaction t
@@ -81,14 +70,14 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             Pageable pageable
     );
 
-    Page<Transaction> findAllByUserIdAndDateBetween(Long userId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
+    Page<Transaction> findAllByUserIdAndDateBetween(Long userId, Instant startDate, Instant endDate, Pageable pageable);
 
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.user.id = :userId AND t.type = :type AND t.date BETWEEN :startDate AND :endDate")
     BigDecimal sumAmountByTypeAndDateBetween(
             @Param("userId") Long userId,
             @Param("type") TransactionType type,
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate
+            @Param("startDate") Instant startDate,
+            @Param("endDate") Instant endDate
     );
 
     @Query("""
