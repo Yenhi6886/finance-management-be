@@ -16,10 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.YearMonth;
-import java.time.ZoneId;
+import java.time.*;
 
 import java.util.List;
 import java.util.Map;
@@ -34,11 +31,8 @@ public class BudgetService {
 
     public BudgetStatRespond getBudgetStat(Long userId, int year, int month, int page, int size) {
         YearMonth yearMonth = YearMonth.of(year, month);
-       Instant startDay = yearMonth.atDay(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+        Instant startDay = yearMonth.atDay(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
         Instant endDay = yearMonth.atEndOfMonth().atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant();
-
-        Instant startInstant = startDay.toInstant(ZoneOffset.UTC);
-        Instant endInstant = endDay.toInstant(ZoneOffset.UTC);
 
         BigDecimal totalBudget = categoryRepository.sumBudgetAmountByUserId(userId);
         if (totalBudget == null) {
@@ -46,13 +40,13 @@ public class BudgetService {
         }
 
         BigDecimal totalIncome = transactionRepository.sumAmountByTypeAndDateBetween(
-                userId, TransactionType.INCOME, startInstant, endInstant);
+                userId, TransactionType.INCOME, startDay, endDay);
         if (totalIncome == null) {
             totalIncome = BigDecimal.ZERO;
         }
 
         BigDecimal totalExpense = transactionRepository.sumAmountByTypeAndDateBetween(
-                userId, TransactionType.EXPENSE, startInstant, endInstant);
+                userId, TransactionType.EXPENSE, startDay, endDay);
         if (totalExpense == null) {
             totalExpense = BigDecimal.ZERO;
         }
@@ -61,7 +55,7 @@ public class BudgetService {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("date").descending());
 
-        Page<Transaction> transactions =  transactionRepository.findAllByUserIdAndDateBetween(userId, startInstant, endInstant, pageable);
+        Page<Transaction> transactions =  transactionRepository.findAllByUserIdAndDateBetween(userId, startDay, endDay, pageable);
 
         Page<TransactionResponse> transactionResponses =  transactions.map(this::mapToTransactionResponse);
 
