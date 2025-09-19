@@ -222,24 +222,31 @@ public class TransactionService {
     }
 
     private TransactionResponse mapToTransactionResponse(Transaction transaction) {
+        BigDecimal amount = transaction.getAmount() == null ? BigDecimal.ZERO : transaction.getAmount().abs();
+
         TransactionResponse.TransactionResponseBuilder builder = TransactionResponse.builder()
                 .id(transaction.getId())
-                .amount(transaction.getAmount().abs())
+                .amount(amount)
                 .type(transaction.getType())
                 .description(transaction.getDescription())
                 .date(transaction.getDate())
                 .categoryId(transaction.getCategory() != null ? transaction.getCategory().getId() : null)
                 .category(transaction.getCategory() != null ? transaction.getCategory().getName() : null)
-                .walletId(transaction.getWallet().getId())
-                .walletName(transaction.getWallet().getName());
+                .walletId(transaction.getWallet() != null ? transaction.getWallet().getId() : null)
+                .walletName(transaction.getWallet() != null ? transaction.getWallet().getName() : null);
 
         if (transaction.getType() == TransactionType.TRANSFER) {
-            List<Long> walletIds = List.of(transaction.getFromWalletId(), transaction.getToWalletId());
-            Map<Long, String> walletNames = walletRepository.findAllById(walletIds).stream()
-                    .collect(Collectors.toMap(Wallet::getId, Wallet::getName));
+            Long fromWalletId = transaction.getFromWalletId();
+            Long toWalletId = transaction.getToWalletId();
 
-            builder.fromWalletName(walletNames.get(transaction.getFromWalletId()));
-            builder.toWalletName(walletNames.get(transaction.getToWalletId()));
+            if (fromWalletId != null && toWalletId != null) {
+                List<Long> walletIds = List.of(fromWalletId, toWalletId);
+                Map<Long, String> walletNames = walletRepository.findAllById(walletIds).stream()
+                        .collect(Collectors.toMap(Wallet::getId, Wallet::getName));
+
+                builder.fromWalletName(walletNames.get(fromWalletId));
+                builder.toWalletName(walletNames.get(toWalletId));
+            }
         }
         return builder.build();
     }
