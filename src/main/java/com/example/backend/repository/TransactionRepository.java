@@ -53,6 +53,16 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     List<Transaction> findByCategoryIdOrderByDateDesc(Long categoryId);
 
+    @Query("SELECT t FROM Transaction t " +
+            "WHERE t.user.id = :userId " +
+            "AND t.date BETWEEN :startOfDay AND :endOfDay")
+    Page<Transaction> findTransactionsTodayByUser(
+            @Param("userId") Long userId,
+            @Param("startOfDay") Instant startOfDay,
+            @Param("endOfDay") Instant endOfDay,
+            Pageable pageable
+    );
+
     @Query("""
     SELECT t FROM Transaction t
     WHERE t.user.id = :userId
