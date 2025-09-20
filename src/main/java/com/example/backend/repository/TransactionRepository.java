@@ -1,5 +1,6 @@
 package com.example.backend.repository;
 
+import com.example.backend.dto.response.CategorySpendingResponse;
 import com.example.backend.entity.Transaction;
 import com.example.backend.enums.TransactionType;
 import org.springframework.data.domain.Page;
@@ -33,13 +34,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     @Query("SELECT t FROM Transaction t WHERE t.user.id = :userId AND t.type = 'TRANSFER'")
     List<Transaction> findTransferTransactionsByUserId(@Param("userId") Long userId, Pageable pageable);
 
-    @Query(value = "SELECT date(t.transaction_date) as transaction_date, " +
-            "(SELECT t2.balance_after_transaction FROM transactions t2 WHERE t2.wallet_id = :walletId AND date(t2.transaction_date) <= date(t.transaction_date) ORDER BY t2.transaction_date DESC, t2.id DESC LIMIT 1) as closing_balance " +
-            "FROM transactions t " +
-            "WHERE t.wallet_id = :walletId AND t.transaction_date >= :startDate " +
-            "GROUP BY transaction_date " +
-            "ORDER BY transaction_date ASC", nativeQuery = true)
-    List<Object[]> findClosingBalanceByDate(@Param("walletId") Long walletId, @Param("startDate") Instant startDate);
+    List<Transaction> findByWalletIdAndDateAfterOrderByDateAsc(Long walletId, Instant startDate);
 
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.category.id = :categoryId AND t.type = 'EXPENSE' AND t.date BETWEEN :startDate AND :endDate")
     BigDecimal sumExpensesByCategoryIdAndDateRange(@Param("categoryId") Long categoryId, @Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
@@ -128,6 +123,42 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("walletIds") List<Long> walletIds,
             @Param("transactionTypes") List<TransactionType> transactionTypes,
             @Param("categoryIds") List<Long> categoryIds
+    );
+
+    List<Transaction> findByWalletIdAndDateBetween(Long walletId, Instant start, Instant end);
+
+    List<Transaction> findByWallet_UserIdAndDateBetween(Long userId, Instant start, Instant end);
+
+    List<Transaction> findTop5ByWalletIdOrderByDateDesc(Long walletId);
+
+    List<Transaction> findTop5ByWallet_UserIdOrderByDateDesc(Long userId);
+
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.user.id = :userId AND (:walletId IS NULL OR t.wallet.id = :walletId) AND t.type = :type AND t.date BETWEEN :startDate AND :endDate")
+    BigDecimal sumAmountByUserAndTypeAndDateBetween(
+            @Param("userId") Long userId,
+            @Param("walletId") Long walletId,
+            @Param("type") TransactionType type,
+            @Param("startDate") Instant startDate,
+            @Param("endDate") Instant endDate
+    );
+
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.wallet.id = :walletId AND t.type = :type AND t.date BETWEEN :startDate AND :endDate")
+    BigDecimal sumAmountByWalletIdAndTypeAndDateBetween(
+            @Param("walletId") Long walletId,
+            @Param("type") TransactionType type,
+            @Param("startDate") Instant startDate,
+            @Param("endDate") Instant endDate
+    );
+
+    @Query("SELECT new com.example.backend.dto.response.CategorySpendingResponse(c.name, SUM(t.amount), c.color) " +
+            "FROM Transaction t JOIN t.category c " +
+            "WHERE t.wallet.id = :walletId AND t.type = 'EXPENSE' AND t.date BETWEEN :startDate AND :endDate " +
+            "GROUP BY c.id, c.name, c.color " +
+            "ORDER BY SUM(t.amount) DESC")
+    List<CategorySpendingResponse> findExpenseByWalletIdAndDateRange(
+            @Param("walletId") Long walletId,
+            @Param("startDate") Instant startDate,
+            @Param("endDate") Instant endDate
     );
 
 }

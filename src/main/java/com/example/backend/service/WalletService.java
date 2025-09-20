@@ -3,9 +3,7 @@ package com.example.backend.service;
 import com.example.backend.dto.request.AddMoneyRequest;
 import com.example.backend.dto.request.CreateWalletRequest;
 import com.example.backend.dto.request.UpdateWalletRequest;
-import com.example.backend.dto.response.BalanceHistoryResponse;
-import com.example.backend.dto.response.TransactionResponse;
-import com.example.backend.dto.response.WalletResponse;
+import com.example.backend.dto.response.*;
 import com.example.backend.entity.*;
 import com.example.backend.enums.PermissionType;
 import com.example.backend.enums.TransactionType;
@@ -21,11 +19,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -155,6 +154,31 @@ public class WalletService {
         return walletMapper.toWalletResponse(wallet);
     }
 
+    public WalletDetailResponse getWalletDetails(Long walletId) {
+        Wallet wallet = walletRepository.findById(walletId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ví với ID: " + walletId));
+
+        YearMonth currentMonth = YearMonth.now();
+        Instant startOfMonth = currentMonth.atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+        Instant endOfMonth = currentMonth.atEndOfMonth().atTime(23, 59, 59).toInstant(ZoneOffset.UTC);
+
+        BigDecimal monthlyIncome = transactionRepository.sumAmountByWalletIdAndTypeAndDateBetween(walletId, TransactionType.INCOME, startOfMonth, endOfMonth);
+        BigDecimal monthlyExpense = transactionRepository.sumAmountByWalletIdAndTypeAndDateBetween(walletId, TransactionType.EXPENSE, startOfMonth, endOfMonth);
+        BigDecimal netChange = monthlyIncome.subtract(monthlyExpense);
+
+        List<BalanceHistoryResponse> balanceHistory = getBalanceHistory(walletId, "30d");
+        List<CategorySpendingResponse> expenseByCategory = transactionRepository.findExpenseByWalletIdAndDateRange(walletId, startOfMonth, endOfMonth);
+
+        return WalletDetailResponse.builder()
+                .wallet(walletMapper.toWalletResponse(wallet))
+                .monthlyIncome(monthlyIncome)
+                .monthlyExpense(monthlyExpense)
+                .netChange(netChange)
+                .balanceHistory(balanceHistory)
+                .expenseByCategory(expenseByCategory)
+                .build();
+    }
+
     public List<WalletResponse> getWalletsByUserId(Long userId) {
         List<Wallet> wallets = walletRepository.findByUserIdAndIsArchived(userId, false);
         return wallets.stream()
@@ -217,24 +241,33 @@ public class WalletService {
                 startDate = Instant.now().minus(7, ChronoUnit.DAYS);
                 break;
             case "1m":
-                startDate = Instant.now().minus(30, ChronoUnit.DAYS); // Approximation for a month
+                startDate = Instant.now().minus(30, ChronoUnit.DAYS);
                 break;
             case "3m":
-                startDate = Instant.now().minus(90, ChronoUnit.DAYS); // Approximation for 3 months
+                startDate = Instant.now().minus(90, ChronoUnit.DAYS);
                 break;
             default:
                 startDate = Instant.now().minus(30, ChronoUnit.DAYS);
                 break;
         }
 
-        List<Object[]> results = transactionRepository.findClosingBalanceByDate(walletId, startDate);
-        return results.stream()
-                .map(result -> new BalanceHistoryResponse(
-                        ((Timestamp) result[0]).toInstant().atZone(java.time.ZoneOffset.UTC).toLocalDate(),
-                        (BigDecimal) result[1]
-                ))
+        List<Transaction> transactions = transactionRepository.findByWalletIdAndDateAfterOrderByDateAsc(walletId, startDate);
+        if (transactions.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<LocalDate, BigDecimal> closingBalances = new LinkedHashMap<>();
+        for (Transaction t : transactions) {
+            LocalDate date = t.getDate().atZone(ZoneOffset.UTC).toLocalDate();
+            closingBalances.put(date, t.getBalanceAfterTransaction());
+        }
+
+        return closingBalances.entrySet().stream()
+                .map(entry -> new BalanceHistoryResponse(entry.getKey(), entry.getValue()))
+                .sorted(Comparator.comparing(BalanceHistoryResponse::getDate))
                 .collect(Collectors.toList());
     }
+
 
     public List<WalletResponse> getArchivedWalletsByUserId(Long userId) {
         List<Wallet> wallets = walletRepository.findByUserIdAndIsArchived(userId, true);
