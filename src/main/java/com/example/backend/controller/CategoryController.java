@@ -51,6 +51,15 @@ public class CategoryController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<CategoryResponse>> getCategoryById(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        CategoryResponse category = categoryService.getCategoryById(id, currentUser.getId());
+        ApiResponse<CategoryResponse> response = new ApiResponse<>(true, "Lấy thông tin chi tiết danh mục thành công", category);
+        return ResponseEntity.ok(response);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteCategory(
             @PathVariable Long id,

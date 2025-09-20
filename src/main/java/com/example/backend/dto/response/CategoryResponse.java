@@ -12,6 +12,7 @@ public class CategoryResponse {
     private Long id;
     private String name;
     private String description;
+    private String color;
 
     private BigDecimal budgetAmount;
     private BudgetPeriod budgetPeriod;

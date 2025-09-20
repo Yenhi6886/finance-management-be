@@ -13,6 +13,8 @@ public class CategoryRequest {
 
     private String description;
 
+    private String color;
+
     private BigDecimal budgetAmount;
 
     private BudgetPeriod budgetPeriod;

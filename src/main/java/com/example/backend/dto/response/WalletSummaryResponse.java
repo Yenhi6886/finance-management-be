@@ -6,15 +6,16 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.util.Map;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class WalletSummaryResponse {
-    private Map<String, BigDecimal> totalBalanceByCurrency;
     private BigDecimal totalBalanceVND;
+    private BigDecimal monthlyIncome;
+    private BigDecimal monthlyExpense;
     private int totalWallets;
-    private String message;
+    private double monthlyGrowth;
+    private long totalTransactions;
 }
