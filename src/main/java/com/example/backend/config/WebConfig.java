@@ -28,7 +28,7 @@ public class WebConfig implements WebMvcConfigurer {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:3000"
+                "https://finance.mozu.media"
                 // , "https://your-production-frontend-domain.com"
         ));
 

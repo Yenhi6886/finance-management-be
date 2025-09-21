@@ -5,6 +5,7 @@ import com.example.backend.dto.request.CreateWalletRequest;
 import com.example.backend.dto.request.UpdateWalletRequest;
 import com.example.backend.dto.response.*;
 import com.example.backend.entity.*;
+import com.example.backend.enums.InvitationStatus;
 import com.example.backend.enums.PermissionType;
 import com.example.backend.enums.TransactionType;
 import com.example.backend.exception.BadRequestException;
@@ -98,7 +99,7 @@ public class WalletService {
                 .wallet(wallet)
                 .owner(owner)
                 .sharedWithUser(owner)
-                .isActive(true)
+                .status(InvitationStatus.ACCEPTED)
                 .permissionLevel(WalletShare.PermissionLevel.OWNER)
                 .build();
         WalletShare savedShare = walletShareRepository.save(ownerShare);
@@ -147,7 +148,7 @@ public class WalletService {
         Wallet wallet = walletRepository.findById(walletId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ví với ID: " + walletId));
 
-        if (!isWalletOwner(walletId, userId) && !walletShareRepository.existsByWalletIdAndSharedWithUserIdAndIsActiveTrue(walletId, userId)) {
+        if (!isWalletOwner(walletId, userId) && !walletShareRepository.existsByWalletIdAndSharedWithUserIdAndStatus(walletId, userId, InvitationStatus.ACCEPTED)) {
             throw new BadRequestException("Bạn không có quyền truy cập ví này");
         }
 
@@ -187,7 +188,7 @@ public class WalletService {
     }
 
     public List<WalletResponse> getSharedWalletsByUserId(Long userId) {
-        List<WalletShare> walletShares = walletShareRepository.findSharedWalletsByUserId(userId);
+        List<WalletShare> walletShares = walletShareRepository.findBySharedWithUserIdAndStatus(userId, InvitationStatus.ACCEPTED);
         return walletShares.stream()
                 .filter(ws -> !ws.getWallet().isArchived() && !ws.getOwner().getId().equals(userId))
                 .map(ws -> {
@@ -205,7 +206,7 @@ public class WalletService {
                 .map(walletMapper::toWalletResponse)
                 .collect(Collectors.toList());
 
-        List<WalletShare> sharedWallets = walletShareRepository.findSharedWalletsByUserId(userId);
+        List<WalletShare> sharedWallets = walletShareRepository.findBySharedWithUserIdAndStatus(userId, InvitationStatus.ACCEPTED);
         List<WalletResponse> sharedWalletResponses = sharedWallets.stream()
                 .filter(ws -> !ws.getWallet().isArchived() && !ws.getOwner().getId().equals(userId))
                 .map(ws -> {

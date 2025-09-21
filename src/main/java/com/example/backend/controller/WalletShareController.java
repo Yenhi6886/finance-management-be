@@ -23,43 +23,55 @@ public class WalletShareController {
 
     private final WalletShareService walletShareService;
 
-    @PostMapping
-    public ResponseEntity<ApiResponse<ShareWalletResponse>> shareWallet(
+    @PostMapping("/invite")
+    public ResponseEntity<ApiResponse<ShareWalletResponse>> shareWalletByInvitation(
             @Valid @RequestBody ShareWalletRequest request,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
 
         ShareWalletResponse response = walletShareService.shareWallet(request, currentUser.getId());
         ApiResponse<ShareWalletResponse> apiResponse = new ApiResponse<>(
                 true,
-                "Chia sẻ ví thành công. Email thông báo đã được gửi đến người nhận.",
+                "Lời mời chia sẻ ví đã được gửi thành công.",
                 response
         );
         return new ResponseEntity<>(apiResponse, HttpStatus.CREATED);
     }
 
-    @PostMapping("/create-link")
-    public ResponseEntity<ApiResponse<ShareWalletResponse>> createShareLink(
-            @Valid @RequestBody ShareWalletRequest request,
+    @GetMapping("/verify")
+    public ResponseEntity<ApiResponse<ShareWalletResponse>> verifyInvitation(@RequestParam String token) {
+        ShareWalletResponse response = walletShareService.verifyInvitation(token);
+        ApiResponse<ShareWalletResponse> apiResponse = new ApiResponse<>(
+                true,
+                "Lấy thông tin lời mời thành công.",
+                response
+        );
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @PostMapping("/accept")
+    public ResponseEntity<ApiResponse<Void>> acceptInvitation(
+            @RequestParam String token,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
 
-        ShareWalletResponse response = walletShareService.createShareLink(request, currentUser.getId());
-        ApiResponse<ShareWalletResponse> apiResponse = new ApiResponse<>(
+        walletShareService.acceptInvitation(token, currentUser.getId());
+        ApiResponse<Void> apiResponse = new ApiResponse<>(
                 true,
-                "Tạo link chia sẻ thành công",
-                response
+                "Chấp nhận lời mời chia sẻ ví thành công!",
+                null
         );
-        return new ResponseEntity<>(apiResponse, HttpStatus.CREATED);
+        return ResponseEntity.ok(apiResponse);
     }
 
-    @GetMapping("/link/{shareToken}")
-    public ResponseEntity<ApiResponse<ShareWalletResponse>> getShareLinkInfo(
-            @PathVariable String shareToken) {
+    @PostMapping("/reject")
+    public ResponseEntity<ApiResponse<Void>> rejectInvitation(
+            @RequestParam String token,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
 
-        ShareWalletResponse response = walletShareService.getShareLinkInfo(shareToken);
-        ApiResponse<ShareWalletResponse> apiResponse = new ApiResponse<>(
+        walletShareService.rejectInvitation(token, currentUser.getId());
+        ApiResponse<Void> apiResponse = new ApiResponse<>(
                 true,
-                "Lấy thông tin link chia sẻ thành công",
-                response
+                "Bạn đã từ chối lời mời chia sẻ ví.",
+                null
         );
         return ResponseEntity.ok(apiResponse);
     }
@@ -84,23 +96,8 @@ public class WalletShareController {
         List<ShareWalletResponse> sharedWallets = walletShareService.getWalletsSharedByMe(currentUser.getId());
         ApiResponse<List<ShareWalletResponse>> apiResponse = new ApiResponse<>(
                 true,
-                "Lấy danh sách ví đã chia sẻ thành công",
+                "Lấy danh sách ví đã chia sẻ và các lời mời đã gửi thành công",
                 sharedWallets
-        );
-        return ResponseEntity.ok(apiResponse);
-    }
-
-    @DeleteMapping("/{walletId}/users/{userId}")
-    public ResponseEntity<ApiResponse<Void>> revokeWalletShare(
-            @PathVariable Long walletId,
-            @PathVariable Long userId,
-            @AuthenticationPrincipal CustomUserDetails currentUser) {
-
-        walletShareService.revokeWalletShare(walletId, userId, currentUser.getId());
-        ApiResponse<Void> apiResponse = new ApiResponse<>(
-                true,
-                "Thu hồi chia sẻ ví thành công",
-                null
         );
         return ResponseEntity.ok(apiResponse);
     }
@@ -113,20 +110,19 @@ public class WalletShareController {
         walletShareService.revokeWalletShareById(shareId, currentUser.getId());
         ApiResponse<Void> apiResponse = new ApiResponse<>(
                 true,
-                "Thu hồi chia sẻ ví thành công",
+                "Thu hồi/xóa chia sẻ ví thành công",
                 null
         );
         return ResponseEntity.ok(apiResponse);
     }
 
-    @PutMapping("/{walletId}/users/{userId}/permission")
+    @PutMapping("/{shareId}/permission")
     public ResponseEntity<ApiResponse<Void>> updateWalletSharePermission(
-            @PathVariable Long walletId,
-            @PathVariable Long userId,
+            @PathVariable Long shareId,
             @RequestParam WalletShare.PermissionLevel permission,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
 
-        walletShareService.updateWalletSharePermission(walletId, userId, currentUser.getId(), permission);
+        walletShareService.updateWalletSharePermission(shareId, currentUser.getId(), permission);
         ApiResponse<Void> apiResponse = new ApiResponse<>(
                 true,
                 "Cập nhật quyền truy cập ví thành công",

@@ -6,9 +6,10 @@ import com.example.backend.dto.response.UserWalletPermissionsResponse;
 import com.example.backend.entity.User;
 import com.example.backend.entity.WalletPermission;
 import com.example.backend.entity.WalletShare;
+import com.example.backend.enums.InvitationStatus;
 import com.example.backend.enums.PermissionType;
-import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.exception.BadRequestException;
+import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.repository.WalletPermissionRepository;
 import com.example.backend.repository.WalletShareRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,11 +39,11 @@ public class WalletPermissionService {
             throw new BadRequestException("Bạn không có quyền quản lý quyền truy cập ví này");
         }
 
-        WalletShare walletShare = walletShareRepository.findByWalletIdAndUserId(walletId, userId)
+        WalletShare walletShare = walletShareRepository.findByWalletIdAndSharedWithUserId(walletId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chia sẻ ví cho người dùng này"));
 
-        if (!walletShare.getIsActive()) {
-            throw new BadRequestException("Chia sẻ ví đã bị vô hiệu hóa");
+        if (walletShare.getStatus() != InvitationStatus.ACCEPTED) {
+            throw new BadRequestException("Không thể gán quyền cho lời mời chưa được chấp nhận.");
         }
 
         walletPermissionRepository.deleteByWalletShareId(walletShare.getId());
@@ -76,7 +77,7 @@ public class WalletPermissionService {
     }
 
     public List<UserWalletPermissionsResponse> getUserWalletPermissions(Long userId) {
-        List<WalletShare> walletShares = walletShareRepository.findSharedWalletsByUserId(userId);
+        List<WalletShare> walletShares = walletShareRepository.findBySharedWithUserIdAndStatus(userId, InvitationStatus.ACCEPTED);
 
         return walletShares.stream()
                 .map(ws -> {
@@ -100,7 +101,7 @@ public class WalletPermissionService {
                             .permissions(permissionTypes)
                             .permissionDisplayNames(displayNames)
                             .sharedAt(ws.getCreatedAt())
-                            .isActive(ws.getIsActive())
+                            .isActive(ws.getStatus() == InvitationStatus.ACCEPTED)
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -112,7 +113,7 @@ public class WalletPermissionService {
             throw new BadRequestException("Bạn không có quyền quản lý quyền truy cập ví này");
         }
 
-        WalletShare walletShare = walletShareRepository.findByWalletIdAndUserId(walletId, userId)
+        WalletShare walletShare = walletShareRepository.findByWalletIdAndSharedWithUserId(walletId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chia sẻ ví"));
 
         WalletPermission permission = walletPermissionRepository

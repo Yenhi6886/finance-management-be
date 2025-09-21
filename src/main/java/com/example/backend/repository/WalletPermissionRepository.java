@@ -15,6 +15,10 @@ import java.util.Optional;
 @Repository
 public interface WalletPermissionRepository extends JpaRepository<WalletPermission, Long> {
 
+    List<WalletPermission> findByWalletShareId(Long walletShareId);
+
+    boolean existsByWalletShare_SharedWithUser_IdAndWalletShare_Wallet_IdAndPermissionTypeAndIsGrantedTrue(Long userId, Long walletId, PermissionType permissionType);
+
     @Query("SELECT wp FROM WalletPermission wp " +
             "WHERE wp.walletShare.id = :walletShareId " +
             "AND wp.isGranted = true")
@@ -33,7 +37,7 @@ public interface WalletPermissionRepository extends JpaRepository<WalletPermissi
             "AND ws.sharedWithUser.id = :userId " +
             "AND wp.permissionType = :permissionType " +
             "AND wp.isGranted = true " +
-            "AND ws.isActive = true")
+            "AND ws.status = com.example.backend.enums.InvitationStatus.ACCEPTED")
     boolean hasPermission(@Param("walletId") Long walletId,
                           @Param("userId") Long userId,
                           @Param("permissionType") PermissionType permissionType);
@@ -43,7 +47,7 @@ public interface WalletPermissionRepository extends JpaRepository<WalletPermissi
             "WHERE ws.wallet.id = :walletId " +
             "AND ws.sharedWithUser.id = :userId " +
             "AND wp.isGranted = true " +
-            "AND ws.isActive = true")
+            "AND ws.status = com.example.backend.enums.InvitationStatus.ACCEPTED")
     List<WalletPermission> findUserPermissionsForWallet(@Param("walletId") Long walletId,
                                                         @Param("userId") Long userId);
 

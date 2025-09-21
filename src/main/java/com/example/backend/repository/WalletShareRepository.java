@@ -1,10 +1,13 @@
 package com.example.backend.repository;
 
 import com.example.backend.entity.WalletShare;
+import com.example.backend.enums.InvitationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,43 +15,28 @@ import java.util.Optional;
 @Repository
 public interface WalletShareRepository extends JpaRepository<WalletShare, Long> {
 
-    @Query("SELECT ws FROM WalletShare ws " +
-            "JOIN FETCH ws.wallet w " +
-            "JOIN FETCH ws.owner o " +
-            "WHERE ws.sharedWithUser.id = :userId AND ws.owner.id != :userId AND ws.isActive = true")
-    List<WalletShare> findSharedWalletsByUserId(@Param("userId") Long userId);
+    // === Các phương thức cho luồng mời mới ===
 
-    @Query("SELECT ws FROM WalletShare ws " +
-            "JOIN FETCH ws.wallet w " +
-            "JOIN FETCH ws.sharedWithUser swu " +
-            "WHERE ws.owner.id = :ownerId AND ws.sharedWithUser.id != :ownerId AND ws.isActive = true")
-    List<WalletShare> findWalletsSharedByUserId(@Param("ownerId") Long ownerId);
+    Optional<WalletShare> findByInvitationToken(String invitationToken);
 
-    @Query("SELECT ws FROM WalletShare ws " +
-            "WHERE ws.wallet.id = :walletId " +
-            "AND ws.sharedWithUser.email = :email " +
-            "AND ws.isActive = true")
-    Optional<WalletShare> findByWalletIdAndEmail(@Param("walletId") Long walletId, @Param("email") String email);
+    Optional<WalletShare> findByWalletIdAndSharedWithUser_EmailAndStatus(Long walletId, String email, InvitationStatus status);
 
-    @Query("SELECT ws FROM WalletShare ws " +
-            "JOIN FETCH ws.wallet w " +
-            "JOIN FETCH ws.owner o " +
-            "WHERE ws.wallet.id = :walletId " +
-            "AND ws.sharedWithUser.id = :userId " +
-            "AND ws.isActive = true")
-    Optional<WalletShare> findByWalletIdAndUserId(@Param("walletId") Long walletId, @Param("userId") Long userId);
+    List<WalletShare> findBySharedWithUserIdAndStatus(Long userId, InvitationStatus status);
 
-    boolean existsByWalletIdAndSharedWithUserIdAndIsActiveTrue(Long walletId, Long userId);
+    List<WalletShare> findByOwnerId(Long ownerId);
 
-    @Query("SELECT COUNT(ws) FROM WalletShare ws " +
-            "WHERE ws.wallet.id = :walletId AND ws.isActive = true")
-    Long countByWalletId(@Param("walletId") Long walletId);
+    Optional<WalletShare> findByIdAndOwnerId(Long shareId, Long ownerId);
 
-    @Query("SELECT ws FROM WalletShare ws " +
-            "JOIN FETCH ws.wallet w " +
-            "JOIN FETCH ws.owner o " +
-            "WHERE ws.shareToken = :shareToken AND ws.isActive = true")
-    Optional<WalletShare> findByShareToken(@Param("shareToken") String shareToken);
+    // === Các phương thức được sử dụng bởi các service khác ===
 
+    Optional<WalletShare> findByWalletIdAndSharedWithUserId(Long walletId, Long userId);
+
+    boolean existsByWalletIdAndSharedWithUserIdAndStatus(Long walletId, Long userId, InvitationStatus status);
+
+    @Query("SELECT COUNT(ws) FROM WalletShare ws WHERE ws.wallet.id = :walletId AND ws.status = com.example.backend.enums.InvitationStatus.ACCEPTED")
+    Long countAcceptedSharesByWalletId(@Param("walletId") Long walletId);
+
+    @Transactional
+    @Modifying
     void deleteByWalletId(Long walletId);
 }
