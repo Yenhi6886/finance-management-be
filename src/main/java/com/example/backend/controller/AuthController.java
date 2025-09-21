@@ -94,7 +94,7 @@ public class AuthController {
     @GetMapping("/oauth2/callback/google")
     public RedirectView handleGoogleCallback(@RequestParam("code") String code) throws IOException {
         String jwtToken = userService.processGoogleCallback(code);
-        String frontendRedirectUrl = "https://finance.mozu.media/oauth-callback?token=" + jwtToken;
+        String frontendRedirectUrl = "http://localhost:3000/oauth-callback?token=" + jwtToken;
         return new RedirectView(frontendRedirectUrl);
     }
 }

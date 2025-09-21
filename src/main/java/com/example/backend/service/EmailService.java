@@ -22,7 +22,7 @@ public class EmailService {
     @Value("${app.mail.from:noreply@finance-management.com}")
     private String fromEmail;
 
-    @Value("${app.frontend.url:https://finance.mozu.media}")
+    @Value("${app.frontend.url:http://localhost:3000}")
     private String frontendUrl;
 
     public void sendWalletShareInvitation(User owner, User sharedWithUser, Wallet wallet, String token, String customMessage) {
