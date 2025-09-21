@@ -212,7 +212,7 @@ public class WalletController {
     }
 
     @PatchMapping("/{walletId}/archive")
-    @RequireWalletPermission(value = PermissionType.EDIT_WALLET, requireOwnership = true, walletId = "#walletId")
+    @RequireWalletPermission(value = PermissionType.EDIT_WALLET, walletId = "#walletId")
     public ResponseEntity<ApiResponse<WalletResponse>> archiveWallet(
             @PathVariable Long walletId,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
@@ -222,7 +222,7 @@ public class WalletController {
     }
 
     @PatchMapping("/{walletId}/unarchive")
-    @RequireWalletPermission(value = PermissionType.EDIT_WALLET, requireOwnership = true, walletId = "#walletId")
+    @RequireWalletPermission(value = PermissionType.EDIT_WALLET, walletId = "#walletId")
     public ResponseEntity<ApiResponse<WalletResponse>> unarchiveWallet(
             @PathVariable Long walletId,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
