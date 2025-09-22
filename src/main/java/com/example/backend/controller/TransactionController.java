@@ -17,6 +17,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -84,6 +85,8 @@ public class TransactionController {
             @AuthenticationPrincipal CustomUserDetails currentUser,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
+            @RequestParam(required = false) BigDecimal minAmount,
+            @RequestParam(required = false) BigDecimal maxAmount,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
@@ -92,7 +95,9 @@ public class TransactionController {
                 currentUser.getId(),
                 startDate,
                 endDate,
-                pageable
+                pageable,
+                minAmount,
+                maxAmount
         );
 
         ApiResponse<TransactionStatisticResponse> response = new ApiResponse<>(
@@ -133,6 +138,8 @@ public class TransactionController {
             @RequestParam Long walletId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
+            @RequestParam(required = false) BigDecimal minAmount,
+            @RequestParam(required = false) BigDecimal maxAmount,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
@@ -142,7 +149,9 @@ public class TransactionController {
                 walletId,
                 startDate,
                 endDate,
-                pageable
+                pageable,
+                minAmount,
+                maxAmount
         );
 
         ApiResponse<TransactionStatisticResponse> response = new ApiResponse<>(

@@ -264,7 +264,7 @@ public class TransactionService {
                 .collect(Collectors.toList());
     }
 
-    private TransactionStatisticResponse getTransactionStatistics(Long userId, Long walletId, LocalDateTime startDateTime, LocalDateTime endDateTime, Pageable pageable) {
+    private TransactionStatisticResponse getTransactionStatistics(Long userId, Long walletId, LocalDateTime startDateTime, LocalDateTime endDateTime, Pageable pageable, BigDecimal minAmount, BigDecimal maxAmount) {
         if (walletId != null) {
             Wallet wallet = walletRepository.findById(walletId)
                     .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ví với ID: " + walletId));
@@ -276,8 +276,8 @@ public class TransactionService {
         Instant startDate = (startDateTime != null) ? startDateTime.toInstant(ZoneOffset.UTC) : null;
         Instant endDate = (endDateTime != null) ? endDateTime.toInstant(ZoneOffset.UTC) : null;
 
-        Page<Transaction> transactionsPage = transactionRepository.getTransactionStatistics(userId, walletId, startDate, endDate, pageable);
-        BigDecimal totalAmount = transactionRepository.sumAmountForStatistics(userId, walletId, startDate, endDate);
+        Page<Transaction> transactionsPage = transactionRepository.getTransactionStatistics(userId, walletId, startDate, endDate, minAmount, maxAmount, pageable);
+        BigDecimal totalAmount = transactionRepository.sumAmountForStatistics(userId, walletId, startDate, endDate, minAmount, maxAmount);
 
         if (totalAmount == null) {
             totalAmount = BigDecimal.ZERO;
@@ -292,21 +292,21 @@ public class TransactionService {
         LocalDate today = LocalDate.now();
         LocalDateTime startOfDay = today.atStartOfDay();
         LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
-        return getTransactionStatistics(userId, null, startOfDay, endOfDay, pageable);
+        return getTransactionStatistics(userId, null, startOfDay, endOfDay, pageable, null, null);
     }
 
-    public TransactionStatisticResponse getTransactionsByTime(Long userId,LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
-        return getTransactionStatistics(userId, null, startDate, endDate, pageable);
+    public TransactionStatisticResponse getTransactionsByTime(Long userId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable, BigDecimal minAmount, BigDecimal maxAmount) {
+        return getTransactionStatistics(userId, null, startDate, endDate, pageable, minAmount, maxAmount);
     }
 
     public TransactionStatisticResponse getTransactionsTodayByWalletId(Long userId, Long walletId, Pageable pageable) {
         LocalDate today = LocalDate.now();
         LocalDateTime startOfDay = today.atStartOfDay();
         LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
-        return getTransactionStatistics(userId, walletId, startOfDay, endOfDay, pageable);
+        return getTransactionStatistics(userId, walletId, startOfDay, endOfDay, pageable, null, null);
     }
 
-    public TransactionStatisticResponse getTransactionsByWalletIdAndTime(Long userId, Long walletId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
-        return getTransactionStatistics(userId, walletId, startDate, endDate, pageable);
+    public TransactionStatisticResponse getTransactionsByWalletIdAndTime(Long userId, Long walletId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable, BigDecimal minAmount, BigDecimal maxAmount) {
+        return getTransactionStatistics(userId, walletId, startDate, endDate, pageable, minAmount, maxAmount);
     }
 }

@@ -64,6 +64,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
       AND (:walletId IS NULL OR t.wallet.id = :walletId)
       AND (:startDate IS NULL OR t.date >= :startDate)
       AND (:endDate IS NULL OR t.date <= :endDate)
+      AND (:minAmount IS NULL OR t.amount >= :minAmount)
+      AND (:maxAmount IS NULL OR t.amount <= :maxAmount)
     ORDER BY t.date DESC
     """)
     Page<Transaction> getTransactionStatistics(
@@ -71,6 +73,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("walletId") Long walletId,
             @Param("startDate") Instant startDate,
             @Param("endDate") Instant endDate,
+            @Param("minAmount") BigDecimal minAmount,
+            @Param("maxAmount") BigDecimal maxAmount,
             Pageable pageable
     );
 
@@ -91,12 +95,16 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
       AND (:walletId IS NULL OR t.wallet.id = :walletId)
       AND (:startDate IS NULL OR t.date >= :startDate)
       AND (:endDate IS NULL OR t.date <= :endDate)
+      AND (:minAmount IS NULL OR t.amount >= :minAmount)
+      AND (:maxAmount IS NULL OR t.amount <= :maxAmount)
     """)
     BigDecimal sumAmountForStatistics(
             @Param("userId") Long userId,
             @Param("walletId") Long walletId,
             @Param("startDate") Instant startDate,
-            @Param("endDate") Instant endDate
+            @Param("endDate") Instant endDate,
+            @Param("minAmount") BigDecimal minAmount,
+            @Param("maxAmount") BigDecimal maxAmount
     );
 
     List<Transaction> findByCategoryIdOrderByDateDescIdDesc(Long categoryId);
