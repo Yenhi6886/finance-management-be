@@ -64,6 +64,14 @@ public class WalletService {
         checkIfWalletIsArchived(wallet);
 
         BigDecimal newBalance = wallet.getBalance().add(request.getAmount());
+        
+        // Kiểm tra giới hạn số dư ví tối đa 999 tỉ
+        BigDecimal maxBalance = new BigDecimal("999000000000");
+        if (newBalance.compareTo(maxBalance) > 0) {
+            throw new BadRequestException(String.format("Số dư ví sau khi nạp sẽ là %s VND, vượt quá giới hạn %s VND (999 tỉ)", 
+                newBalance.toPlainString(), maxBalance.toPlainString()));
+        }
+        
         wallet.setBalance(newBalance);
         walletRepository.save(wallet);
 
