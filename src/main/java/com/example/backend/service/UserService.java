@@ -6,7 +6,6 @@ import com.example.backend.dto.response.UserResponse;
 import com.example.backend.entity.User;
 import com.example.backend.entity.UserSettings;
 import com.example.backend.entity.VerificationToken;
-import com.example.backend.enums.AuthProvider;
 import com.example.backend.enums.UserStatus;
 import com.example.backend.enums.VerificationTokenType;
 import com.example.backend.mapper.UserMapper;
