@@ -1,6 +1,5 @@
 package com.example.backend.dto.response;
 
-import com.example.backend.enums.AuthProvider;
 import com.example.backend.enums.UserStatus;
 import lombok.Data;
 
