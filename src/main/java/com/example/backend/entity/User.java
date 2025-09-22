@@ -1,5 +1,6 @@
 package com.example.backend.entity;
 
+import com.example.backend.enums.AuthProvider;
 import com.example.backend.enums.UserStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;

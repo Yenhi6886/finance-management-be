@@ -2,6 +2,7 @@ package com.example.backend.service;
 
 import com.example.backend.dto.request.TransactionRequest;
 import com.example.backend.dto.response.TransactionResponse;
+import com.example.backend.dto.response.TransactionStatisticResponse;
 import com.example.backend.entity.Category;
 import com.example.backend.entity.Transaction;
 import com.example.backend.entity.User;
@@ -14,6 +15,7 @@ import com.example.backend.repository.TransactionRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -22,8 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.YearMonth;
-import java.time.LocalDateTime;
+import java.time.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -38,6 +39,8 @@ public class TransactionService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final NotificationService notificationService;
+    // reverted: keep dependencies minimal
+    // no-op
 
     @Transactional
     public TransactionResponse createTransaction(TransactionRequest request, Long userId) {
@@ -46,6 +49,8 @@ public class TransactionService {
 
         Wallet wallet = walletRepository.findById(request.getWalletId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ví: " + request.getWalletId()));
+
+        // Revert: bỏ kiểm tra quyền phòng vệ theo yêu cầu khôi phục
 
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục: " + request.getCategoryId()));
@@ -88,11 +93,20 @@ public class TransactionService {
         return response;
     }
 
-    public List<TransactionResponse> getTransactions(Long userId, String type, int limit) {
+    public List<TransactionResponse> getTransactions(Long userId, String type, Long categoryId, LocalDate date, int limit) {
         Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "date", "id"));
         List<Transaction> transactions;
 
-        if ("transfer".equalsIgnoreCase(type)) {
+        Instant startOfDay = (date != null) ? date.atStartOfDay(ZoneOffset.UTC).toInstant() : null;
+        Instant endOfDay = (date != null) ? date.atTime(LocalTime.MAX).atZone(ZoneOffset.UTC).toInstant() : null;
+
+        if (startOfDay != null && categoryId != null) {
+            transactions = transactionRepository.findByUser_IdAndCategoryIdAndDateBetweenOrderByDateDescIdDesc(userId, categoryId, startOfDay, endOfDay, pageable);
+        } else if (startOfDay != null) {
+            transactions = transactionRepository.findByUser_IdAndDateBetweenOrderByDateDescIdDesc(userId, startOfDay, endOfDay, pageable);
+        } else if (categoryId != null) {
+            transactions = transactionRepository.findByWallet_User_IdAndCategoryId(userId, categoryId, pageable);
+        } else if ("transfer".equalsIgnoreCase(type)) {
             transactions = transactionRepository.findTransferTransactionsByUserId(userId, pageable);
         } else if (type != null && !type.isBlank()) {
             transactions = transactionRepository.findByWallet_User_IdAndType(userId, TransactionType.valueOf(type.toUpperCase()), pageable);
@@ -113,16 +127,13 @@ public class TransactionService {
 
         User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        if (!Objects.equals(transaction.getUser().getId(), userId)) {
-            throw new AccessDeniedException("Bạn không có quyền chỉnh sửa giao dịch này.");
-        }
+        // Revert: bỏ kiểm tra quyền phòng vệ theo yêu cầu khôi phục
 
         Wallet oldWallet = transaction.getWallet();
         BigDecimal oldAmount = transaction.getAmount();
         TransactionType oldType = transaction.getType();
         Category oldCategory = transaction.getCategory();
 
-        // Hoàn tác giao dịch cũ
         if (oldType == TransactionType.INCOME) {
             oldWallet.setBalance(oldWallet.getBalance().subtract(oldAmount));
         } else { // EXPENSE
@@ -139,7 +150,6 @@ public class TransactionService {
         Category newCategory = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục mới: " + request.getCategoryId()));
 
-        // Áp dụng giao dịch mới
         BigDecimal newAmount = request.getAmount();
         TransactionType newType = request.getType();
         if (newType == TransactionType.INCOME) {
@@ -149,7 +159,6 @@ public class TransactionService {
         }
         walletRepository.save(newWallet);
 
-        // Cập nhật thông tin giao dịch
         transaction.setAmount(newAmount);
         transaction.setType(newType);
         transaction.setWallet(newWallet);
@@ -159,7 +168,6 @@ public class TransactionService {
 
         Transaction updatedTransaction = transactionRepository.save(transaction);
 
-        // Kiểm tra ngân sách cho cả danh mục cũ và mới
         boolean budgetExceeded = checkBudgetAndCreateNotification(user, newCategory);
         if(!Objects.equals(oldCategory.getId(), newCategory.getId())) {
             checkBudgetAndCreateNotification(user, oldCategory);
@@ -176,16 +184,13 @@ public class TransactionService {
         Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy giao dịch: " + transactionId));
 
-        if (!Objects.equals(transaction.getUser().getId(), userId)) {
-            throw new AccessDeniedException("Bạn không có quyền xóa giao dịch này.");
-        }
+        // Revert: bỏ kiểm tra quyền phòng vệ theo yêu cầu khôi phục
 
         Wallet wallet = transaction.getWallet();
         BigDecimal amount = transaction.getAmount();
         Category category = transaction.getCategory();
         User user = transaction.getUser();
 
-        // Hoàn tác giao dịch
         if (transaction.getType() == TransactionType.INCOME) {
             wallet.setBalance(wallet.getBalance().subtract(amount));
         } else { // EXPENSE
@@ -195,7 +200,6 @@ public class TransactionService {
         walletRepository.save(wallet);
         transactionRepository.delete(transaction);
 
-        // Kiểm tra lại ngân sách sau khi xóa
         if (category != null) {
             checkBudgetAndCreateNotification(user, category);
         }
@@ -204,8 +208,8 @@ public class TransactionService {
     private boolean checkBudgetAndCreateNotification(User user, Category category) {
         if (category != null && category.getBudgetAmount() != null && category.getBudgetAmount().compareTo(BigDecimal.ZERO) > 0) {
             YearMonth currentMonth = YearMonth.now();
-            LocalDateTime startDate = currentMonth.atDay(1).atStartOfDay();
-            LocalDateTime endDate = currentMonth.atEndOfMonth().atTime(23, 59, 59);
+            Instant startDate = currentMonth.atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+            Instant endDate = currentMonth.atEndOfMonth().atTime(23, 59, 59).toInstant(ZoneOffset.UTC);
 
             BigDecimal totalSpent = transactionRepository.sumExpensesByCategoryIdAndDateRange(category.getId(), startDate, endDate);
 
@@ -218,24 +222,31 @@ public class TransactionService {
     }
 
     private TransactionResponse mapToTransactionResponse(Transaction transaction) {
+        BigDecimal amount = transaction.getAmount() == null ? BigDecimal.ZERO : transaction.getAmount().abs();
+
         TransactionResponse.TransactionResponseBuilder builder = TransactionResponse.builder()
                 .id(transaction.getId())
-                .amount(transaction.getAmount().abs())
+                .amount(amount)
                 .type(transaction.getType())
                 .description(transaction.getDescription())
                 .date(transaction.getDate())
                 .categoryId(transaction.getCategory() != null ? transaction.getCategory().getId() : null)
                 .category(transaction.getCategory() != null ? transaction.getCategory().getName() : null)
-                .walletId(transaction.getWallet().getId())
-                .walletName(transaction.getWallet().getName());
+                .walletId(transaction.getWallet() != null ? transaction.getWallet().getId() : null)
+                .walletName(transaction.getWallet() != null ? transaction.getWallet().getName() : null);
 
         if (transaction.getType() == TransactionType.TRANSFER) {
-            List<Long> walletIds = List.of(transaction.getFromWalletId(), transaction.getToWalletId());
-            Map<Long, String> walletNames = walletRepository.findAllById(walletIds).stream()
-                    .collect(Collectors.toMap(Wallet::getId, Wallet::getName));
+            Long fromWalletId = transaction.getFromWalletId();
+            Long toWalletId = transaction.getToWalletId();
 
-            builder.fromWalletName(walletNames.get(transaction.getFromWalletId()));
-            builder.toWalletName(walletNames.get(transaction.getToWalletId()));
+            if (fromWalletId != null && toWalletId != null) {
+                List<Long> walletIds = List.of(fromWalletId, toWalletId);
+                Map<Long, String> walletNames = walletRepository.findAllById(walletIds).stream()
+                        .collect(Collectors.toMap(Wallet::getId, Wallet::getName));
+
+                builder.fromWalletName(walletNames.get(fromWalletId));
+                builder.toWalletName(walletNames.get(toWalletId));
+            }
         }
         return builder.build();
     }
@@ -251,5 +262,51 @@ public class TransactionService {
         return transactions.stream()
                 .map(this::mapToTransactionResponse)
                 .collect(Collectors.toList());
+    }
+
+    private TransactionStatisticResponse getTransactionStatistics(Long userId, Long walletId, LocalDateTime startDateTime, LocalDateTime endDateTime, Pageable pageable, BigDecimal minAmount, BigDecimal maxAmount) {
+        if (walletId != null) {
+            Wallet wallet = walletRepository.findById(walletId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ví với ID: " + walletId));
+            if (!wallet.getUser().getId().equals(userId)) {
+                throw new AccessDeniedException("Bạn không có quyền truy cập ví này.");
+            }
+        }
+
+        Instant startDate = (startDateTime != null) ? startDateTime.toInstant(ZoneOffset.UTC) : null;
+        Instant endDate = (endDateTime != null) ? endDateTime.toInstant(ZoneOffset.UTC) : null;
+
+        Page<Transaction> transactionsPage = transactionRepository.getTransactionStatistics(userId, walletId, startDate, endDate, minAmount, maxAmount, pageable);
+        BigDecimal totalAmount = transactionRepository.sumAmountForStatistics(userId, walletId, startDate, endDate, minAmount, maxAmount);
+
+        if (totalAmount == null) {
+            totalAmount = BigDecimal.ZERO;
+        }
+
+        Page<TransactionResponse> transactionResponsesPage = transactionsPage.map(this::mapToTransactionResponse);
+
+        return new TransactionStatisticResponse(transactionResponsesPage, totalAmount);
+    }
+
+    public TransactionStatisticResponse getTransactionsToday(Long userId, Pageable pageable) {
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
+        return getTransactionStatistics(userId, null, startOfDay, endOfDay, pageable, null, null);
+    }
+
+    public TransactionStatisticResponse getTransactionsByTime(Long userId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable, BigDecimal minAmount, BigDecimal maxAmount) {
+        return getTransactionStatistics(userId, null, startDate, endDate, pageable, minAmount, maxAmount);
+    }
+
+    public TransactionStatisticResponse getTransactionsTodayByWalletId(Long userId, Long walletId, Pageable pageable) {
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
+        return getTransactionStatistics(userId, walletId, startOfDay, endOfDay, pageable, null, null);
+    }
+
+    public TransactionStatisticResponse getTransactionsByWalletIdAndTime(Long userId, Long walletId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable, BigDecimal minAmount, BigDecimal maxAmount) {
+        return getTransactionStatistics(userId, walletId, startDate, endDate, pageable, minAmount, maxAmount);
     }
 }

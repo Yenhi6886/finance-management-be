@@ -3,10 +3,9 @@ package com.example.backend.service;
 import com.example.backend.dto.request.AddMoneyRequest;
 import com.example.backend.dto.request.CreateWalletRequest;
 import com.example.backend.dto.request.UpdateWalletRequest;
-import com.example.backend.dto.response.BalanceHistoryResponse;
-import com.example.backend.dto.response.TransactionResponse;
-import com.example.backend.dto.response.WalletResponse;
+import com.example.backend.dto.response.*;
 import com.example.backend.entity.*;
+import com.example.backend.enums.InvitationStatus;
 import com.example.backend.enums.PermissionType;
 import com.example.backend.enums.TransactionType;
 import com.example.backend.exception.BadRequestException;
@@ -21,10 +20,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -63,6 +64,14 @@ public class WalletService {
         checkIfWalletIsArchived(wallet);
 
         BigDecimal newBalance = wallet.getBalance().add(request.getAmount());
+        
+        // Kiểm tra giới hạn số dư ví tối đa 999 tỉ
+        BigDecimal maxBalance = new BigDecimal("999000000000");
+        if (newBalance.compareTo(maxBalance) > 0) {
+            throw new BadRequestException(String.format("Số dư ví sau khi nạp sẽ là %s VND, vượt quá giới hạn %s VND (999 tỉ)", 
+                newBalance.toPlainString(), maxBalance.toPlainString()));
+        }
+        
         wallet.setBalance(newBalance);
         walletRepository.save(wallet);
 
@@ -76,7 +85,7 @@ public class WalletService {
                 .type(TransactionType.INCOME)
                 .amount(request.getAmount())
                 .description(finalDescription)
-                .date(LocalDateTime.now())
+                .date(Instant.now())
                 .balanceAfterTransaction(newBalance)
                 .build();
 
@@ -98,7 +107,7 @@ public class WalletService {
                 .wallet(wallet)
                 .owner(owner)
                 .sharedWithUser(owner)
-                .isActive(true)
+                .status(InvitationStatus.ACCEPTED)
                 .permissionLevel(WalletShare.PermissionLevel.OWNER)
                 .build();
         WalletShare savedShare = walletShareRepository.save(ownerShare);
@@ -147,11 +156,36 @@ public class WalletService {
         Wallet wallet = walletRepository.findById(walletId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ví với ID: " + walletId));
 
-        if (!isWalletOwner(walletId, userId) && !walletShareRepository.existsByWalletIdAndSharedWithUserIdAndIsActiveTrue(walletId, userId)) {
+        if (!isWalletOwner(walletId, userId) && !walletShareRepository.existsByWalletIdAndSharedWithUserIdAndStatus(walletId, userId, InvitationStatus.ACCEPTED)) {
             throw new BadRequestException("Bạn không có quyền truy cập ví này");
         }
 
         return walletMapper.toWalletResponse(wallet);
+    }
+
+    public WalletDetailResponse getWalletDetails(Long walletId) {
+        Wallet wallet = walletRepository.findById(walletId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ví với ID: " + walletId));
+
+        YearMonth currentMonth = YearMonth.now();
+        Instant startOfMonth = currentMonth.atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+        Instant endOfMonth = currentMonth.atEndOfMonth().atTime(23, 59, 59).toInstant(ZoneOffset.UTC);
+
+        BigDecimal monthlyIncome = transactionRepository.sumAmountByWalletIdAndTypeAndDateBetween(walletId, TransactionType.INCOME, startOfMonth, endOfMonth);
+        BigDecimal monthlyExpense = transactionRepository.sumAmountByWalletIdAndTypeAndDateBetween(walletId, TransactionType.EXPENSE, startOfMonth, endOfMonth);
+        BigDecimal netChange = monthlyIncome.subtract(monthlyExpense);
+
+        List<BalanceHistoryResponse> balanceHistory = getBalanceHistory(walletId, "30d");
+        List<CategorySpendingResponse> expenseByCategory = transactionRepository.findExpenseByWalletIdAndDateRange(walletId, startOfMonth, endOfMonth);
+
+        return WalletDetailResponse.builder()
+                .wallet(walletMapper.toWalletResponse(wallet))
+                .monthlyIncome(monthlyIncome)
+                .monthlyExpense(monthlyExpense)
+                .netChange(netChange)
+                .balanceHistory(balanceHistory)
+                .expenseByCategory(expenseByCategory)
+                .build();
     }
 
     public List<WalletResponse> getWalletsByUserId(Long userId) {
@@ -162,7 +196,7 @@ public class WalletService {
     }
 
     public List<WalletResponse> getSharedWalletsByUserId(Long userId) {
-        List<WalletShare> walletShares = walletShareRepository.findSharedWalletsByUserId(userId);
+        List<WalletShare> walletShares = walletShareRepository.findBySharedWithUserIdAndStatus(userId, InvitationStatus.ACCEPTED);
         return walletShares.stream()
                 .filter(ws -> !ws.getWallet().isArchived() && !ws.getOwner().getId().equals(userId))
                 .map(ws -> {
@@ -180,7 +214,7 @@ public class WalletService {
                 .map(walletMapper::toWalletResponse)
                 .collect(Collectors.toList());
 
-        List<WalletShare> sharedWallets = walletShareRepository.findSharedWalletsByUserId(userId);
+        List<WalletShare> sharedWallets = walletShareRepository.findBySharedWithUserIdAndStatus(userId, InvitationStatus.ACCEPTED);
         List<WalletResponse> sharedWalletResponses = sharedWallets.stream()
                 .filter(ws -> !ws.getWallet().isArchived() && !ws.getOwner().getId().equals(userId))
                 .map(ws -> {
@@ -210,30 +244,39 @@ public class WalletService {
     }
 
     public List<BalanceHistoryResponse> getBalanceHistory(Long walletId, String period) {
-        LocalDateTime startDate;
+        Instant startDate;
         switch (period) {
             case "7d":
-                startDate = LocalDateTime.now().minusDays(7);
+                startDate = Instant.now().minus(7, ChronoUnit.DAYS);
                 break;
             case "1m":
-                startDate = LocalDateTime.now().minusMonths(1);
+                startDate = Instant.now().minus(30, ChronoUnit.DAYS);
                 break;
             case "3m":
-                startDate = LocalDateTime.now().minusMonths(3);
+                startDate = Instant.now().minus(90, ChronoUnit.DAYS);
                 break;
             default:
-                startDate = LocalDateTime.now().minusDays(30);
+                startDate = Instant.now().minus(30, ChronoUnit.DAYS);
                 break;
         }
 
-        List<Object[]> results = transactionRepository.findClosingBalanceByDate(walletId, startDate);
-        return results.stream()
-                .map(result -> new BalanceHistoryResponse(
-                        ((Timestamp) result[0]).toLocalDateTime().toLocalDate(),
-                        (BigDecimal) result[1]
-                ))
+        List<Transaction> transactions = transactionRepository.findByWalletIdAndDateAfterOrderByDateAsc(walletId, startDate);
+        if (transactions.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<LocalDate, BigDecimal> closingBalances = new LinkedHashMap<>();
+        for (Transaction t : transactions) {
+            LocalDate date = t.getDate().atZone(ZoneOffset.UTC).toLocalDate();
+            closingBalances.put(date, t.getBalanceAfterTransaction());
+        }
+
+        return closingBalances.entrySet().stream()
+                .map(entry -> new BalanceHistoryResponse(entry.getKey(), entry.getValue()))
+                .sorted(Comparator.comparing(BalanceHistoryResponse::getDate))
                 .collect(Collectors.toList());
     }
+
 
     public List<WalletResponse> getArchivedWalletsByUserId(Long userId) {
         List<Wallet> wallets = walletRepository.findByUserIdAndIsArchived(userId, true);

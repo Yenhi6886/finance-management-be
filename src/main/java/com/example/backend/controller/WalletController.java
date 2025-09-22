@@ -83,6 +83,16 @@ public class WalletController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @GetMapping("/{walletId}/details")
+    @RequireWalletPermission(value = PermissionType.VIEW_WALLET, walletId = "#walletId")
+    public ResponseEntity<ApiResponse<WalletDetailResponse>> getWalletDetails(
+            @PathVariable Long walletId,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        WalletDetailResponse walletDetails = walletService.getWalletDetails(walletId);
+        ApiResponse<WalletDetailResponse> apiResponse = new ApiResponse<>(true, "Lấy chi tiết ví thành công", walletDetails);
+        return ResponseEntity.ok(apiResponse);
+    }
+
     @GetMapping("/{walletId}/transactions")
     @RequireWalletPermission(value = PermissionType.VIEW_TRANSACTIONS, walletId = "#walletId")
     public ResponseEntity<ApiResponse<Page<TransactionResponse>>> getWalletTransactions(
@@ -148,22 +158,6 @@ public class WalletController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/total-balance")
-    public ResponseEntity<ApiResponse<WalletSummaryResponse>> getTotalBalance(@AuthenticationPrincipal CustomUserDetails currentUser) {
-        Map<String, BigDecimal> totalBalanceByCurrency = walletSelectionService.getTotalBalanceByCurrency(currentUser.getId());
-        BigDecimal totalBalanceVND = walletSelectionService.getTotalBalanceInVND(currentUser.getId());
-        int totalWallets = walletService.getAllWalletsByUserId(currentUser.getId()).size();
-
-        WalletSummaryResponse summaryResponse = WalletSummaryResponse.builder()
-                .totalBalanceByCurrency(totalBalanceByCurrency)
-                .totalBalanceVND(totalBalanceVND)
-                .totalWallets(totalWallets)
-                .message("Lấy tổng số dư thành công")
-                .build();
-        ApiResponse<WalletSummaryResponse> apiResponse = new ApiResponse<>(true, "Lấy tổng số dư thành công", summaryResponse);
-        return ResponseEntity.ok(apiResponse);
-    }
-
     @PostMapping("/transfer")
     @RequireWalletPermission(value = PermissionType.ADD_TRANSACTION, walletId = "#request.fromWalletId")
     public ResponseEntity<ApiResponse<WalletTransferResponse>> transferMoney(
@@ -218,7 +212,7 @@ public class WalletController {
     }
 
     @PatchMapping("/{walletId}/archive")
-    @RequireWalletPermission(value = PermissionType.EDIT_WALLET, requireOwnership = true, walletId = "#walletId")
+    @RequireWalletPermission(value = PermissionType.EDIT_WALLET, walletId = "#walletId")
     public ResponseEntity<ApiResponse<WalletResponse>> archiveWallet(
             @PathVariable Long walletId,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
@@ -228,7 +222,7 @@ public class WalletController {
     }
 
     @PatchMapping("/{walletId}/unarchive")
-    @RequireWalletPermission(value = PermissionType.EDIT_WALLET, requireOwnership = true, walletId = "#walletId")
+    @RequireWalletPermission(value = PermissionType.EDIT_WALLET, walletId = "#walletId")
     public ResponseEntity<ApiResponse<WalletResponse>> unarchiveWallet(
             @PathVariable Long walletId,
             @AuthenticationPrincipal CustomUserDetails currentUser) {

@@ -1,6 +1,8 @@
 package com.example.backend.dto.response;
 
 import com.example.backend.entity.WalletShare;
+import com.example.backend.enums.InvitationStatus;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,9 +11,10 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ShareWalletResponse {
 
     private Long id;
@@ -22,10 +25,10 @@ public class ShareWalletResponse {
     private String sharedWithEmail;
     private String sharedWithName;
     private WalletShare.PermissionLevel permissionLevel;
-    private Boolean isActive;
+    private InvitationStatus status;
     private LocalDateTime createdAt;
     private String message;
-    private WalletResponse wallet;
-    private String shareToken;
+    private String invitationToken;
     private LocalDateTime expiresAt;
+    private WalletResponse wallet;
 }

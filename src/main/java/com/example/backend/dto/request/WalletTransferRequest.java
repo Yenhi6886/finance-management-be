@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Data
 @NoArgsConstructor
@@ -26,5 +26,5 @@ public class WalletTransferRequest {
 
     private String description;
 
-    private LocalDateTime date;
+    private Instant date;
 }

@@ -3,14 +3,22 @@ package com.example.backend.controller;
 import com.example.backend.dto.request.TransactionRequest;
 import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.dto.response.TransactionResponse;
+import com.example.backend.dto.response.TransactionStatisticResponse;
 import com.example.backend.security.CustomUserDetails;
 import com.example.backend.service.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -33,9 +41,11 @@ public class TransactionController {
     public ResponseEntity<ApiResponse<List<TransactionResponse>>> getTransactions(
             @AuthenticationPrincipal CustomUserDetails currentUser,
             @RequestParam(required = false) String type,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(defaultValue = "50") int limit) {
 
-        List<TransactionResponse> transactions = transactionService.getTransactions(currentUser.getId(), type, limit);
+        List<TransactionResponse> transactions = transactionService.getTransactions(currentUser.getId(), type, categoryId, date, limit);
         ApiResponse<List<TransactionResponse>> response = new ApiResponse<>(true, "Lấy danh sách giao dịch thành công", transactions);
         return ResponseEntity.ok(response);
     }
@@ -51,6 +61,7 @@ public class TransactionController {
     }
 
     @DeleteMapping("/{id}")
+    // Kiểm tra quyền xóa sẽ được xác nhận trong service vì cần suy ra walletId từ transaction
     public ResponseEntity<ApiResponse<Void>> deleteTransaction(
             @PathVariable Long id,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
@@ -58,4 +69,98 @@ public class TransactionController {
         ApiResponse<Void> response = new ApiResponse<>(true, "Xóa giao dịch thành công", null);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/statistics/today")
+    public ResponseEntity<ApiResponse<TransactionStatisticResponse>> getTodayTransactions(
+            @AuthenticationPrincipal CustomUserDetails currentUser,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date"));
+        TransactionStatisticResponse statistics = transactionService.getTransactionsToday(currentUser.getId(), pageable);
+        ApiResponse<TransactionStatisticResponse> response = new ApiResponse<>(true, "Lấy danh sách giao dịch hôm nay thành công", statistics);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/statistics")
+    public ResponseEntity<ApiResponse<TransactionStatisticResponse>> getTransactionStatistics(
+            @AuthenticationPrincipal CustomUserDetails currentUser,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
+            @RequestParam(required = false) BigDecimal minAmount,
+            @RequestParam(required = false) BigDecimal maxAmount,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date"));
+        TransactionStatisticResponse statistics = transactionService.getTransactionsByTime(
+                currentUser.getId(),
+                startDate,
+                endDate,
+                pageable,
+                minAmount,
+                maxAmount
+        );
+
+        ApiResponse<TransactionStatisticResponse> response = new ApiResponse<>(
+                true,
+                "Lấy danh sách giao dịch theo thời gian thành công",
+                statistics
+        );
+        return ResponseEntity.ok(response);
+    }
+
+
+    @GetMapping("/statistics/wallet/today")
+    public ResponseEntity<ApiResponse<TransactionStatisticResponse>> getTodayWalletTransactions(
+            @AuthenticationPrincipal CustomUserDetails currentUser,
+            @RequestParam Long walletId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date"));
+        TransactionStatisticResponse statistics = transactionService.getTransactionsTodayByWalletId(
+                currentUser.getId(),
+                walletId,
+                pageable
+        );
+
+        ApiResponse<TransactionStatisticResponse> response = new ApiResponse<>(
+                true,
+                "Lấy danh sách giao dịch hôm nay theo ví thành công",
+                statistics
+        );
+        return ResponseEntity.ok(response);
+    }
+
+
+    @GetMapping("/statistics/wallet")
+    public ResponseEntity<ApiResponse<TransactionStatisticResponse>> getWalletTransactions(
+            @AuthenticationPrincipal CustomUserDetails currentUser,
+            @RequestParam Long walletId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
+            @RequestParam(required = false) BigDecimal minAmount,
+            @RequestParam(required = false) BigDecimal maxAmount,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date"));
+        TransactionStatisticResponse statistics = transactionService.getTransactionsByWalletIdAndTime(
+                currentUser.getId(),
+                walletId,
+                startDate,
+                endDate,
+                pageable,
+                minAmount,
+                maxAmount
+        );
+
+        ApiResponse<TransactionStatisticResponse> response = new ApiResponse<>(
+                true,
+                "Lấy danh sách giao dịch theo thời gian và ví thành công",
+                statistics
+        );
+        return ResponseEntity.ok(response);
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.example.backend.entity;
 
+import com.example.backend.enums.InvitationStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,18 +34,19 @@ public class WalletShare {
     private User owner;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "shared_with_user_id", nullable = true)
+    @JoinColumn(name = "shared_with_user_id", nullable = false)
     private User sharedWithUser;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "permission_level", nullable = false)
     private PermissionLevel permissionLevel = PermissionLevel.VIEW;
 
-    @Column(name = "is_active", nullable = false)
-    private Boolean isActive = true;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private InvitationStatus status = InvitationStatus.PENDING;
 
-    @Column(name = "share_token", unique = true)
-    private String shareToken;
+    @Column(name = "invitation_token", unique = true)
+    private String invitationToken;
 
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;

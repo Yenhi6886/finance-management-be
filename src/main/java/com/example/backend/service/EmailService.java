@@ -3,11 +3,13 @@ package com.example.backend.service;
 import com.example.backend.entity.User;
 import com.example.backend.entity.Wallet;
 import com.example.backend.entity.WalletShare;
+import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -23,51 +25,41 @@ public class EmailService {
     @Value("${app.frontend.url:http://localhost:3000}")
     private String frontendUrl;
 
-    public void sendWalletShareNotification(WalletShare walletShare, String customMessage) {
+    public void sendWalletShareInvitation(User owner, User sharedWithUser, Wallet wallet, String token, String customMessage) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
-            message.setTo(walletShare.getSharedWithUser().getEmail());
-            message.setSubject("Bạn đã được chia sẻ ví: " + walletShare.getWallet().getName());
+            message.setTo(sharedWithUser.getEmail());
+            message.setSubject(owner.getFirstName() + " đã mời bạn cùng quản lý ví: " + wallet.getName());
 
-            String emailContent = buildWalletShareEmailContent(walletShare, customMessage);
+            String emailContent = buildWalletShareInvitationEmailContent(owner, sharedWithUser, wallet, token, customMessage);
             message.setText(emailContent);
 
             mailSender.send(message);
-            log.info("Email thông báo chia sẻ ví đã được gửi đến: {}", walletShare.getSharedWithUser().getEmail());
+            log.info("Email mời chia sẻ ví đã được gửi đến: {}", sharedWithUser.getEmail());
         } catch (Exception e) {
-            log.error("Lỗi khi gửi email thông báo chia sẻ ví: {}", e.getMessage(), e);
+            log.error("Lỗi khi gửi email mời chia sẻ ví: {}", e.getMessage(), e);
         }
     }
 
-    private String buildWalletShareEmailContent(WalletShare walletShare, String customMessage) {
-        User owner = walletShare.getOwner();
-        User sharedWithUser = walletShare.getSharedWithUser();
-        Wallet wallet = walletShare.getWallet();
+    private String buildWalletShareInvitationEmailContent(User owner, User sharedWithUser, Wallet wallet, String token, String customMessage) {
+        String invitationLink = frontendUrl + "/accept-invitation?token=" + token;
 
         StringBuilder content = new StringBuilder();
-        content.append("Xin chào ").append(sharedWithUser.getFirstName()).append(" ").append(sharedWithUser.getLastName()).append(",\n\n");
+        content.append("Xin chào ").append(sharedWithUser.getFirstName()).append(",\n\n");
 
         content.append(owner.getFirstName()).append(" ").append(owner.getLastName())
-                .append(" đã chia sẻ ví '").append(wallet.getName()).append("' với bạn.\n\n");
-
-        content.append("Thông tin ví:\n");
-        content.append("- Tên ví: ").append(wallet.getName()).append("\n");
-        content.append("- Loại tiền tệ: ").append(wallet.getCurrency()).append("\n");
-        content.append("- Số dư hiện tại: ").append(wallet.getBalance()).append(" ").append(wallet.getCurrency()).append("\n");
-        content.append("- Quyền truy cập: ").append(walletShare.getPermissionLevel().getDisplayName()).append("\n");
-
-        if (wallet.getDescription() != null && !wallet.getDescription().isEmpty()) {
-            content.append("- Mô tả: ").append(wallet.getDescription()).append("\n");
-        }
+                .append(" đã mời bạn cùng tham gia quản lý ví '").append(wallet.getName()).append("'.\n\n");
 
         if (customMessage != null && !customMessage.isEmpty()) {
-            content.append("\nLời nhắn từ ").append(owner.getFirstName()).append(":\n");
-            content.append(customMessage).append("\n");
+            content.append("Lời nhắn từ ").append(owner.getFirstName()).append(":\n\"");
+            content.append(customMessage).append("\"\n\n");
         }
 
-        content.append("\nBạn có thể truy cập ví này trong ứng dụng quản lý tài chính của mình.\n");
-        content.append("Đăng nhập tại: ").append(frontendUrl).append("/login\n\n");
+        content.append("Vui lòng nhấp vào liên kết bên dưới để xem chi tiết và chấp nhận lời mời:\n");
+        content.append(invitationLink).append("\n\n");
+        content.append("Lưu ý: Lời mời này sẽ hết hạn sau 48 giờ.\n\n");
+        content.append("Nếu bạn không quen biết người gửi hoặc không muốn nhận lời mời này, vui lòng bỏ qua email.\n\n");
 
         content.append("Trân trọng,\n");
         content.append("Đội ngũ Finance Management");
@@ -173,5 +165,36 @@ public class EmailService {
         content.append("Đội ngũ Finance Management");
 
         return content.toString();
+    }
+
+    public void sendEmailWithAttachment(String toEmail,
+                                        String subject,
+                                        String textBody,
+                                        byte[] attachmentBytes,
+                                        String attachmentFilename,
+                                        String contentType) {
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            helper.setFrom(fromEmail);
+            helper.setTo(toEmail);
+            helper.setSubject(subject);
+            helper.setText(textBody, false);
+
+            if (attachmentBytes != null && attachmentBytes.length > 0 && attachmentFilename != null) {
+                helper.addAttachment(attachmentFilename, new org.springframework.core.io.ByteArrayResource(attachmentBytes) {
+                    @Override
+                    public String getFilename() {
+                        return attachmentFilename;
+                    }
+                }, contentType != null ? contentType : "application/octet-stream");
+            }
+
+            mailSender.send(mimeMessage);
+            log.info("Email với tệp đính kèm đã được gửi đến: {}", toEmail);
+        } catch (Exception e) {
+            log.error("Lỗi khi gửi email kèm tệp đính kèm: {}", e.getMessage(), e);
+            throw new RuntimeException("Không thể gửi email với tệp đính kèm", e);
+        }
     }
 }

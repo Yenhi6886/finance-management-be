@@ -14,9 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,6 +33,7 @@ public class CategoryService {
         Category category = Category.builder()
                 .name(request.getName())
                 .description(request.getDescription())
+                .color(request.getColor())
                 .budgetAmount(request.getBudgetAmount())
                 .budgetPeriod(request.getBudgetPeriod())
                 .incomeTargetAmount(request.getIncomeTargetAmount())
@@ -56,6 +55,7 @@ public class CategoryService {
 
         category.setName(request.getName());
         category.setDescription(request.getDescription());
+        category.setColor(request.getColor());
         category.setBudgetAmount(request.getBudgetAmount());
         category.setBudgetPeriod(request.getBudgetPeriod());
         category.setIncomeTargetAmount(request.getIncomeTargetAmount());
@@ -70,6 +70,17 @@ public class CategoryService {
         return categories.stream()
                 .map(this::mapToCategoryResponse)
                 .collect(Collectors.toList());
+    }
+
+    public CategoryResponse getCategoryById(Long categoryId, Long userId) {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục với ID: " + categoryId));
+
+        if (!category.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException("Bạn không có quyền xem danh mục này.");
+        }
+
+        return mapToCategoryResponse(category);
     }
 
     @Transactional
@@ -87,15 +98,13 @@ public class CategoryService {
 
     private CategoryResponse mapToCategoryResponse(Category category) {
         LocalDate today = LocalDate.now();
-        LocalDateTime startOfMonth = today.withDayOfMonth(1).atStartOfDay();
-        LocalDateTime endOfMonth = today.withDayOfMonth(today.lengthOfMonth()).atTime(LocalTime.MAX);
+        Instant startOfMonth = today.withDayOfMonth(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+        Instant endOfMonth = today.withDayOfMonth(today.lengthOfMonth()).atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC);
 
-        // Luôn tính toán số tiền đã chi và đã thu
         BigDecimal spentAmount = transactionRepository.sumExpensesByCategoryIdAndDateRange(category.getId(), startOfMonth, endOfMonth);
         BigDecimal earnedAmount = transactionRepository.sumIncomesByCategoryIdAndDateRange(category.getId(), startOfMonth, endOfMonth);
 
         BigDecimal remainingAmount = null;
-        // Chỉ tính số tiền còn lại nếu có đặt ngân sách
         if (category.getBudgetAmount() != null && category.getBudgetAmount().compareTo(BigDecimal.ZERO) > 0) {
             remainingAmount = category.getBudgetAmount().subtract(spentAmount);
         }
@@ -104,6 +113,7 @@ public class CategoryService {
                 .id(category.getId())
                 .name(category.getName())
                 .description(category.getDescription())
+                .color(category.getColor())
                 .budgetAmount(category.getBudgetAmount())
                 .budgetPeriod(category.getBudgetPeriod())
                 .spentAmount(spentAmount)
