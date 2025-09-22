@@ -1,9 +1,11 @@
 package com.example.backend.controller;
 
+import com.example.backend.annotation.RequireWalletPermission;
 import com.example.backend.dto.request.TransactionRequest;
 import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.dto.response.TransactionResponse;
 import com.example.backend.dto.response.TransactionStatisticResponse;
+import com.example.backend.enums.PermissionType;
 import com.example.backend.security.CustomUserDetails;
 import com.example.backend.service.TransactionService;
 import jakarta.validation.Valid;
@@ -29,6 +31,7 @@ public class TransactionController {
     private final TransactionService transactionService;
 
     @PostMapping
+    @RequireWalletPermission(value = PermissionType.ADD_TRANSACTION, walletId = "#request.walletId")
     public ResponseEntity<ApiResponse<TransactionResponse>> createTransaction(
             @Valid @RequestBody TransactionRequest request,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
@@ -51,6 +54,7 @@ public class TransactionController {
     }
 
     @PutMapping("/{id}")
+    @RequireWalletPermission(value = PermissionType.EDIT_TRANSACTION, walletId = "#request.walletId")
     public ResponseEntity<ApiResponse<TransactionResponse>> updateTransaction(
             @PathVariable Long id,
             @Valid @RequestBody TransactionRequest request,
@@ -61,6 +65,7 @@ public class TransactionController {
     }
 
     @DeleteMapping("/{id}")
+    // Kiểm tra quyền xóa sẽ được xác nhận trong service vì cần suy ra walletId từ transaction
     public ResponseEntity<ApiResponse<Void>> deleteTransaction(
             @PathVariable Long id,
             @AuthenticationPrincipal CustomUserDetails currentUser) {

@@ -14,7 +14,10 @@ import com.example.backend.repository.CategoryRepository;
 import com.example.backend.repository.TransactionRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.repository.WalletRepository;
+import com.example.backend.repository.WalletShareRepository;
 import lombok.RequiredArgsConstructor;
+import com.example.backend.service.WalletPermissionService;
+import com.example.backend.enums.PermissionType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -39,6 +42,8 @@ public class TransactionService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final NotificationService notificationService;
+    private final WalletPermissionService walletPermissionService;
+    private final WalletShareRepository walletShareRepository;
 
     @Transactional
     public TransactionResponse createTransaction(TransactionRequest request, Long userId) {
@@ -47,6 +52,11 @@ public class TransactionService {
 
         Wallet wallet = walletRepository.findById(request.getWalletId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ví: " + request.getWalletId()));
+
+        // Defensive permission check for shared wallets
+        if (!walletPermissionService.hasPermission(wallet.getId(), userId, PermissionType.ADD_TRANSACTION)) {
+            throw new AccessDeniedException("Bạn không có quyền thêm giao dịch cho ví này.");
+        }
 
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục: " + request.getCategoryId()));
@@ -123,8 +133,9 @@ public class TransactionService {
 
         User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        if (!Objects.equals(transaction.getUser().getId(), userId)) {
-            throw new AccessDeniedException("Bạn không có quyền chỉnh sửa giao dịch này.");
+        // Require EDIT permission on the target wallet
+        if (!walletPermissionService.hasPermission(request.getWalletId(), userId, PermissionType.EDIT_TRANSACTION)) {
+            throw new AccessDeniedException("Bạn không có quyền chỉnh sửa giao dịch trên ví này.");
         }
 
         Wallet oldWallet = transaction.getWallet();
@@ -182,8 +193,9 @@ public class TransactionService {
         Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy giao dịch: " + transactionId));
 
-        if (!Objects.equals(transaction.getUser().getId(), userId)) {
-            throw new AccessDeniedException("Bạn không có quyền xóa giao dịch này.");
+        // Require DELETE permission on the wallet of this transaction
+        if (!walletPermissionService.hasPermission(transaction.getWallet().getId(), userId, PermissionType.DELETE_TRANSACTION)) {
+            throw new AccessDeniedException("Bạn không có quyền xóa giao dịch trên ví này.");
         }
 
         Wallet wallet = transaction.getWallet();
@@ -276,8 +288,24 @@ public class TransactionService {
         Instant startDate = (startDateTime != null) ? startDateTime.toInstant(ZoneOffset.UTC) : null;
         Instant endDate = (endDateTime != null) ? endDateTime.toInstant(ZoneOffset.UTC) : null;
 
-        Page<Transaction> transactionsPage = transactionRepository.getTransactionStatistics(userId, walletId, startDate, endDate, minAmount, maxAmount, pageable);
-        BigDecimal totalAmount = transactionRepository.sumAmountForStatistics(userId, walletId, startDate, endDate, minAmount, maxAmount);
+        Page<Transaction> transactionsPage;
+        BigDecimal totalAmount;
+        if (walletId != null) {
+            transactionsPage = transactionRepository.getTransactionStatistics(userId, walletId, startDate, endDate, minAmount, maxAmount, pageable);
+            totalAmount = transactionRepository.sumAmountForStatistics(userId, walletId, startDate, endDate, minAmount, maxAmount);
+        } else {
+            // Build allowed wallet ids: owned + shared accepted
+            List<Long> ownedWalletIds = walletRepository.findByUserIdAndIsArchived(userId, false)
+                    .stream().map(Wallet::getId).toList();
+            List<Long> sharedWalletIds = walletShareRepository.findBySharedWithUserIdAndStatus(userId, com.example.backend.enums.InvitationStatus.ACCEPTED)
+                    .stream().map(ws -> ws.getWallet().getId()).toList();
+            List<Long> allowedWalletIds = new java.util.ArrayList<>();
+            allowedWalletIds.addAll(ownedWalletIds);
+            allowedWalletIds.addAll(sharedWalletIds);
+
+            transactionsPage = transactionRepository.getTransactionStatisticsByWallets(allowedWalletIds, startDate, endDate, minAmount, maxAmount, pageable);
+            totalAmount = transactionRepository.sumAmountForStatisticsByWallets(allowedWalletIds, startDate, endDate, minAmount, maxAmount);
+        }
 
         if (totalAmount == null) {
             totalAmount = BigDecimal.ZERO;

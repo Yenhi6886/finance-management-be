@@ -78,6 +78,24 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             Pageable pageable
     );
 
+    @Query("""
+    SELECT t FROM Transaction t
+    WHERE (:walletIds IS NULL OR t.wallet.id IN :walletIds)
+      AND (:startDate IS NULL OR t.date >= :startDate)
+      AND (:endDate IS NULL OR t.date <= :endDate)
+      AND (:minAmount IS NULL OR t.amount >= :minAmount)
+      AND (:maxAmount IS NULL OR t.amount <= :maxAmount)
+    ORDER BY t.date DESC
+    """)
+    Page<Transaction> getTransactionStatisticsByWallets(
+            @Param("walletIds") List<Long> walletIds,
+            @Param("startDate") Instant startDate,
+            @Param("endDate") Instant endDate,
+            @Param("minAmount") BigDecimal minAmount,
+            @Param("maxAmount") BigDecimal maxAmount,
+            Pageable pageable
+    );
+
     Page<Transaction> findAllByUserIdAndDateBetween(Long userId, Instant startDate, Instant endDate, Pageable pageable);
 
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.user.id = :userId AND t.type = :type AND t.date BETWEEN :startDate AND :endDate")
@@ -101,6 +119,23 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     BigDecimal sumAmountForStatistics(
             @Param("userId") Long userId,
             @Param("walletId") Long walletId,
+            @Param("startDate") Instant startDate,
+            @Param("endDate") Instant endDate,
+            @Param("minAmount") BigDecimal minAmount,
+            @Param("maxAmount") BigDecimal maxAmount
+    );
+
+    @Query("""
+    SELECT COALESCE(SUM(CASE WHEN t.type = com.example.backend.enums.TransactionType.INCOME THEN t.amount WHEN t.type = com.example.backend.enums.TransactionType.EXPENSE THEN -t.amount ELSE 0 END), 0)
+    FROM Transaction t
+    WHERE (:walletIds IS NULL OR t.wallet.id IN :walletIds)
+      AND (:startDate IS NULL OR t.date >= :startDate)
+      AND (:endDate IS NULL OR t.date <= :endDate)
+      AND (:minAmount IS NULL OR t.amount >= :minAmount)
+      AND (:maxAmount IS NULL OR t.amount <= :maxAmount)
+    """)
+    BigDecimal sumAmountForStatisticsByWallets(
+            @Param("walletIds") List<Long> walletIds,
             @Param("startDate") Instant startDate,
             @Param("endDate") Instant endDate,
             @Param("minAmount") BigDecimal minAmount,
