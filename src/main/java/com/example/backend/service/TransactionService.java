@@ -89,7 +89,7 @@ public class TransactionService {
     }
 
     public List<TransactionResponse> getTransactions(Long userId, String type, int limit) {
-        Pageable pageable = PageRequest.of(0, limit, Sort.by("date").descending());
+        Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "date", "id"));
         List<Transaction> transactions;
 
         if ("transfer".equalsIgnoreCase(type)) {
@@ -247,7 +247,7 @@ public class TransactionService {
             throw new AccessDeniedException("Bạn không có quyền truy cập danh mục này.");
         }
 
-        List<Transaction> transactions = transactionRepository.findByCategoryIdOrderByDateDesc(categoryId);
+        List<Transaction> transactions = transactionRepository.findByCategoryIdOrderByDateDescIdDesc(categoryId);
         return transactions.stream()
                 .map(this::mapToTransactionResponse)
                 .collect(Collectors.toList());
