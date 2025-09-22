@@ -34,6 +34,7 @@ public class WalletController {
     private final WalletShareService walletShareService;
     private final WalletPermissionService walletPermissionService;
 
+
     @PostMapping
     public ResponseEntity<ApiResponse<WalletResponse>> createWallet(
             @Valid @RequestBody CreateWalletRequest request,
