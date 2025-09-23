@@ -9,8 +9,6 @@ import com.example.backend.entity.VerificationToken;
 import com.example.backend.enums.AuthProvider;
 import com.example.backend.enums.UserStatus;
 import com.example.backend.enums.VerificationTokenType;
-import com.example.backend.exception.BadRequestException;
-import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.mapper.UserMapper;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.repository.UserSettingsRepository;
@@ -76,6 +74,7 @@ public class UserService {
     @Autowired
     private WebClient.Builder webClientBuilder;
 
+    // Lấy giá trị từ application.properties
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String googleClientId;
     @Value("${spring.security.oauth2.client.registration.google.client-secret}")
@@ -83,15 +82,16 @@ public class UserService {
     @Value("${app.oauth2.google.redirect-uri}")
     private String googleRedirectUri;
 
+    // ... (Các phương thức cũ như register, login, activateAccount, etc. giữ nguyên)
     public void register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new BadRequestException("user.email.exists");
+            throw new RuntimeException("Email đã được sử dụng!");
         }
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new BadRequestException("user.username.exists");
+            throw new RuntimeException("Username đã được sử dụng!");
         }
         if (StringUtils.hasText(request.getPhoneNumber()) && userRepository.existsByPhoneNumber(request.getPhoneNumber())) {
-            throw new BadRequestException("user.phone.exists");
+            throw new RuntimeException("Số điện thoại đã được sử dụng!");
         }
 
         User user = userMapper.toUser(request);
@@ -100,8 +100,9 @@ public class UserService {
         user.setAuthProvider(AuthProvider.LOCAL);
         User savedUser = userRepository.save(user);
 
+        // Create and send activation token
         String token = UUID.randomUUID().toString();
-        VerificationToken verificationToken = new VerificationToken(token, savedUser, VerificationTokenType.ACCOUNT_ACTIVATION, TOKEN_EXPIRATION_IN_MINUTES * 4);
+        VerificationToken verificationToken = new VerificationToken(token, savedUser, VerificationTokenType.ACCOUNT_ACTIVATION, TOKEN_EXPIRATION_IN_MINUTES * 4); // 1 hour for activation
         verificationTokenRepository.save(verificationToken);
 
         emailService.sendActivationEmail(user.getEmail(), token);
@@ -113,18 +114,19 @@ public class UserService {
             authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getIdentifier(), request.getPassword()));
         } catch (BadCredentialsException e) {
-            throw new BadCredentialsException("auth.bad.credentials");
+            throw new RuntimeException("Tên đăng nhập hoặc mật khẩu không chính xác!");
         }
 
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         User user = userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new UsernameNotFoundException("user.not.found.after.auth"));
+                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng sau khi xác thực: " + userDetails.getUsername()));
+
 
         if (user.getStatus() == UserStatus.INACTIVE) {
-            throw new BadRequestException("user.account.inactive");
+            throw new RuntimeException("Tài khoản của bạn chưa được kích hoạt. Vui lòng kiểm tra email.");
         }
         if (user.getStatus() == UserStatus.DELETED) {
-            throw new BadRequestException("user.account.deleted");
+            throw new RuntimeException("Tài khoản của bạn đã bị vô hiệu hoá.");
         }
 
         String token = jwtUtil.generateToken(authentication);
@@ -159,7 +161,7 @@ public class UserService {
 
     public void resetPassword(String token, String newPassword) {
         if (!PASSWORD_PATTERN.matcher(newPassword).matches()) {
-            throw new BadRequestException("user.password.invalid.pattern");
+            throw new RuntimeException("Mật khẩu phải có ít nhất 8 ký tự, bao gồm cả chữ và số.");
         }
         VerificationToken verificationToken = validateToken(token, VerificationTokenType.PASSWORD_RESET);
         User user = verificationToken.getUser();
@@ -173,7 +175,7 @@ public class UserService {
     public void changePassword(ChangePasswordRequest request) {
         User currentUser = getCurrentUser();
         if (!passwordEncoder.matches(request.getCurrentPassword(), currentUser.getPassword())) {
-            throw new BadRequestException("user.password.current.incorrect");
+            throw new RuntimeException("Mật khẩu hiện tại không đúng!");
         }
         currentUser.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(currentUser);
@@ -213,44 +215,62 @@ public class UserService {
     private User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
-            throw new BadRequestException("auth.required");
+            throw new RuntimeException("Yêu cầu xác thực để thực hiện hành động này.");
         }
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         return userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("user.authenticated.not.found", userDetails.getUsername()));
+                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng đã được xác thực trong database: " + userDetails.getUsername()));
     }
 
     private VerificationToken validateToken(String token, VerificationTokenType type) {
         VerificationToken verificationToken = verificationTokenRepository.findByToken(token)
-                .orElseThrow(() -> new BadRequestException("token.invalid"));
+                .orElseThrow(() -> new RuntimeException("Token không hợp lệ."));
 
         if (verificationToken.isUsed()) {
-            throw new BadRequestException("token.used");
+            throw new RuntimeException("Token đã được sử dụng.");
         }
         if (verificationToken.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new BadRequestException("token.expired");
+            throw new RuntimeException("Token đã hết hạn.");
         }
         if (verificationToken.getType() != type) {
-            throw new BadRequestException("token.invalid.type");
+            throw new RuntimeException("Token không đúng loại.");
         }
         return verificationToken;
     }
 
+    // --- CÁC PHƯƠNG THỨC MỚI CHO LUỒNG GOOGLE LOGIN ĐƠN GIẢN ---
+
     public String getGoogleOAuth2Url() {
+        if (!StringUtils.hasText(googleClientId)) {
+            throw new RuntimeException("Missing GOOGLE_CLIENT_ID configuration");
+        }
+        if (!StringUtils.hasText(googleRedirectUri)) {
+            throw new RuntimeException("Missing app.oauth2.google.redirect-uri configuration");
+        }
         String url = "https://accounts.google.com/o/oauth2/v2/auth";
-        return UriComponentsBuilder.fromHttpUrl(url)
+        String authUrl = UriComponentsBuilder.fromHttpUrl(url)
                 .queryParam("client_id", googleClientId)
                 .queryParam("redirect_uri", googleRedirectUri)
                 .queryParam("response_type", "code")
                 .queryParam("scope", "openid profile email")
                 .queryParam("access_type", "offline")
                 .toUriString();
+        // Simple log for troubleshooting
+        System.out.println("[OAuth] Auth URL: " + authUrl);
+        return authUrl;
     }
 
     public String processGoogleCallback(String code) {
+        // 1. Dùng code để lấy access_token từ Google
         GoogleTokenResponse tokenResponse = getGoogleToken(code);
+
+        // 2. Dùng access_token để lấy thông tin người dùng từ Google
         GoogleUserInfoResponse userInfo = getGoogleUserInfo(tokenResponse.getAccessToken());
+
+        // 3. Tìm hoặc tạo người dùng mới trong database
         User user = findOrCreateUser(userInfo);
+
+        // 4. Tạo JWT token của hệ thống và trả về
         Authentication authentication = new UsernamePasswordAuthenticationToken(
                 CustomUserDetails.create(user), null, CustomUserDetails.create(user).getAuthorities());
         return jwtUtil.generateToken(authentication);
@@ -258,58 +278,79 @@ public class UserService {
 
     private GoogleTokenResponse getGoogleToken(String code) {
         WebClient webClient = webClientBuilder.baseUrl("https://oauth2.googleapis.com").build();
+
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("code", code);
         formData.add("client_id", googleClientId);
         formData.add("client_secret", googleClientSecret);
         formData.add("redirect_uri", googleRedirectUri);
         formData.add("grant_type", "authorization_code");
-        return webClient.post()
-                .uri("/token")
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .body(BodyInserters.fromFormData(formData))
-                .retrieve()
-                .bodyToMono(GoogleTokenResponse.class)
-                .block();
+
+        try {
+            return webClient.post()
+                    .uri("/token")
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .body(BodyInserters.fromFormData(formData))
+                    .retrieve()
+                    .onStatus(status -> !status.is2xxSuccessful(), clientResponse -> clientResponse.bodyToMono(String.class)
+                            .map(body -> new RuntimeException("Google token exchange failed: " + body)))
+                    .bodyToMono(GoogleTokenResponse.class)
+                    .block();
+        } catch (RuntimeException ex) {
+            throw new RuntimeException("Google token exchange failed: " + ex.getMessage());
+        }
     }
 
     private GoogleUserInfoResponse getGoogleUserInfo(String accessToken) {
         WebClient webClient = webClientBuilder.baseUrl("https://www.googleapis.com").build();
-        return webClient.get()
-                .uri(uriBuilder -> uriBuilder.path("/oauth2/v3/userinfo").build())
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
-                .retrieve()
-                .bodyToMono(GoogleUserInfoResponse.class)
-                .block();
+        try {
+            return webClient.get()
+                    .uri(uriBuilder -> uriBuilder.path("/oauth2/v3/userinfo").build())
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                    .retrieve()
+                    .onStatus(status -> !status.is2xxSuccessful(), clientResponse -> clientResponse.bodyToMono(String.class)
+                            .map(body -> new RuntimeException("Google userinfo failed: " + body)))
+                    .bodyToMono(GoogleUserInfoResponse.class)
+                    .block();
+        } catch (RuntimeException ex) {
+            throw new RuntimeException("Google userinfo failed: " + ex.getMessage());
+        }
     }
 
     private User findOrCreateUser(GoogleUserInfoResponse userInfo) {
         Optional<User> userOptional = userRepository.findByEmail(userInfo.getEmail());
         if (userOptional.isPresent()) {
             User existingUser = userOptional.get();
+            // Cập nhật thông tin nếu cần
             existingUser.setFirstName(userInfo.getGivenName());
             existingUser.setLastName(userInfo.getFamilyName());
             existingUser.setAvatarUrl(userInfo.getPicture());
             return userRepository.save(existingUser);
         } else {
+            // Tạo user mới
             User newUser = new User();
             newUser.setEmail(userInfo.getEmail());
             newUser.setFirstName(userInfo.getGivenName());
             newUser.setLastName(userInfo.getFamilyName());
             newUser.setAvatarUrl(userInfo.getPicture());
-            newUser.setUsername("google_" + userInfo.getSub());
-            newUser.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
+            newUser.setUsername("google_" + userInfo.getSub()); // Tạo username duy nhất
+            newUser.setPassword(passwordEncoder.encode(UUID.randomUUID().toString())); // Mật khẩu ngẫu nhiên
             newUser.setAuthProvider(AuthProvider.GOOGLE);
             newUser.setStatus(UserStatus.ACTIVE);
             newUser.setProviderId(userInfo.getSub());
+
             User savedUser = userRepository.save(newUser);
+
+            // Tạo UserSettings mặc định
             UserSettings userSettings = new UserSettings();
             userSettings.setUser(savedUser);
             userSettingsRepository.save(userSettings);
+
             return savedUser;
         }
     }
 
+    // Lớp nội tại để chứa response từ Google
     @Data
     private static class GoogleTokenResponse {
         @JsonProperty("access_token")

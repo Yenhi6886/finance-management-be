@@ -27,6 +27,9 @@ public class AuthController {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @org.springframework.beans.factory.annotation.Value("${app.frontend.url:http://localhost:3000}")
+    private String frontendBaseUrl;
+
     // --- CÁC ENDPOINT CŨ GIỮ NGUYÊN ---
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<Void>> register(@Valid @RequestBody RegisterRequest request) {
@@ -86,15 +89,39 @@ public class AuthController {
     // --- ENDPOINT MỚI ĐỂ BẮT ĐẦU LUỒNG GOOGLE LOGIN ---
     @GetMapping("/oauth2/google")
     public RedirectView googleLogin() {
-        String redirectUrl = userService.getGoogleOAuth2Url();
-        return new RedirectView(redirectUrl);
+        try {
+            String redirectUrl = userService.getGoogleOAuth2Url();
+            return new RedirectView(redirectUrl);
+        } catch (Exception ex) {
+            String errorMsg = java.net.URLEncoder.encode(ex.getMessage() == null ? "oauth_config_invalid" : ex.getMessage(), java.nio.charset.StandardCharsets.UTF_8);
+            return new RedirectView(frontendBaseUrl + "/oauth-callback?error=" + errorMsg);
+        }
     }
 
     // --- ENDPOINT MỚI ĐỂ XỬ LÝ CALLBACK TỪ GOOGLE ---
     @GetMapping("/oauth2/callback/google")
-    public RedirectView handleGoogleCallback(@RequestParam("code") String code) throws IOException {
-        String jwtToken = userService.processGoogleCallback(code);
-        String frontendRedirectUrl = "http://localhost:3000/oauth-callback?token=" + jwtToken;
-        return new RedirectView(frontendRedirectUrl);
+    public RedirectView handleGoogleCallback(
+            @RequestParam(value = "code", required = false) String code,
+            @RequestParam(value = "error", required = false) String error,
+            @RequestParam(value = "error_description", required = false) String errorDescription
+    ) throws IOException {
+        if (error != null) {
+            String message = (errorDescription != null ? errorDescription : error);
+            String errorMsg = java.net.URLEncoder.encode(message, java.nio.charset.StandardCharsets.UTF_8);
+            return new RedirectView(frontendBaseUrl + "/oauth-callback?error=" + errorMsg);
+        }
+        if (code == null || code.isBlank()) {
+            String errorMsg = java.net.URLEncoder.encode("missing_code", java.nio.charset.StandardCharsets.UTF_8);
+            return new RedirectView(frontendBaseUrl + "/oauth-callback?error=" + errorMsg);
+        }
+        try {
+            String jwtToken = userService.processGoogleCallback(code);
+            String frontendRedirectUrl = frontendBaseUrl + "/oauth-callback?token=" + jwtToken;
+            return new RedirectView(frontendRedirectUrl);
+        } catch (Exception ex) {
+            String errorMsg = java.net.URLEncoder.encode(ex.getMessage() == null ? "oauth_failed" : ex.getMessage(), java.nio.charset.StandardCharsets.UTF_8);
+            String errorRedirect = frontendBaseUrl + "/oauth-callback?error=" + errorMsg;
+            return new RedirectView(errorRedirect);
+        }
     }
 }
