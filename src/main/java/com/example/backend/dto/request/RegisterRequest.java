@@ -8,22 +8,22 @@ import lombok.Data;
 @Data
 public class RegisterRequest {
 
-    @NotBlank(message = "Email không được để trống")
-    @Email(message = "Email không hợp lệ")
+    @NotBlank(message = "validation.notblank.email")
+    @Email(message = "validation.email.invalid")
     private String email;
 
-    @NotBlank(message = "Tên đăng nhập không được để trống")
-    @Size(min = 3, max = 50, message = "Tên đăng nhập phải có từ 3 đến 50 ký tự")
+    @NotBlank(message = "validation.notblank.username")
+    @Size(min = 3, max = 50, message = "validation.size.username")
     private String username;
 
-    @NotBlank(message = "Mật khẩu không được để trống")
-    @Size(min = 6, max = 8, message = "Mật khẩu phải có từ 6 đến 8 ký tự")
+    @NotBlank(message = "validation.notblank.password")
+    @Size(min = 6, max = 8, message = "validation.size.password")
     private String password;
 
-    @NotBlank(message = "Tên không được để trống")
+    @NotBlank(message = "validation.notblank.firstname")
     private String firstName;
 
-    @NotBlank(message = "Họ không được để trống")
+    @NotBlank(message = "validation.notblank.lastname")
     private String lastName;
 
     private String phoneNumber;

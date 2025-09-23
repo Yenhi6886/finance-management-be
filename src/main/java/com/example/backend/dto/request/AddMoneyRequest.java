@@ -11,12 +11,12 @@ import java.math.BigDecimal;
 @Data
 public class AddMoneyRequest {
 
-    @NotNull(message = "Số tiền không được để trống")
-    @DecimalMin(value = "1000.0", message = "Số tiền tối thiểu là 1,000 VND")
-    @DecimalMax(value = "1000000000.0", message = "Số tiền nạp mỗi lần tối đa là 1,000,000,000 VND (1 tỉ)")
+    @NotNull(message = "{validation.notnull.amount}")
+    @DecimalMin(value = "1000.0", message = "{validation.min.amount}")
+    @DecimalMax(value = "1000000000.0", message = "{validation.max.amount}")
     private BigDecimal amount;
 
-    @NotEmpty(message = "Phương thức nạp tiền không được để trống")
+    @NotEmpty(message = "{validation.notempty.method}")
     private String method;
 
     private String description;

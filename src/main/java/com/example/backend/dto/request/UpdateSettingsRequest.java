@@ -10,8 +10,8 @@ import java.math.BigDecimal;
 @Data
 public class UpdateSettingsRequest {
 
-    @DecimalMin(value = "0.0", inclusive = false, message = "Tỷ giá phải là số dương")
-    @Digits(integer = 10, fraction = 4, message = "Tỷ giá không hợp lệ")
+    @DecimalMin(value = "0.0", inclusive = false, message = "{validation.min.exchange.rate}")
+    @Digits(integer = 10, fraction = 4, message = "{validation.digits.exchange.rate}")
     private BigDecimal usdToVndRate;
 
     private UserSettings.CurrencyFormat currencyFormat;

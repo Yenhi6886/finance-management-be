@@ -10,20 +10,20 @@ import java.time.Instant;
 
 @Data
 public class TransactionRequest {
-    @NotNull(message = "Số tiền không được để trống")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Số tiền phải lớn hơn 0")
+    @NotNull(message = "{validation.notnull.amount}")
+    @DecimalMin(value = "0.0", inclusive = false, message = "{validation.min.amount.positive}")
     private BigDecimal amount;
 
-    @NotNull(message = "Loại giao dịch không được để trống")
+    @NotNull(message = "{validation.notnull.transaction.type}")
     private TransactionType type;
 
-    @NotNull(message = "Ví không được để trống")
+    @NotNull(message = "{validation.notnull.wallet}")
     private Long walletId;
 
     private Long categoryId;
 
     private String description;
 
-    @NotNull(message = "Thời gian không được để trống")
+    @NotNull(message = "{validation.notnull.date}")
     private Instant date;
 }

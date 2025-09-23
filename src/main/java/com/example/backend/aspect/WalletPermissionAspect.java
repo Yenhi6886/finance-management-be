@@ -4,6 +4,7 @@ import com.example.backend.annotation.RequireWalletPermission;
 import com.example.backend.enums.PermissionType;
 import com.example.backend.exception.BadRequestException;
 import com.example.backend.security.CustomUserDetails;
+import com.example.backend.service.MessageService;
 import com.example.backend.service.WalletPermissionService;
 import com.example.backend.service.WalletService;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class WalletPermissionAspect {
 
     private final WalletPermissionService walletPermissionService;
     private final WalletService walletService;
+    private final MessageService messageService;
     private final ExpressionParser expressionParser = new SpelExpressionParser();
 
     @Around("@annotation(com.example.backend.annotation.RequireWalletPermission)")
@@ -38,7 +40,7 @@ public class WalletPermissionAspect {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
-            throw new BadRequestException("Người dùng chưa đăng nhập hoặc thông tin xác thực không hợp lệ.");
+            throw new BadRequestException(messageService.getMessage("wallet.permission.user.not.authenticated"));
         }
 
         CustomUserDetails currentUser = (CustomUserDetails) authentication.getPrincipal();
@@ -46,20 +48,21 @@ public class WalletPermissionAspect {
 
         Long walletId = extractWalletId(joinPoint, annotation);
         if (walletId == null) {
-            throw new BadRequestException("Không thể xác định ID của ví từ request.");
+            throw new BadRequestException(messageService.getMessage("wallet.permission.wallet.id.not.found"));
         }
 
         if (annotation.requireOwnership()) {
             if (!walletService.isWalletOwner(walletId, userId)) {
                 log.warn("User {} không phải là chủ sở hữu của ví {}.", userId, walletId);
-                throw new BadRequestException("Bạn không phải là chủ sở hữu của ví này.");
+                throw new BadRequestException(messageService.getMessage("wallet.permission.not.owner"));
             }
             log.debug("Kiểm tra quyền sở hữu thành công cho user {} với ví {}", userId, walletId);
         } else {
             PermissionType requiredPermission = annotation.value();
             if (!walletPermissionService.hasPermission(walletId, userId, requiredPermission)) {
                 log.warn("User {} không có quyền {} trên ví {}.", userId, requiredPermission, walletId);
-                throw new BadRequestException("Bạn không có quyền '" + requiredPermission.getDisplayName() + "' trên ví này.");
+                throw new BadRequestException(messageService.getMessage("wallet.permission.insufficient", 
+                    new Object[]{requiredPermission.getDisplayName()}));
             }
             log.debug("Kiểm tra quyền {} thành công cho user {} với ví {}", requiredPermission, userId, walletId);
         }
@@ -70,7 +73,7 @@ public class WalletPermissionAspect {
     private Long extractWalletId(ProceedingJoinPoint joinPoint, RequireWalletPermission annotation) {
         String walletIdExpression = annotation.walletId();
         if (walletIdExpression.isEmpty()) {
-            throw new BadRequestException("Biểu thức walletId trong @RequireWalletPermission không được để trống.");
+            throw new BadRequestException(messageService.getMessage("wallet.permission.expression.empty"));
         }
 
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
@@ -91,10 +94,11 @@ public class WalletPermissionAspect {
             } else if (value instanceof String) {
                 return Long.parseLong((String) value);
             }
-            throw new BadRequestException("Không thể trích xuất ID ví hợp lệ từ biểu thức: " + walletIdExpression);
+            throw new BadRequestException(messageService.getMessage("wallet.permission.invalid.id", 
+                new Object[]{walletIdExpression}));
         } catch (Exception e) {
-            log.error("Lỗi khi xử lý biểu thức SpEL '{}': {}", walletIdExpression, e.getMessage());
-            throw new BadRequestException("Đã xảy ra lỗi khi xác thực quyền truy cập ví.");
+            log.error("{} '{}': {}", messageService.getMessage("wallet.permission.error"), walletIdExpression, e.getMessage());
+            throw new BadRequestException(messageService.getMessage("wallet.permission.spel.error"));
         }
     }
 }

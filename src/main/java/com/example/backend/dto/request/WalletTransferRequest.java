@@ -14,14 +14,14 @@ import java.time.Instant;
 @AllArgsConstructor
 public class WalletTransferRequest {
 
-    @NotNull(message = "ID ví nguồn không được để trống")
+    @NotNull(message = "{validation.notnull.from.wallet}")
     private Long fromWalletId;
 
-    @NotNull(message = "ID ví đích không được để trống")
+    @NotNull(message = "{validation.notnull.to.wallet}")
     private Long toWalletId;
 
-    @NotNull(message = "Số tiền không được để trống")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Số tiền phải lớn hơn 0")
+    @NotNull(message = "{validation.notnull.amount}")
+    @DecimalMin(value = "0.0", inclusive = false, message = "{validation.min.amount.positive}")
     private BigDecimal amount;
 
     private String description;

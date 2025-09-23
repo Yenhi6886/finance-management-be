@@ -13,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 public class AssignPermissionRequest {
 
-    @NotNull(message = "Danh sách quyền không được để trống")
+    @NotNull(message = "{validation.notnull.permissions}")
     private List<PermissionType> permissions;
 
     private String reason;

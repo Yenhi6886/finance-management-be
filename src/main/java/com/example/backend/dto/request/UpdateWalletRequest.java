@@ -7,13 +7,13 @@ import lombok.Data;
 @Data
 public class UpdateWalletRequest {
 
-    @NotBlank(message = "Tên ví là bắt buộc")
-    @Size(min = 2, max = 50, message = "Tên ví phải có từ 2 đến 50 ký tự")
+    @NotBlank(message = "{validation.notblank.wallet.name}")
+    @Size(min = 2, max = 50, message = "{validation.size.wallet.name}")
     private String name;
 
-    @NotBlank(message = "Icon là bắt buộc")
+    @NotBlank(message = "{validation.notblank.icon}")
     private String icon;
 
-    @Size(max = 200, message = "Mô tả không được quá 200 ký tự")
+    @Size(max = 200, message = "{validation.size.description}")
     private String description;
 }

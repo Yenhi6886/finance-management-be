@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 public class EmailService {
 
     private final JavaMailSender mailSender;
+    private final MessageService messageService;
 
     @Value("${app.mail.from:noreply@finance-management.com}")
     private String fromEmail;
